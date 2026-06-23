@@ -45,6 +45,26 @@ export async function updateProduct(id, product) {
   return res.json();
 }
 
+export async function updateOrderStatus(id, status) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function updateOrderStatus(id, status) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export async function deleteProduct(id) {
   await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
     method: 'DELETE',

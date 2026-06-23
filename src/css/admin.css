@@ -86,3 +86,10 @@
 }
 .modal-box input:focus, .modal-box textarea:focus { outline: none; border-color: var(--color-primary); }
 .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; justify-content: flex-end; }
+
+/* Status select in orders table */
+.status-select {
+  padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid #ddd;
+  font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;
+  background: #fff; color: #333;
+}

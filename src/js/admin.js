@@ -1,5 +1,5 @@
 // src/js/admin.js
-import { getProducts, getOrders, createProduct, updateProduct, deleteProduct } from './api.js';
+import { getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus } from './api.js';
 
 const ADMIN_USERS = {
   [import.meta.env.VITE_ADMIN_USER1 || 'admin1']: import.meta.env.VITE_ADMIN_PASS1 || 'pass1',
@@ -194,11 +194,29 @@ if (ordersTable) {
               <td>${o.customer_phone || '–'}</td>
               <td>${o.customer_address || '–'}</td>
               <td>${Number(o.total || 0).toLocaleString()}</td>
-              <td><span class="status-badge status-${o.status || 'pending'}">${o.status || 'pending'}</span></td>
+              <td>
+                <select class="status-select" data-id="${o.id}">
+                  ${['pending','confirmed','shipped','delivered','cancelled'].map(s =>
+                    `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`
+                  ).join('')}
+                </select>
+              </td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
+
+    ordersTable.querySelectorAll('.status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        sel.disabled = true;
+        try {
+          await updateOrderStatus(sel.dataset.id, sel.value);
+        } catch {
+          alert('Failed to update status. Check Supabase UPDATE policy.');
+        }
+        sel.disabled = false;
+      });
+    });
   })();
 }
