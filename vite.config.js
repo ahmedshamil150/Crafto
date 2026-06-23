@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   root: 'src',
@@ -7,21 +8,18 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: 'src/index.html',
-        shop: 'src/shop.html',
-        product: 'src/product.html',
-        cart: 'src/cart.html',
-        checkout: 'src/checkout.html',
-        about: 'src/about.html',
-        contact: 'src/contact.html',
-        adminLogin: 'src/admin/login.html',
-        adminDashboard: 'src/admin/dashboard.html',
-        adminProducts: 'src/admin/products.html',
-        adminOrders: 'src/admin/orders.html',
+        main:           resolve(__dirname, 'src/index.html'),
+        shop:           resolve(__dirname, 'src/shop.html'),
+        product:        resolve(__dirname, 'src/product.html'),
+        cart:           resolve(__dirname, 'src/cart.html'),
+        checkout:       resolve(__dirname, 'src/checkout.html'),
+        about:          resolve(__dirname, 'src/about.html'),
+        contact:        resolve(__dirname, 'src/contact.html'),
+        adminLogin:     resolve(__dirname, 'src/admin/login.html'),
+        adminDashboard: resolve(__dirname, 'src/admin/dashboard.html'),
+        adminProducts:  resolve(__dirname, 'src/admin/products.html'),
+        adminOrders:    resolve(__dirname, 'src/admin/orders.html'),
       },
     },
   },
 });
-  "name": "crafto",
-  "type": "module"
-}

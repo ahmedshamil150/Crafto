@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crafto Admin – Login</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="admin-body">
+  <main class="admin-login-wrap">
+    <h1>Crafto Admin</h1>
+    <form id="admin-login-form" class="admin-card" style="max-width:360px;margin:2rem auto;">
+      <h2 style="margin-bottom:1.5rem;">Sign In</h2>
+      <div style="margin-bottom:1rem;">
+        <label for="username">Username</label><br/>
+        <input id="username" type="text" placeholder="admin" required />
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label for="password">Password</label><br/>
+        <input id="password" type="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="button" style="width:100%;">Login</button>
+      <p id="login-error" style="color:red;margin-top:0.75rem;display:none;">Invalid credentials.</p>
+    </form>
+  </main>
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+/* Admin-specific styles */
+
+.admin-body {
+  display: flex;
+  min-height: 100vh;
+  background: #f0f2f5;
+  font-family: var(--font-body);
+}
+
+.admin-login-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.admin-login-wrap h1 {
+  font-family: var(--font-heading);
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+.admin-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%;
+}
+
+.admin-card input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+/* Sidebar */
+.admin-sidebar {
+  width: 220px;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 1.5rem 1rem;
+  flex-shrink: 0;
+}
+
+.admin-sidebar h2 {
+  font-family: var(--font-heading);
+  color: var(--color-accent);
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+}
+
+.admin-sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.admin-sidebar nav a {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.admin-sidebar nav a:hover,
+.admin-sidebar nav a.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+
+/* Main content */
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.admin-main h2 {
+  font-family: var(--font-heading);
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+}
+
+/* Stats cards */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+.stat-card h3 {
+  font-size: 2.2rem;
+  color: var(--color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-card p {
+  color: #666;
+  font-size: 0.9rem;
+}
