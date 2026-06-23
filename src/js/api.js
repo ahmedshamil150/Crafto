@@ -54,7 +54,9 @@ export async function deleteProduct(id) {
 
 export async function getOrders() {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers(true) });
+  // Always use anon key for orders — service key is not available client-side in production
+  // RLS policy below grants anon SELECT access
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers() });
   if (!res.ok) return [];
   return res.json();
 }
@@ -65,5 +67,9 @@ export async function createOrder(order) {
     headers: { ...headers(), 'Prefer': 'return=representation' },
     body: JSON.stringify(order),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
   return res.json();
 }

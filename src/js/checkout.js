@@ -49,8 +49,8 @@ form?.addEventListener('submit', async e => {
     localStorage.removeItem('crafto_cart');
     showToast('Order placed! We will contact you to confirm delivery.');
     setTimeout(() => window.location.href = './index.html', 2000);
-  } catch {
-    showToast('Something went wrong. Please try again.', 'error');
+  } catch (err) {
+    showToast(`Order failed: ${err.message}`, 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Place Order (COD)';
   }
