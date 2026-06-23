@@ -3,52 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crafto – Home</title>
+  <title>Crafto – Handcrafted Home Décor from Pakistan</title>
   <meta name="description" content="Handcrafted home décor and handicrafts from Pakistan.">
   <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="container">
-    <h1>Crafto</h1>
-    <nav>
-      <ul>
-        <li><a href="./index.html">Home</a></li>
-        <li><a href="./shop.html">Shop</a></li>
-        <li><a href="./about.html">About</a></li>
-        <li><a href="./contact.html">Contact</a></li>
-        <li><a href="./cart.html">Cart</a></li>
-      </ul>
-    </nav>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./index.html" class="logo">Crafto</a>
+      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
+      <nav id="nav-menu">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./shop.html">Shop</a></li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./contact.html">Contact</a></li>
+          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
-    <section class="hero" style="text-align:center; margin:2rem 0;">
-      <h2>Welcome to Crafto</h2>
-      <p>Discover unique handmade décor and crafts made with love in Pakistan.</p>
-      <a class="button" href="/shop.html">Start Shopping</a>
-    </section>
-    <section class="grid">
-      <!-- Sample product cards (placeholders) -->
-      <div class="card">
-        <img src="/public/placeholder1.jpg" alt="Sample Product" />
-        <h3>Handcrafted Vase</h3>
-        <p>PKR 2,500</p>
-        <a class="button" href="/product.html?id=1">View</a>
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Handcrafted with Love,<br/>Made in Pakistan</h1>
+        <p>Discover unique home décor and handicrafts by skilled Pakistani artisans.</p>
+        <a class="button" href="./shop.html">Shop Now</a>
       </div>
-      <div class="card">
-        <img src="/public/placeholder2.jpg" alt="Sample Product" />
-        <h3>Embroidered Wall Hanging</h3>
-        <p>PKR 3,200</p>
-        <a class="button" href="/product.html?id=2">View</a>
+    </section>
+
+    <section class="container section">
+      <h2 class="section-title">Featured Products</h2>
+      <div class="grid" id="product-grid">
+        <p class="loading">Loading products…</p>
+      </div>
+      <div style="text-align:center;margin-top:2rem;">
+        <a class="button button-outline" href="./shop.html">View All Products</a>
+      </div>
+    </section>
+
+    <section class="features container section">
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">🏺</span>
+          <h3>Authentic Craftsmanship</h3>
+          <p>Every piece is handmade by skilled artisans across Pakistan.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🚚</span>
+          <h3>Nationwide Delivery</h3>
+          <p>We deliver to all major cities across Pakistan.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">💳</span>
+          <h3>Cash on Delivery</h3>
+          <p>Pay when your order arrives. No advance payment needed.</p>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer>
+  <footer class="site-footer">
     <p>&copy; 2026 Crafto. All rights reserved.</p>
   </footer>
 
   <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./js/product.js"></script>
 </body>
 </html>

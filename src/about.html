@@ -4,37 +4,63 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crafto – About Us</title>
-  <meta name="description" content="Learn about Crafto – handcrafted home décor and handicrafts from Pakistan.">
+  <meta name="description" content="Learn about Crafto – handcrafted home décor from Pakistan.">
   <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="container">
-    <h1><a href="./index.html">Crafto</a></h1>
-    <nav>
-      <ul>
-        <li><a href="./index.html">Home</a></li>
-        <li><a href="./shop.html">Shop</a></li>
-        <li><a href="./about.html">About</a></li>
-        <li><a href="./contact.html">Contact</a></li>
-        <li><a href="./cart.html">Cart</a></li>
-      </ul>
-    </nav>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./index.html" class="logo">Crafto</a>
+      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
+      <nav id="nav-menu">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./shop.html">Shop</a></li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./contact.html">Contact</a></li>
+          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main class="container" style="max-width:760px;margin-top:2rem;">
-    <h2>About Crafto</h2>
-    <p style="margin-top:1rem;">
-      Crafto is a Pakistani e-commerce store dedicated to celebrating the rich tradition of handcrafted home décor and handicrafts.
-      Every piece in our collection is made by skilled artisans across Pakistan — from the vibrant pottery of Multan to the intricate woodwork of Chiniot.
+  <main class="container section" style="max-width:760px;">
+    <h2 class="section-title">About Crafto</h2>
+    <p style="margin-top:1rem;line-height:1.8;">
+      Crafto is a Pakistani e-commerce store dedicated to celebrating the rich tradition of handcrafted
+      home décor and handicrafts. Every piece in our collection is made by skilled artisans across
+      Pakistan — from the vibrant blue pottery of Multan to the intricate woodwork of Chiniot, and the
+      colourful textile art of Sindh.
     </p>
-    <p style="margin-top:1rem;">
-      Our mission is to connect these talented craftspeople with homes that appreciate authenticity, quality, and culture.
+    <p style="margin-top:1rem;line-height:1.8;">
+      Our mission is to connect these talented craftspeople directly with homes that appreciate
+      authenticity, quality, and culture. When you buy from Crafto, you support a local artisan and
+      bring a piece of Pakistan's heritage into your home.
     </p>
+    <div class="features-grid" style="margin-top:2.5rem;">
+      <div class="feature-card">
+        <span class="feature-icon">🤝</span>
+        <h3>Support Local Artisans</h3>
+        <p>Every purchase goes directly to the craftsperson who made it.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✋</span>
+        <h3>100% Handmade</h3>
+        <p>No mass production. Each item is unique and made by hand.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📦</span>
+        <h3>Safe Packaging</h3>
+        <p>We pack every order carefully so it arrives in perfect condition.</p>
+      </div>
+    </div>
   </main>
 
-  <footer>
+  <footer class="site-footer">
     <p>&copy; 2026 Crafto. All rights reserved.</p>
   </footer>
+
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>

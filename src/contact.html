@@ -6,43 +6,43 @@
   <title>Crafto – Contact</title>
   <meta name="description" content="Get in touch with the Crafto team.">
   <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="container">
-    <h1><a href="./index.html">Crafto</a></h1>
-    <nav>
-      <ul>
-        <li><a href="./index.html">Home</a></li>
-        <li><a href="./shop.html">Shop</a></li>
-        <li><a href="./about.html">About</a></li>
-        <li><a href="./contact.html">Contact</a></li>
-        <li><a href="./cart.html">Cart</a></li>
-      </ul>
-    </nav>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./index.html" class="logo">Crafto</a>
+      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
+      <nav id="nav-menu">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./shop.html">Shop</a></li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./contact.html">Contact</a></li>
+          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main class="container" style="max-width:560px;margin-top:2rem;">
-    <h2>Contact Us</h2>
+  <main class="container section" style="max-width:560px;">
+    <h2 class="section-title">Contact Us</h2>
     <form id="contact-form" style="margin-top:1.5rem;">
-      <div style="margin-bottom:1rem;">
-        <label for="c-name">Name</label><br/>
-        <input id="c-name" type="text" placeholder="Your name" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;" />
-      </div>
-      <div style="margin-bottom:1rem;">
-        <label for="c-email">Email</label><br/>
-        <input id="c-email" type="email" placeholder="you@example.com" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;" />
-      </div>
-      <div style="margin-bottom:1rem;">
-        <label for="c-message">Message</label><br/>
-        <textarea id="c-message" rows="4" placeholder="How can we help?" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;"></textarea>
-      </div>
-      <button type="submit" class="button">Send Message</button>
-      <p id="contact-status" style="margin-top:0.75rem;"></p>
+      <label>Name *
+        <input id="c-name" type="text" placeholder="Your name" required />
+      </label>
+      <label>Email *
+        <input id="c-email" type="email" placeholder="you@example.com" required />
+      </label>
+      <label>Message *
+        <textarea id="c-message" rows="4" placeholder="How can we help?" required></textarea>
+      </label>
+      <button type="submit" class="button" style="margin-top:0.5rem;">Send Message</button>
+      <p id="contact-status" style="margin-top:0.75rem;color:var(--color-primary);"></p>
     </form>
   </main>
 
-  <footer>
+  <footer class="site-footer">
     <p>&copy; 2026 Crafto. All rights reserved.</p>
   </footer>
 

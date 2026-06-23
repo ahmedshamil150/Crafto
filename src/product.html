@@ -6,30 +6,34 @@
   <title>Crafto – Product Detail</title>
   <meta name="description" content="View details and purchase handcrafted products from Crafto.">
   <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="container">
-    <h1><a href="./index.html">Crafto</a></h1>
-    <nav>
-      <ul>
-        <li><a href="./index.html">Home</a></li>
-        <li><a href="./shop.html">Shop</a></li>
-        <li><a href="./about.html">About</a></li>
-        <li><a href="./contact.html">Contact</a></li>
-        <li><a href="./cart.html">Cart</a></li>
-      </ul>
-    </nav>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./index.html" class="logo">Crafto</a>
+      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
+      <nav id="nav-menu">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./shop.html">Shop</a></li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./contact.html">Contact</a></li>
+          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main class="container" id="product-detail">
-    <p>Loading product...</p>
+  <main class="container section" id="product-detail">
+    <p class="loading">Loading product…</p>
   </main>
 
-  <footer>
+  <footer class="site-footer">
     <p>&copy; 2026 Crafto. All rights reserved.</p>
   </footer>
 
+  <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/product.js"></script>
 </body>
 </html>

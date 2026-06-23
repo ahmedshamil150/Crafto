@@ -1,14 +1,14 @@
 // src/js/api.js
-// Supabase REST helper – reads VITE_ env vars injected at build time
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_SVC_KEY  = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 
-function headers() {
+function headers(useService = false) {
+  const key = useService && SUPABASE_SVC_KEY ? SUPABASE_SVC_KEY : SUPABASE_ANON_KEY;
   return {
     'Content-Type': 'application/json',
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
   };
 }
 
@@ -30,7 +30,7 @@ export async function getProductById(id) {
 export async function createProduct(product) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
     method: 'POST',
-    headers: { ...headers(), 'Prefer': 'return=representation' },
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
     body: JSON.stringify(product),
   });
   return res.json();
@@ -39,7 +39,7 @@ export async function createProduct(product) {
 export async function updateProduct(id, product) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
     method: 'PATCH',
-    headers: { ...headers(), 'Prefer': 'return=representation' },
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
     body: JSON.stringify(product),
   });
   return res.json();
@@ -48,13 +48,22 @@ export async function updateProduct(id, product) {
 export async function deleteProduct(id) {
   await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
     method: 'DELETE',
-    headers: headers(),
+    headers: headers(true),
   });
 }
 
 export async function getOrders() {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers() });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers(true) });
   if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createOrder(order) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+    method: 'POST',
+    headers: { ...headers(), 'Prefer': 'return=representation' },
+    body: JSON.stringify(order),
+  });
   return res.json();
 }

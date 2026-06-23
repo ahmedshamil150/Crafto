@@ -1,26 +1,32 @@
 // src/js/product.js
-// Loads product data from Supabase and renders product cards / product detail page
-
 import { getProducts, getProductById } from './api.js';
+import { updateCartBadge, showToast } from './main.js';
 
-const grid = document.getElementById('product-grid');
+const grid   = document.getElementById('product-grid');
 const detail = document.getElementById('product-detail');
 
 async function renderShop() {
   if (!grid) return;
+  grid.innerHTML = '<p class="loading">Loading products…</p>';
   const products = await getProducts();
-  if (!products.length) {
-    grid.innerHTML = '<p>No products found.</p>';
-    return;
-  }
+  if (!products.length) { grid.innerHTML = '<p>No products found.</p>'; return; }
   grid.innerHTML = products.map(p => `
     <div class="card">
-      <img src="${p.image_url || 'https://placehold.co/400x300?text=Crafto'}" alt="${p.title}" />
+      <a href="./product.html?id=${p.id}">
+        <img src="${p.image_url || 'https://placehold.co/400x300?text=Crafto'}" alt="${p.title}" loading="lazy" />
+      </a>
       <h3>${p.title}</h3>
-      <p>PKR ${Number(p.price).toLocaleString()}</p>
-      <a class="button" href="./product.html?id=${p.id}">View</a>
+      ${p.category ? `<span class="badge">${p.category}</span>` : ''}
+      <p class="price">PKR ${Number(p.price).toLocaleString()}</p>
+      <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;">
+        <a class="button button-outline" href="./product.html?id=${p.id}">View</a>
+        <button class="button add-cart-btn"
+          data-id="${p.id}" data-title="${p.title}" data-price="${p.price}">Add to Cart</button>
+      </div>
     </div>
   `).join('');
+
+  grid.querySelectorAll('.add-cart-btn').forEach(btn => btn.addEventListener('click', addToCart));
 }
 
 async function renderDetail() {
@@ -29,26 +35,62 @@ async function renderDetail() {
   if (!id) { detail.innerHTML = '<p>Product not found.</p>'; return; }
   const p = await getProductById(id);
   if (!p) { detail.innerHTML = '<p>Product not found.</p>'; return; }
+
+  const images = [p.image_url, p.image_url_2, p.image_url_3]
+    .filter(Boolean)
+    .map(u => u.trim())
+    .filter(Boolean);
+  if (!images.length) images.push('https://placehold.co/600x450?text=Crafto');
+
   detail.innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:1.5rem;">
-      <img src="${p.image_url || 'https://placehold.co/600x450?text=Crafto'}" alt="${p.title}" style="width:100%;border-radius:12px;" />
-      <div>
+    <div class="product-detail-grid">
+      <div class="product-gallery">
+        <img id="gallery-main" src="${images[0]}" alt="${p.title}" />
+        ${images.length > 1 ? `
+        <div class="gallery-thumbs">
+          ${images.map((u, i) => `
+            <img src="${u}" alt="${p.title} ${i+1}" class="thumb ${i===0?'active':''}" data-src="${u}" />
+          `).join('')}
+        </div>` : ''}
+      </div>
+      <div class="product-info">
         <h2>${p.title}</h2>
-        <p style="margin:0.75rem 0;color:#666;">${p.description || ''}</p>
-        <p style="font-size:1.5rem;font-weight:600;color:var(--color-primary);">PKR ${Number(p.price).toLocaleString()}</p>
-        <button class="button" id="add-to-cart" data-id="${p.id}" data-title="${p.title}" data-price="${p.price}" style="margin-top:1rem;">Add to Cart</button>
+        ${p.category ? `<span class="badge">${p.category}</span>` : ''}
+        <p class="product-desc">${p.description || ''}</p>
+        <p class="price" style="font-size:1.6rem;">PKR ${Number(p.price).toLocaleString()}</p>
+        ${p.stock > 0
+          ? `<p class="stock-ok">✓ In stock (${p.stock} available)</p>`
+          : `<p class="stock-out">✗ Out of stock</p>`}
+        <button class="button" id="add-to-cart"
+          data-id="${p.id}" data-title="${p.title}" data-price="${p.price}"
+          ${p.stock === 0 ? 'disabled' : ''} style="margin-top:1.25rem;width:100%;">
+          Add to Cart
+        </button>
       </div>
     </div>
   `;
-  document.getElementById('add-to-cart')?.addEventListener('click', e => {
-    const { id, title, price } = e.target.dataset;
-    const cart = JSON.parse(localStorage.getItem('crafto_cart') || '[]');
-    const existing = cart.find(i => i.id === id);
-    if (existing) existing.qty++;
-    else cart.push({ id, title, price: Number(price), qty: 1 });
-    localStorage.setItem('crafto_cart', JSON.stringify(cart));
-    alert(`${title} added to cart!`);
+
+  // Thumb switcher
+  detail.querySelectorAll('.thumb').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      document.getElementById('gallery-main').src = thumb.dataset.src;
+      detail.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+    });
   });
+
+  document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
+}
+
+function addToCart(e) {
+  const { id, title, price } = e.target.dataset;
+  const cart = JSON.parse(localStorage.getItem('crafto_cart') || '[]');
+  const existing = cart.find(i => i.id === id);
+  if (existing) existing.qty++;
+  else cart.push({ id, title, price: Number(price), qty: 1 });
+  localStorage.setItem('crafto_cart', JSON.stringify(cart));
+  updateCartBadge();
+  showToast(`${title} added to cart!`);
 }
 
 renderShop();

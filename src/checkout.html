@@ -6,46 +6,49 @@
   <title>Crafto – Checkout</title>
   <meta name="description" content="Complete your purchase at Crafto.">
   <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <header class="container">
-    <h1><a href="./index.html">Crafto</a></h1>
-    <nav>
-      <ul>
-        <li><a href="./index.html">Home</a></li>
-        <li><a href="./shop.html">Shop</a></li>
-        <li><a href="./about.html">About</a></li>
-        <li><a href="./contact.html">Contact</a></li>
-        <li><a href="./cart.html">Cart</a></li>
-      </ul>
-    </nav>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./index.html" class="logo">Crafto</a>
+      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
+      <nav id="nav-menu">
+        <ul>
+          <li><a href="./index.html">Home</a></li>
+          <li><a href="./shop.html">Shop</a></li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./contact.html">Contact</a></li>
+          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
-    <h2>Checkout</h2>
-    <form id="checkout-form" style="max-width:500px; margin-top:1.5rem;">
-      <div style="margin-bottom:1rem;">
-        <label for="name">Full Name</label><br/>
-        <input id="name" type="text" placeholder="Your name" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;" />
-      </div>
-      <div style="margin-bottom:1rem;">
-        <label for="address">Delivery Address</label><br/>
-        <textarea id="address" rows="3" placeholder="City, Province" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;"></textarea>
-      </div>
-      <div style="margin-bottom:1rem;">
-        <label for="phone">Phone Number</label><br/>
-        <input id="phone" type="tel" placeholder="+92 300 0000000" required style="width:100%;padding:0.5rem;margin-top:0.25rem;border-radius:6px;border:1px solid #ccc;" />
-      </div>
-      <div id="order-summary" style="margin-bottom:1rem;"></div>
-      <button type="submit" class="button">Place Order (COD)</button>
-    </form>
+  <main class="container section">
+    <h2 class="section-title">Checkout</h2>
+    <div class="checkout-grid">
+      <form id="checkout-form" class="checkout-form">
+        <label>Full Name *
+          <input id="name" type="text" placeholder="Your full name" required />
+        </label>
+        <label>Phone Number *
+          <input id="phone" type="tel" placeholder="+92 300 0000000" required />
+        </label>
+        <label>Delivery Address *
+          <textarea id="address" rows="3" placeholder="House no., Street, City, Province" required></textarea>
+        </label>
+        <button type="submit" class="button" style="width:100%;margin-top:0.5rem;">Place Order (COD)</button>
+      </form>
+      <div id="order-summary"></div>
+    </div>
   </main>
 
-  <footer>
+  <footer class="site-footer">
     <p>&copy; 2026 Crafto. All rights reserved.</p>
   </footer>
 
+  <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/checkout.js"></script>
 </body>
 </html>
