@@ -184,7 +184,7 @@ if (ordersTable) {
     ordersTable.innerHTML = `
       <table>
         <thead>
-          <tr><th>Date</th><th>Customer</th><th>Phone</th><th>Total (PKR)</th><th>Status</th></tr>
+          <tr><th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th></tr>
         </thead>
         <tbody>
           ${orders.map(o => `
@@ -192,6 +192,7 @@ if (ordersTable) {
               <td>${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
               <td>${o.customer_name || '–'}</td>
               <td>${o.customer_phone || '–'}</td>
+              <td>${o.customer_address || '–'}</td>
               <td>${Number(o.total || 0).toLocaleString()}</td>
               <td><span class="status-badge status-${o.status || 'pending'}">${o.status || 'pending'}</span></td>
             </tr>
