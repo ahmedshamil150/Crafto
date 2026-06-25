@@ -64,6 +64,36 @@ document.getElementById('logout-btn')?.addEventListener('click', e => {
   window.location.href = './login.html';
 });
 
+// --- Mobile sidebar ---
+function initAdminMobileNav() {
+  const burger = document.getElementById('admin-burger');
+  const sidebar = document.getElementById('admin-sidebar');
+  const overlay = document.getElementById('admin-overlay');
+  if (!burger || !sidebar) return;
+
+  const close = () => {
+    sidebar.classList.remove('open');
+    overlay?.classList.remove('open');
+    document.body.classList.remove('admin-nav-open');
+    burger.setAttribute('aria-expanded', 'false');
+  };
+
+  burger.addEventListener('click', () => {
+    const isOpen = sidebar.classList.toggle('open');
+    overlay?.classList.toggle('open', isOpen);
+    document.body.classList.toggle('admin-nav-open', isOpen);
+    burger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+
+  overlay?.addEventListener('click', close);
+  sidebar.querySelectorAll('nav a').forEach(link => link.addEventListener('click', close));
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900) close();
+  });
+}
+
+if (!isLoginPage) initAdminMobileNav();
+
 // --- Dashboard stats ---
 if (document.getElementById('stat-products')) {
   (async () => {
@@ -177,6 +207,7 @@ if (productsTable) {
       return;
     }
     productsTable.innerHTML = `
+      <div class="admin-table-wrap">
       <table>
         <thead>
           <tr>
@@ -198,6 +229,7 @@ if (productsTable) {
           `).join('')}
         </tbody>
       </table>
+      </div>
     `;
 
     productsTable.querySelectorAll('.edit-btn').forEach(btn => {
@@ -226,7 +258,8 @@ if (ordersTable) {
     const orders = await getOrders();
     if (!orders.length) { ordersTable.innerHTML = '<p>No orders yet.</p>'; return; }
     ordersTable.innerHTML = `
-      <table>
+      <div class="admin-table-wrap">
+      <table class="admin-table-wide">
         <thead>
           <tr><th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th></tr>
         </thead>
@@ -236,7 +269,7 @@ if (ordersTable) {
               <td>${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
               <td>${o.customer_name || '–'}</td>
               <td>${o.customer_phone || '–'}</td>
-              <td>${o.customer_address || '–'}</td>
+              <td class="address-cell">${o.customer_address || '–'}</td>
               <td>${Number(o.total || 0).toLocaleString()}</td>
               <td>
                 <select class="status-select" data-id="${o.id}">
@@ -249,6 +282,7 @@ if (ordersTable) {
           `).join('')}
         </tbody>
       </table>
+      </div>
     `;
 
     ordersTable.querySelectorAll('.status-select').forEach(sel => {
@@ -311,7 +345,8 @@ if (revenueContent) {
       </div>
 
       <h3 class="admin-subtitle">Sales Detail</h3>
-      <table>
+      <div class="admin-table-wrap">
+      <table class="admin-table-wide">
         <thead>
           <tr>
             <th>Date</th><th>Order</th><th>Product</th><th>Unit Price</th><th>Qty</th><th>Subtotal</th>
@@ -336,8 +371,10 @@ if (revenueContent) {
           </tr>
         </tfoot>
       </table>
+      </div>
 
       <h3 class="admin-subtitle">By Product &amp; Price</h3>
+      <div class="admin-table-wrap">
       <table>
         <thead>
           <tr>
@@ -355,6 +392,7 @@ if (revenueContent) {
           `).join('')}
         </tbody>
       </table>
+      </div>
     `;
   })();
 }
@@ -372,7 +410,8 @@ if (reviewsTable) {
     }
 
     reviewsTable.innerHTML = `
-      <table>
+      <div class="admin-table-wrap">
+      <table class="admin-table-reviews">
         <thead>
           <tr>
             <th>Product</th><th>Author</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th>
@@ -399,6 +438,7 @@ if (reviewsTable) {
           `).join('')}
         </tbody>
       </table>
+      </div>
     `;
 
     reviewsTable.querySelectorAll('.pin-btn').forEach(btn => {

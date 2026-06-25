@@ -9,7 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body class="admin-body">
-  <aside class="admin-sidebar">
+  <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"></div>
+  <aside class="admin-sidebar" id="admin-sidebar">
     <h2>Crafto Admin</h2>
     <nav>
       <ul>
@@ -25,7 +27,7 @@
   </aside>
   <main class="admin-main">
     <h2>Reviews</h2>
-    <div id="reviews-table" style="margin-top:1.5rem;"></div>
+    <div id="reviews-table"></div>
   </main>
   <script type="module" src="../js/admin.js"></script>
 </body>
