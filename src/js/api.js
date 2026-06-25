@@ -97,8 +97,18 @@ export async function trackOrder(orderId, phone) {
 export async function getReviews(productId) {
   if (!SUPABASE_URL) return [];
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=created_at.desc`,
+    `${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=pinned.desc,created_at.desc`,
     { headers: headers() }
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function getAllReviews() {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/reviews?select=*,products(title)&order=pinned.desc,created_at.desc`,
+    { headers: headers(true) }
   );
   if (!res.ok) return [];
   return res.json();
@@ -114,4 +124,22 @@ export async function createReview(review) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `HTTP ${res.status}`);
   }
+}
+
+export async function deleteReview(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: headers(true),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+export async function setReviewPinned(id, pinned) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
+    body: JSON.stringify({ pinned }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }

@@ -129,3 +129,12 @@ CREATE POLICY "Anyone can post reviews"
 
 GRANT SELECT, INSERT ON reviews TO anon;
 GRANT SELECT, INSERT ON reviews TO authenticated;
+
+-- =============================================
+-- 8. Review pinning (admin pins via service key)
+-- =============================================
+
+ALTER TABLE reviews
+  ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS reviews_pinned_idx ON reviews(pinned DESC, created_at DESC);

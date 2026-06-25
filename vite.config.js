@@ -25,6 +25,8 @@ export default defineConfig({
         adminDashboard: resolve(__dirname, 'src/admin/dashboard.html'),
         adminProducts:  resolve(__dirname, 'src/admin/products.html'),
         adminOrders:    resolve(__dirname, 'src/admin/orders.html'),
+        adminRevenue:   resolve(__dirname, 'src/admin/revenue.html'),
+        adminReviews:   resolve(__dirname, 'src/admin/reviews.html'),
       },
     },
   },

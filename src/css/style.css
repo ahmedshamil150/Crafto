@@ -185,6 +185,8 @@ input, textarea, select { font-family: var(--font-body); font-size: 1rem; }
   background: var(--color-surface); border-radius: var(--radius);
   padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow);
 }
+.review-card.review-pinned { border-left: 4px solid var(--color-accent); }
+.pinned-badge { margin-top: 0.5rem; background: var(--color-accent); color: #333; }
 .review-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .review-date { display: block; font-size: 0.85rem; color: var(--color-text-muted); margin: 0.35rem 0 0.5rem; }
 .review-comment { line-height: 1.7; color: var(--color-text); }

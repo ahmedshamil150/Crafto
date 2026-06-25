@@ -93,3 +93,25 @@
   font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;
   background: #fff; color: #333;
 }
+
+/* Revenue */
+.revenue-total-card {
+  background: var(--color-primary); color: #fff; border-radius: 12px;
+  padding: 1.5rem 2rem; margin-bottom: 2rem; display: inline-block;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+.revenue-total-card h3 { font-size: 2rem; margin-bottom: 0.25rem; color: #fff; }
+.revenue-total-card p { opacity: 0.9; font-size: 0.9rem; }
+.admin-subtitle {
+  font-size: 1.1rem; color: var(--color-primary); margin: 2rem 0 1rem;
+  font-family: var(--font-heading);
+}
+
+/* Reviews admin */
+.review-comment-cell { max-width: 320px; font-size: 0.9rem; line-height: 1.5; }
+.pin-badge {
+  display: inline-block; background: var(--color-accent); color: #333;
+  font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.rating-stars { color: var(--color-accent); letter-spacing: 1px; }

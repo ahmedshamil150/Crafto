@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crafto Admin – Dashboard</title>
+  <title>Crafto Admin – Reviews</title>
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/admin.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
@@ -13,32 +13,19 @@
     <h2>Crafto Admin</h2>
     <nav>
       <ul>
-        <li><a href="./dashboard.html" class="active">Dashboard</a></li>
+        <li><a href="./dashboard.html">Dashboard</a></li>
         <li><a href="./products.html">Products</a></li>
         <li><a href="./orders.html">Orders</a></li>
         <li><a href="./revenue.html">Revenue</a></li>
-        <li><a href="./reviews.html">Reviews</a></li>
+        <li><a href="./reviews.html" class="active">Reviews</a></li>
         <li><a href="../index.html">← Storefront</a></li>
         <li><a href="#" id="logout-btn">Logout</a></li>
       </ul>
     </nav>
   </aside>
   <main class="admin-main">
-    <h2>Dashboard</h2>
-    <div class="admin-stats">
-      <div class="stat-card">
-        <h3 id="stat-products">–</h3>
-        <p>Total Products</p>
-      </div>
-      <div class="stat-card">
-        <h3 id="stat-orders">–</h3>
-        <p>Pending Orders</p>
-      </div>
-      <div class="stat-card">
-        <h3 id="stat-revenue">–</h3>
-        <p>Total Revenue</p>
-      </div>
-    </div>
+    <h2>Reviews</h2>
+    <div id="reviews-table" style="margin-top:1.5rem;"></div>
   </main>
   <script type="module" src="../js/admin.js"></script>
 </body>

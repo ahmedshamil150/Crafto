@@ -1,5 +1,18 @@
 // src/js/admin.js
-import { getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus } from './api.js';
+import {
+  getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
+  getAllReviews, deleteReview, setReviewPinned,
+} from './api.js';
+
+function esc(str) {
+  const el = document.createElement('span');
+  el.textContent = str ?? '';
+  return el.innerHTML;
+}
+
+function stars(rating) {
+  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+}
 
 const ADMIN_USERS = {
   [import.meta.env.VITE_ADMIN_USER1 || 'admin1']: import.meta.env.VITE_ADMIN_PASS1 || 'pass1',
@@ -219,4 +232,171 @@ if (ordersTable) {
       });
     });
   })();
+}
+
+// --- Revenue ---
+const revenueContent = document.getElementById('revenue-content');
+if (revenueContent) {
+  (async () => {
+    const orders = await getOrders();
+    const active = orders.filter(o => o.status !== 'cancelled');
+
+    const lines = [];
+    const summary = new Map();
+
+    for (const order of active) {
+      const items = Array.isArray(order.items) ? order.items : [];
+      const date = new Date(order.created_at).toLocaleDateString('en-PK');
+      const orderShort = String(order.id).slice(0, 8);
+
+      for (const item of items) {
+        const price = Number(item.price) || 0;
+        const qty = Number(item.qty) || 1;
+        const lineTotal = price * qty;
+        const title = item.title || 'Unknown product';
+
+        lines.push({ date, orderShort, title, price, qty, lineTotal });
+
+        const key = `${title}::${price}`;
+        const row = summary.get(key) || { title, price, qty: 0, revenue: 0 };
+        row.qty += qty;
+        row.revenue += lineTotal;
+        summary.set(key, row);
+      }
+    }
+
+    const grandTotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+    const summaryRows = [...summary.values()].sort((a, b) => b.revenue - a.revenue);
+
+    if (!lines.length) {
+      revenueContent.innerHTML = '<p>No sales yet. Revenue appears when orders are placed.</p>';
+      return;
+    }
+
+    revenueContent.innerHTML = `
+      <div class="revenue-total-card">
+        <h3>PKR ${grandTotal.toLocaleString()}</h3>
+        <p>Total revenue (${active.length} order${active.length === 1 ? '' : 's'}, cancelled excluded)</p>
+      </div>
+
+      <h3 class="admin-subtitle">Sales Detail</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Order</th><th>Product</th><th>Unit Price</th><th>Qty</th><th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lines.map(l => `
+            <tr>
+              <td>${l.date}</td>
+              <td><code>${l.orderShort}</code></td>
+              <td>${esc(l.title)}</td>
+              <td>PKR ${l.price.toLocaleString()}</td>
+              <td>${l.qty}</td>
+              <td><strong>PKR ${l.lineTotal.toLocaleString()}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align:right;font-weight:600;">Grand Total</td>
+            <td><strong>PKR ${grandTotal.toLocaleString()}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h3 class="admin-subtitle">By Product &amp; Price</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th><th>Unit Price</th><th>Qty Sold</th><th>Total Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${summaryRows.map(r => `
+            <tr>
+              <td>${esc(r.title)}</td>
+              <td>PKR ${r.price.toLocaleString()}</td>
+              <td>${r.qty}</td>
+              <td><strong>PKR ${r.revenue.toLocaleString()}</strong></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  })();
+}
+
+// --- Reviews management ---
+const reviewsTable = document.getElementById('reviews-table');
+if (reviewsTable) {
+  async function loadReviews() {
+    reviewsTable.innerHTML = '<p>Loading…</p>';
+    const reviews = await getAllReviews();
+
+    if (!reviews.length) {
+      reviewsTable.innerHTML = '<p>No reviews yet.</p>';
+      return;
+    }
+
+    reviewsTable.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th><th>Author</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${reviews.map(r => `
+            <tr data-id="${r.id}">
+              <td>
+                ${r.pinned ? '<span class="pin-badge">Pinned</span><br/>' : ''}
+                ${esc(r.products?.title || '–')}
+              </td>
+              <td>${esc(r.author_name)}</td>
+              <td><span class="rating-stars">${stars(r.rating)}</span></td>
+              <td class="review-comment-cell">${esc(r.comment)}</td>
+              <td>${new Date(r.created_at).toLocaleDateString('en-PK')}</td>
+              <td class="action-cell">
+                <button class="button pin-btn" data-id="${r.id}" data-pinned="${r.pinned}">
+                  ${r.pinned ? 'Unpin' : 'Pin'}
+                </button>
+                <button class="button delete-review-btn" data-id="${r.id}" style="background:#c62828;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    reviewsTable.querySelectorAll('.pin-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          await setReviewPinned(btn.dataset.id, btn.dataset.pinned !== 'true');
+          loadReviews();
+        } catch {
+          alert('Failed to update pin status.');
+          btn.disabled = false;
+        }
+      });
+    });
+
+    reviewsTable.querySelectorAll('.delete-review-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this review permanently?')) return;
+        btn.disabled = true;
+        try {
+          await deleteReview(btn.dataset.id);
+          loadReviews();
+        } catch {
+          alert('Failed to delete review.');
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  loadReviews();
 }

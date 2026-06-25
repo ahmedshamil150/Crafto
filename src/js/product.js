@@ -202,11 +202,12 @@ async function loadReviews(productId) {
   }
 
   listEl.innerHTML = reviews.map(r => `
-    <article class="review-card">
+    <article class="review-card ${r.pinned ? 'review-pinned' : ''}">
       <div class="review-header">
         <strong>${esc(r.author_name)}</strong>
         <span class="stars">${renderStars(r.rating)}</span>
       </div>
+      ${r.pinned ? '<span class="badge pinned-badge">Pinned</span>' : ''}
       <time class="review-date">${new Date(r.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
       <p class="review-comment">${esc(r.comment)}</p>
     </article>
