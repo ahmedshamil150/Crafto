@@ -24,6 +24,7 @@ let allProducts = [];
 let activeTab = 'all';
 let sortLow = false;
 let filterDisc = false;
+let searchQuery = '';
 const DISPLAY_PAGE_SIZE = 12;
 let visibleCount = DISPLAY_PAGE_SIZE;
 
@@ -90,6 +91,14 @@ function renderGrid() {
   if (!grid) return;
   let filtered = [...allProducts];
 
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(p =>
+      (p.title && p.title.toLowerCase().includes(q)) ||
+      (p.description && p.description.toLowerCase().includes(q))
+    );
+  }
+
   if (activeTab !== 'all') {
     filtered = filtered.filter(p => normalizeCat(p.category) === activeTab);
   }
@@ -134,6 +143,17 @@ async function renderShop() {
   if (!allProducts.length) { grid.innerHTML = '<p>No products found.</p>'; return; }
   renderTabs();
   renderGrid();
+
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value;
+      visibleCount = DISPLAY_PAGE_SIZE;
+      activeTab = 'all';
+      renderTabs();
+      renderGrid();
+    });
+  }
 
   document.getElementById('sort-price')?.addEventListener('click', () => {
     sortLow = !sortLow;
