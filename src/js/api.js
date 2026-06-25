@@ -64,9 +64,7 @@ export async function deleteProduct(id) {
 
 export async function getOrders() {
   if (!SUPABASE_URL) return [];
-  // Always use anon key for orders — service key is not available client-side in production
-  // RLS policy below grants anon SELECT access
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers() });
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers(true) });
   if (!res.ok) return [];
   return res.json();
 }

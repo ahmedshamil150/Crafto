@@ -45,3 +45,15 @@ UPDATE products SET
   image_url_2 = 'https://placehold.co/600x450?text=Jewelry+Box+2',
   image_url_3 = 'https://placehold.co/600x450?text=Jewelry+Box+3'
 WHERE title = 'Camel Bone Jewelry Box';
+
+-- =============================================
+-- 5. Lock down orders RLS
+-- =============================================
+
+DROP POLICY IF EXISTS "Anon can read orders" ON orders;
+DROP POLICY IF EXISTS "Anon can update order status" ON orders;
+
+CREATE POLICY "Anon can insert orders"
+  ON orders FOR INSERT
+  TO anon
+  WITH CHECK (true);
