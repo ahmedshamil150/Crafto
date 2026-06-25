@@ -12,11 +12,24 @@ function headers(useService = false) {
   };
 }
 
-export async function getProducts() {
+export async function getProducts({ limit, offset } = {}) {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?order=created_at.desc`, { headers: headers() });
+  const params = new URLSearchParams({ order: 'created_at.desc' });
+  if (limit) params.set('limit', limit);
+  if (offset != null) params.set('offset', offset);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${params}`, { headers: headers() });
   if (!res.ok) return [];
   return res.json();
+}
+
+export async function getProductsCount() {
+  if (!SUPABASE_URL) return 0;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?select=id&limit=0`, {
+    headers: { ...headers(), 'Prefer': 'count=exact' },
+  });
+  if (!res.ok) return 0;
+  const range = res.headers.get('content-range');
+  return range ? parseInt(range.split('/')[1], 10) : 0;
 }
 
 export async function getProductById(id) {
@@ -25,6 +38,29 @@ export async function getProductById(id) {
   if (!res.ok) return null;
   const data = await res.json();
   return data[0] || null;
+}
+
+const STORAGE_URL = `${SUPABASE_URL}/storage/v1`;
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+export async function uploadImage(file, folder) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `${folder}/${Date.now()}.${ext}`;
+  const res = await fetch(`${STORAGE_URL}/object/product-images/${path}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_SVC_KEY,
+      'Authorization': `Bearer ${SUPABASE_SVC_KEY}`,
+      'Content-Type': file.type,
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Upload failed (HTTP ${res.status})`);
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
 }
 
 export async function createProduct(product) {
@@ -62,11 +98,24 @@ export async function deleteProduct(id) {
   });
 }
 
-export async function getOrders() {
+export async function getOrders({ limit, offset } = {}) {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, { headers: headers(true) });
+  const params = new URLSearchParams({ order: 'created_at.desc' });
+  if (limit) params.set('limit', limit);
+  if (offset != null) params.set('offset', offset);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?${params}`, { headers: headers(true) });
   if (!res.ok) return [];
   return res.json();
+}
+
+export async function getOrdersCount() {
+  if (!SUPABASE_URL) return 0;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=id&limit=0`, {
+    headers: { ...headers(true), 'Prefer': 'count=exact' },
+  });
+  if (!res.ok) return 0;
+  const range = res.headers.get('content-range');
+  return range ? parseInt(range.split('/')[1], 10) : 0;
 }
 
 export async function createOrder(order) {

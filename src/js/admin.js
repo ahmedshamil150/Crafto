@@ -1,7 +1,7 @@
 // src/js/admin.js
 import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
-  getAllReviews, deleteReview, setReviewPinned,
+  getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
 } from './api.js';
 
 function esc(str) {
@@ -142,9 +142,27 @@ if (productsTable) {
           </label>
           <label>Stock<input id="p-stock" type="number" min="0" value="0" /></label>
           <label>Discount (%)<input id="p-discount" type="number" min="0" max="100" value="0" /></label>
-          <label>Image URL 1 *<input id="p-img1" type="url" placeholder="https://..." required /></label>
-          <label>Image URL 2<input id="p-img2" type="url" placeholder="https://..." /></label>
-          <label>Image URL 3<input id="p-img3" type="url" placeholder="https://..." /></label>
+          <label>Image 1 *
+            <div class="img-upload-row">
+              <input id="p-img1-file" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="img-preview" id="p-img1-preview"></div>
+              <input id="p-img1" type="hidden" />
+            </div>
+          </label>
+          <label>Image 2
+            <div class="img-upload-row">
+              <input id="p-img2-file" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="img-preview" id="p-img2-preview"></div>
+              <input id="p-img2" type="hidden" />
+            </div>
+          </label>
+          <label>Image 3
+            <div class="img-upload-row">
+              <input id="p-img3-file" type="file" accept="image/jpeg,image/png,image/webp" />
+              <div class="img-preview" id="p-img3-preview"></div>
+              <input id="p-img3" type="hidden" />
+            </div>
+          </label>
           <div class="modal-actions">
             <button type="button" id="modal-cancel" class="button" style="background:#999;">Cancel</button>
             <button type="submit" class="button" id="modal-save">Save</button>
@@ -158,6 +176,11 @@ if (productsTable) {
   const modal     = document.getElementById('product-modal');
   const modalForm = document.getElementById('product-form');
 
+  function setPreview(id, url) {
+    const el = document.getElementById(id);
+    el.innerHTML = url ? `<img src="${url}" alt="preview" />` : '';
+  }
+
   function openModal(product = null) {
     document.getElementById('modal-title').textContent = product ? 'Edit Product' : 'Add Product';
     document.getElementById('p-id').value       = product?.id || '';
@@ -170,6 +193,12 @@ if (productsTable) {
     document.getElementById('p-img1').value     = product?.image_url || '';
     document.getElementById('p-img2').value     = product?.image_url_2 || '';
     document.getElementById('p-img3').value     = product?.image_url_3 || '';
+    ['p-img1-file', 'p-img2-file', 'p-img3-file'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    setPreview('p-img1-preview', product?.image_url);
+    setPreview('p-img2-preview', product?.image_url_2);
+    setPreview('p-img3-preview', product?.image_url_3);
     document.getElementById('modal-error').style.display = 'none';
     modal.style.display = 'flex';
   }
@@ -179,43 +208,76 @@ if (productsTable) {
 
   document.getElementById('add-product-btn').addEventListener('click', () => openModal());
 
+  async function uploadField(fileInputId, hiddenId, folder) {
+    const fileInput = document.getElementById(fileInputId);
+    const hidden = document.getElementById(hiddenId);
+    if (fileInput.files && fileInput.files[0]) {
+      const file = fileInput.files[0];
+      if (file.size > 2 * 1024 * 1024) throw new Error(`${file.name} exceeds 2MB limit.`);
+      hidden.value = await uploadImage(file, folder);
+    }
+    return hidden.value.trim();
+  }
+
   modalForm.addEventListener('submit', async e => {
     e.preventDefault();
     const saveBtn = document.getElementById('modal-save');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    const errEl = document.getElementById('modal-error');
+    errEl.style.display = 'none';
 
     const id = document.getElementById('p-id').value;
-    const payload = {
-      title:           document.getElementById('p-title').value.trim(),
-      description:     document.getElementById('p-desc').value.trim(),
-      price:           parseFloat(document.getElementById('p-price').value),
-      category:        document.getElementById('p-category').value,
-      stock:           parseInt(document.getElementById('p-stock').value) || 0,
-      discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
-      image_url:   document.getElementById('p-img1').value.trim(),
-      image_url_2: document.getElementById('p-img2').value.trim() || null,
-      image_url_3: document.getElementById('p-img3').value.trim() || null,
-    };
+    const folder = id || `new-${Date.now()}`;
 
     try {
+      const image_url   = await uploadField('p-img1-file', 'p-img1', folder);
+      const image_url_2 = await uploadField('p-img2-file', 'p-img2', folder);
+      const image_url_3 = await uploadField('p-img3-file', 'p-img3', folder);
+
+      if (!image_url) throw new Error('Image 1 is required.');
+
+      const payload = {
+        title:           document.getElementById('p-title').value.trim(),
+        description:     document.getElementById('p-desc').value.trim(),
+        price:           parseFloat(document.getElementById('p-price').value),
+        category:        document.getElementById('p-category').value,
+        stock:           parseInt(document.getElementById('p-stock').value) || 0,
+        discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
+        image_url,
+        image_url_2: image_url_2 || null,
+        image_url_3: image_url_3 || null,
+      };
+
       if (id) await updateProduct(id, payload);
       else    await createProduct(payload);
       modal.style.display = 'none';
+      productsPage = 1;
       loadProducts();
-    } catch {
-      document.getElementById('modal-error').textContent = 'Save failed. Check console.';
-      document.getElementById('modal-error').style.display = 'block';
+    } catch (err) {
+      errEl.textContent = err.message || 'Save failed. Check console.';
+      errEl.style.display = 'block';
     }
     saveBtn.disabled = false; saveBtn.textContent = 'Save';
   });
 
+  const PRODS_PER_PAGE = 10;
+  let productsPage = 1;
+  let productsTotal = 0;
+
   async function loadProducts() {
     productsTable.innerHTML = '<p>Loading…</p>';
-    const products = await getProducts();
+    const [products, count] = await Promise.all([
+      getProducts({ limit: PRODS_PER_PAGE, offset: (productsPage - 1) * PRODS_PER_PAGE }),
+      getProductsCount(),
+    ]);
+    productsTotal = count;
+    const totalPages = Math.ceil(productsTotal / PRODS_PER_PAGE) || 1;
+
     if (!products.length) {
       productsTable.innerHTML = '<p>No products yet. Click "+ Add Product" to create one.</p>';
       return;
     }
+
     productsTable.innerHTML = `
       <div class="admin-table-wrap">
       <table>
@@ -241,6 +303,11 @@ if (productsTable) {
         </tbody>
       </table>
       </div>
+      <div class="pagination">
+        <button class="button page-btn" id="prods-prev" ${productsPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${productsPage} of ${totalPages}</span>
+        <button class="button page-btn" id="prods-next" ${productsPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
     `;
 
     productsTable.querySelectorAll('.edit-btn').forEach(btn => {
@@ -254,8 +321,16 @@ if (productsTable) {
       btn.addEventListener('click', async () => {
         if (!confirm('Delete this product?')) return;
         await deleteProduct(btn.dataset.id);
+        productsPage = 1;
         loadProducts();
       });
+    });
+
+    document.getElementById('prods-prev')?.addEventListener('click', () => {
+      if (productsPage > 1) { productsPage--; loadProducts(); }
+    });
+    document.getElementById('prods-next')?.addEventListener('click', () => {
+      if (productsPage < totalPages) { productsPage++; loadProducts(); }
     });
   }
 
@@ -265,19 +340,29 @@ if (productsTable) {
 // --- Orders list ---
 const ordersTable = document.getElementById('orders-table');
 if (ordersTable) {
-  (async () => {
-    const orders = await getOrders();
+  const ORDERS_PER_PAGE = 10;
+  let ordersPage = 1;
+
+  function renderItems(items) {
+    const arr = Array.isArray(items) ? items : [];
+    if (!arr.length) return '<em>No items</em>';
+    return arr.map(i => `
+      <div style="display:flex;justify-content:space-between;padding:2px 0;">
+        <span>${esc(i.title)} × ${i.qty}</span>
+        <span>PKR ${(Number(i.price) * Number(i.qty)).toLocaleString()}</span>
+      </div>
+    `).join('');
+  }
+
+  async function loadOrders() {
+    ordersTable.innerHTML = '<p>Loading…</p>';
+    const [orders, count] = await Promise.all([
+      getOrders({ limit: ORDERS_PER_PAGE, offset: (ordersPage - 1) * ORDERS_PER_PAGE }),
+      getOrdersCount(),
+    ]);
+    const totalPages = Math.ceil(count / ORDERS_PER_PAGE) || 1;
+
     if (!orders.length) { ordersTable.innerHTML = '<p>No orders yet.</p>'; return; }
-    function renderItems(items) {
-      const arr = Array.isArray(items) ? items : [];
-      if (!arr.length) return '<em>No items</em>';
-      return arr.map(i => `
-        <div style="display:flex;justify-content:space-between;padding:2px 0;">
-          <span>${esc(i.title)} × ${i.qty}</span>
-          <span>PKR ${(Number(i.price) * Number(i.qty)).toLocaleString()}</span>
-        </div>
-      `).join('');
-    }
 
     ordersTable.innerHTML = `
       <div class="admin-table-wrap">
@@ -324,6 +409,11 @@ if (ordersTable) {
         </tbody>
       </table>
       </div>
+      <div class="pagination">
+        <button class="button page-btn" id="orders-prev" ${ordersPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${ordersPage} of ${totalPages}</span>
+        <button class="button page-btn" id="orders-next" ${ordersPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
     `;
 
     ordersTable.querySelectorAll('.toggle-items-btn').forEach(btn => {
@@ -356,7 +446,7 @@ if (ordersTable) {
       try {
         await updateOrderStatus(btn.dataset.id, newStatus);
         btn.textContent = `${label}done ✓`;
-        setTimeout(() => location.reload(), 1000);
+        setTimeout(() => loadOrders(), 1000);
       } catch {
         alert(`Failed to ${label.toLowerCase()} return.`);
         btn.disabled = false;
@@ -377,7 +467,16 @@ if (ordersTable) {
         handleReturnAction(btn, 'return_rejected', 'Reject');
       });
     });
-  })();
+
+    document.getElementById('orders-prev')?.addEventListener('click', () => {
+      if (ordersPage > 1) { ordersPage--; loadOrders(); }
+    });
+    document.getElementById('orders-next')?.addEventListener('click', () => {
+      if (ordersPage < totalPages) { ordersPage++; loadOrders(); }
+    });
+  }
+
+  loadOrders();
 }
 
 // --- Revenue ---

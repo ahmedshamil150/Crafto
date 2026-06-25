@@ -217,12 +217,29 @@ GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO anon;
 GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO authenticated;
 
 -- =============================================
--- 10. Add discount_percent to products
+-- 10. Storage bucket for product images
+-- =============================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow anon users to read (public bucket already does this, but explicit policy helps)
+DROP POLICY IF EXISTS "Public can view product images" ON storage.objects;
+CREATE POLICY "Public can view product images"
+  ON storage.objects FOR SELECT
+  TO anon
+  USING (bucket_id = 'product-images');
+
+-- Service role can upload (bypasses RLS by default, so this is informational)
+-- Admin frontend uses the service key so no extra policy is needed for writes.
+
+-- =============================================
+-- 11. Add discount_percent to products
 -- =============================================
 ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 
 -- =============================================
--- 11. Atomic checkout: validate stock → decrement → place order
+-- 12. Atomic checkout: validate stock → decrement → place order
 -- =============================================
 
 CREATE OR REPLACE FUNCTION place_order(
