@@ -15,6 +15,7 @@ const STATUS_LABELS = {
   cancelled:        'Cancelled',
   return_requested: 'Return requested — we will contact you',
   returned:         'Returned',
+  return_rejected:  'Return request declined',
 };
 
 const params = new URLSearchParams(location.search);

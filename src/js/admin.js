@@ -16,7 +16,7 @@ function stars(rating) {
 
 const ORDER_STATUSES = [
   'pending', 'confirmed', 'shipped', 'delivered',
-  'cancelled', 'return_requested', 'returned',
+  'cancelled', 'return_requested', 'returned', 'return_rejected',
 ];
 
 const REVENUE_STATUSES = new Set(['cancelled', 'return_requested', 'returned']);
@@ -272,11 +272,18 @@ if (ordersTable) {
               <td class="address-cell">${o.customer_address || '–'}</td>
               <td>${Number(o.total || 0).toLocaleString()}</td>
               <td>
-                <select class="status-select" data-id="${o.id}">
-                  ${ORDER_STATUSES.map(s =>
-                    `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`
-                  ).join('')}
-                </select>
+                ${o.status === 'return_requested' ? `
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                    <button class="button approve-return-btn" data-id="${o.id}" style="padding:4px 10px;font-size:0.8rem;background:#2e7d32;">Approve</button>
+                    <button class="button reject-return-btn" data-id="${o.id}" style="padding:4px 10px;font-size:0.8rem;background:#c62828;">Reject</button>
+                  </div>
+                ` : `
+                  <select class="status-select" data-id="${o.id}">
+                    ${ORDER_STATUSES.map(s =>
+                      `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`
+                    ).join('')}
+                  </select>
+                `}
               </td>
             </tr>
           `).join('')}
@@ -294,6 +301,34 @@ if (ordersTable) {
           alert('Failed to update status. Check Supabase UPDATE policy.');
         }
         sel.disabled = false;
+      });
+    });
+
+    async function handleReturnAction(btn, newStatus, label) {
+      btn.disabled = true;
+      btn.textContent = `${label}…`;
+      try {
+        await updateOrderStatus(btn.dataset.id, newStatus);
+        btn.textContent = `${label}done ✓`;
+        setTimeout(() => location.reload(), 1000);
+      } catch {
+        alert(`Failed to ${label.toLowerCase()} return.`);
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    }
+
+    ordersTable.querySelectorAll('.approve-return-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!confirm('Approve this return? Order will be marked as returned.')) return;
+        handleReturnAction(btn, 'returned', 'Approve');
+      });
+    });
+
+    ordersTable.querySelectorAll('.reject-return-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!confirm('Reject this return request?')) return;
+        handleReturnAction(btn, 'return_rejected', 'Reject');
       });
     });
   })();
