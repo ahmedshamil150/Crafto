@@ -217,7 +217,12 @@ GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO anon;
 GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO authenticated;
 
 -- =============================================
--- 10. Atomic checkout: validate stock → decrement → place order
+-- 10. Add discount_percent to products
+-- =============================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
+
+-- =============================================
+-- 11. Atomic checkout: validate stock → decrement → place order
 -- =============================================
 
 CREATE OR REPLACE FUNCTION place_order(

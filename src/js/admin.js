@@ -21,6 +21,8 @@ const ORDER_STATUSES = [
 
 const REVENUE_STATUSES = new Set(['cancelled', 'return_requested', 'returned']);
 
+const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters', 'Others'];
+
 function countStatus(orders, status) {
   return orders.filter(o => o.status === status).length;
 }
@@ -132,8 +134,14 @@ if (productsTable) {
           <label>Title *<input id="p-title" type="text" required /></label>
           <label>Description<textarea id="p-desc" rows="3"></textarea></label>
           <label>Price (PKR) *<input id="p-price" type="number" min="0" step="0.01" required /></label>
-          <label>Category<input id="p-category" type="text" placeholder="e.g. pottery, textiles" /></label>
+          <label>Category *
+            <select id="p-category" required>
+              <option value="">— Select —</option>
+              ${CATEGORIES.map(c => `<option value="${c.toLowerCase()}">${c}</option>`).join('')}
+            </select>
+          </label>
           <label>Stock<input id="p-stock" type="number" min="0" value="0" /></label>
+          <label>Discount (%)<input id="p-discount" type="number" min="0" max="100" value="0" /></label>
           <label>Image URL 1 *<input id="p-img1" type="url" placeholder="https://..." required /></label>
           <label>Image URL 2<input id="p-img2" type="url" placeholder="https://..." /></label>
           <label>Image URL 3<input id="p-img3" type="url" placeholder="https://..." /></label>
@@ -156,8 +164,9 @@ if (productsTable) {
     document.getElementById('p-title').value    = product?.title || '';
     document.getElementById('p-desc').value     = product?.description || '';
     document.getElementById('p-price').value    = product?.price || '';
-    document.getElementById('p-category').value = product?.category || '';
+    document.getElementById('p-category').value = product?.category?.toLowerCase() || '';
     document.getElementById('p-stock').value    = product?.stock ?? 0;
+    document.getElementById('p-discount').value = product?.discount_percent ?? 0;
     document.getElementById('p-img1').value     = product?.image_url || '';
     document.getElementById('p-img2').value     = product?.image_url_2 || '';
     document.getElementById('p-img3').value     = product?.image_url_3 || '';
@@ -177,11 +186,12 @@ if (productsTable) {
 
     const id = document.getElementById('p-id').value;
     const payload = {
-      title:       document.getElementById('p-title').value.trim(),
-      description: document.getElementById('p-desc').value.trim(),
-      price:       parseFloat(document.getElementById('p-price').value),
-      category:    document.getElementById('p-category').value.trim(),
-      stock:       parseInt(document.getElementById('p-stock').value) || 0,
+      title:           document.getElementById('p-title').value.trim(),
+      description:     document.getElementById('p-desc').value.trim(),
+      price:           parseFloat(document.getElementById('p-price').value),
+      category:        document.getElementById('p-category').value,
+      stock:           parseInt(document.getElementById('p-stock').value) || 0,
+      discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
       image_url:   document.getElementById('p-img1').value.trim(),
       image_url_2: document.getElementById('p-img2').value.trim() || null,
       image_url_3: document.getElementById('p-img3').value.trim() || null,
@@ -211,7 +221,7 @@ if (productsTable) {
       <table>
         <thead>
           <tr>
-            <th>Image</th><th>Title</th><th>Price (PKR)</th><th>Stock</th><th>Actions</th>
+            <th>Image</th><th>Title</th><th>Price (PKR)</th><th>Discount</th><th>Stock</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -220,6 +230,7 @@ if (productsTable) {
               <td><img src="${p.image_url || 'https://placehold.co/60x45?text=?'}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;" /></td>
               <td>${p.title}</td>
               <td>${Number(p.price).toLocaleString()}</td>
+              <td>${p.discount_percent ? `${p.discount_percent}%` : '–'}</td>
               <td>${p.stock ?? 0}</td>
               <td class="action-cell">
                 <button class="button edit-btn" data-id="${p.id}">Edit</button>

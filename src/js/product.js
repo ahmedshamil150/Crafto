@@ -2,8 +2,28 @@
 import { getProducts, getProductById, getReviews, createReview } from './api.js';
 import { updateCartBadge, showToast } from './main.js';
 
+const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
+
+function normalizeCat(cat) {
+  const c = (cat || '').trim().toLowerCase();
+  return CATEGORIES.find(k => k.toLowerCase() === c) ? c : 'others';
+}
+
+function discPrice(price, pct) {
+  const d = parseInt(pct) || 0;
+  return d > 0 ? price * (1 - d / 100) : price;
+}
+
+function hasDisc(pct) { return parseInt(pct) > 0; }
+
 const grid   = document.getElementById('product-grid');
 const detail = document.getElementById('product-detail');
+const tabsEl = document.getElementById('shop-tabs');
+
+let allProducts = [];
+let activeTab = 'all';
+let sortLow = false;
+let filterDisc = false;
 
 function esc(str) {
   const el = document.createElement('span');
@@ -22,28 +42,92 @@ function avgRating(reviews) {
   return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 }
 
-async function renderShop() {
-  if (!grid) return;
-  grid.innerHTML = '<p class="loading">Loading products…</p>';
-  const products = await getProducts();
-  if (!products.length) { grid.innerHTML = '<p>No products found.</p>'; return; }
-  grid.innerHTML = products.map(p => `
+function productCardHtml(p) {
+  const finalPrice = discPrice(p.price, p.discount_percent);
+  const onSale = hasDisc(p.discount_percent);
+  return `
     <div class="card">
       <a href="./product.html?id=${p.id}">
         <img src="${p.image_url || 'https://placehold.co/400x300?text=Crafto'}" alt="${p.title}" loading="lazy" />
       </a>
       <h3>${p.title}</h3>
       ${p.category ? `<span class="badge">${p.category}</span>` : ''}
-      <p class="price">PKR ${Number(p.price).toLocaleString()}</p>
+      <p class="price">
+        ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:0.85rem;margin-right:6px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+        PKR ${finalPrice.toLocaleString()}
+        ${onSale ? `<span class="disc-badge">-${p.discount_percent}%</span>` : ''}
+      </p>
       <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;">
         <a class="button button-outline" href="./product.html?id=${p.id}">View</a>
         <button class="button add-cart-btn"
-          data-id="${p.id}" data-title="${p.title}" data-price="${p.price}">Add to Cart</button>
+          data-id="${p.id}" data-title="${p.title}" data-price="${finalPrice}">Add to Cart</button>
       </div>
     </div>
-  `).join('');
+  `;
+}
 
+function renderTabs() {
+  if (!tabsEl) return;
+  const tabs = ['all', ...CATEGORIES.map(c => c.toLowerCase()), 'others'];
+  tabsEl.innerHTML = tabs.map(t => `
+    <button class="tab-btn${activeTab === t ? ' active' : ''}" data-tab="${t}">
+      ${t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+    </button>
+  `).join('');
+  tabsEl.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      renderTabs();
+      renderGrid();
+    });
+  });
+}
+
+function renderGrid() {
+  if (!grid) return;
+  let filtered = [...allProducts];
+
+  if (activeTab !== 'all') {
+    filtered = filtered.filter(p => normalizeCat(p.category) === activeTab);
+  }
+
+  if (filterDisc) {
+    filtered = filtered.filter(p => hasDisc(p.discount_percent));
+  }
+
+  if (sortLow) {
+    filtered.sort((a, b) => discPrice(a.price, a.discount_percent) - discPrice(b.price, b.discount_percent));
+  }
+
+  if (!filtered.length) {
+    grid.innerHTML = '<p class="loading">No products in this category.</p>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(productCardHtml).join('');
   grid.querySelectorAll('.add-cart-btn').forEach(btn => btn.addEventListener('click', addToCart));
+}
+
+async function renderShop() {
+  if (!grid) return;
+  grid.innerHTML = '<p class="loading">Loading products…</p>';
+  allProducts = await getProducts();
+  if (!allProducts.length) { grid.innerHTML = '<p>No products found.</p>'; return; }
+  renderTabs();
+  renderGrid();
+
+  document.getElementById('sort-price')?.addEventListener('click', () => {
+    sortLow = !sortLow;
+    document.getElementById('sort-price').classList.toggle('active', sortLow);
+    document.getElementById('sort-price').textContent = sortLow ? 'Price: High to Low' : 'Price: Low to High';
+    renderGrid();
+  });
+
+  document.getElementById('filter-discounted')?.addEventListener('click', () => {
+    filterDisc = !filterDisc;
+    document.getElementById('filter-discounted').classList.toggle('active', filterDisc);
+    renderGrid();
+  });
 }
 
 async function renderDetail() {
@@ -59,6 +143,9 @@ async function renderDetail() {
     .filter(Boolean);
   if (!images.length) images.push('https://placehold.co/600x450?text=Crafto');
 
+  const finalPrice = discPrice(p.price, p.discount_percent);
+  const onSale = hasDisc(p.discount_percent);
+
   detail.innerHTML = `
     <div class="product-detail-grid">
       <div class="product-gallery">
@@ -73,13 +160,18 @@ async function renderDetail() {
       <div class="product-info">
         <h2>${esc(p.title)}</h2>
         ${p.category ? `<span class="badge">${esc(p.category)}</span>` : ''}
+        ${onSale ? `<span class="disc-badge" style="font-size:0.85rem;margin-left:6px;">-${p.discount_percent}%</span>` : ''}
         <p class="product-desc">${esc(p.description || '')}</p>
-        <p class="price" style="font-size:1.6rem;">PKR ${Number(p.price).toLocaleString()}</p>
+        <p class="price" style="font-size:1.6rem;">
+          ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:1.1rem;margin-right:8px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+          PKR ${finalPrice.toLocaleString()}
+        </p>
+        ${onSale ? `<p style="color:#c62828;font-size:0.9rem;margin-top:-0.25rem;">You save ${p.discount_percent}%</p>` : ''}
         ${p.stock > 0
           ? `<p class="stock-ok">✓ In stock (${p.stock} available)</p>`
           : `<p class="stock-out">✗ Out of stock</p>`}
         <button class="button" id="add-to-cart"
-          data-id="${p.id}" data-title="${esc(p.title)}" data-price="${p.price}"
+          data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
           ${p.stock === 0 ? 'disabled' : ''} style="margin-top:1.25rem;width:100%;">
           Add to Cart
         </button>
