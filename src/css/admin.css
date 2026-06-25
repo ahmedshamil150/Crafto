@@ -215,7 +215,7 @@
   color: var(--admin-text);
 }
 
-.admin-table-wrap table.admin-table-wide { min-width: 720px; }
+.admin-table-wrap table.admin-table-wide { min-width: 760px; }
 .admin-table-wrap table.admin-table-reviews { min-width: 800px; }
 
 .admin-main th,
@@ -403,6 +403,11 @@
   margin-top: 1.25rem;
   justify-content: flex-end;
 }
+
+/* Order items expand */
+.toggle-items-btn:hover { background: #e0e0e0; }
+.items-detail-row td { font-size: 0.88rem; }
+.items-detail-row td > div:first-child { color: var(--admin-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* Empty / loading states */
 .admin-main > p,

@@ -257,20 +257,37 @@ if (ordersTable) {
   (async () => {
     const orders = await getOrders();
     if (!orders.length) { ordersTable.innerHTML = '<p>No orders yet.</p>'; return; }
+    function renderItems(items) {
+      const arr = Array.isArray(items) ? items : [];
+      if (!arr.length) return '<em>No items</em>';
+      return arr.map(i => `
+        <div style="display:flex;justify-content:space-between;padding:2px 0;">
+          <span>${esc(i.title)} × ${i.qty}</span>
+          <span>PKR ${(Number(i.price) * Number(i.qty)).toLocaleString()}</span>
+        </div>
+      `).join('');
+    }
+
     ordersTable.innerHTML = `
       <div class="admin-table-wrap">
       <table class="admin-table-wide">
         <thead>
-          <tr><th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th></tr>
+          <tr>
+            <th style="width:32px;"></th>
+            <th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th>
+          </tr>
         </thead>
         <tbody>
           ${orders.map(o => `
-            <tr>
+            <tr class="order-main-row" data-order-id="${o.id}">
+              <td style="text-align:center;">
+                <button class="toggle-items-btn" data-id="${o.id}" style="background:none;border:1px solid #aaa;border-radius:3px;cursor:pointer;padding:1px 6px;font-size:0.85rem;line-height:1.4;" title="Show items">+</button>
+              </td>
               <td>${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
               <td>${o.customer_name || '–'}</td>
               <td>${o.customer_phone || '–'}</td>
               <td class="address-cell">${o.customer_address || '–'}</td>
-              <td>${Number(o.total || 0).toLocaleString()}</td>
+              <td>PKR ${Number(o.total || 0).toLocaleString()}</td>
               <td>
                 ${o.status === 'return_requested' ? `
                   <div style="display:flex;gap:4px;flex-wrap:wrap;">
@@ -286,11 +303,29 @@ if (ordersTable) {
                 `}
               </td>
             </tr>
+            <tr class="items-detail-row" id="items-${CSS.escape(o.id)}" style="display:none;">
+              <td colspan="7" style="padding:0.75rem 1rem;background:#f9f9f9;">
+                <div style="font-weight:600;margin-bottom:0.5rem;">Order Items</div>
+                ${renderItems(o.items)}
+              </td>
+            </tr>
           `).join('')}
         </tbody>
       </table>
       </div>
     `;
+
+    ordersTable.querySelectorAll('.toggle-items-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const detailRow = document.getElementById(`items-${CSS.escape(id)}`);
+        if (!detailRow) return;
+        const isHidden = detailRow.style.display === 'none';
+        detailRow.style.display = isHidden ? 'table-row' : 'none';
+        btn.textContent = isHidden ? '−' : '+';
+        btn.title = isHidden ? 'Hide items' : 'Show items';
+      });
+    });
 
     ordersTable.querySelectorAll('.status-select').forEach(sel => {
       sel.addEventListener('change', async () => {
