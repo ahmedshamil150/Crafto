@@ -94,6 +94,32 @@ export async function trackOrder(orderId, phone) {
   return res.json();
 }
 
+export async function cancelOrder(orderId, phone) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cancel_order`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ p_order_id: orderId, p_phone: phone }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.details || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function requestReturn(orderId, phone) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/request_return`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ p_order_id: orderId, p_phone: phone }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.details || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function getReviews(productId) {
   if (!SUPABASE_URL) return [];
   const res = await fetch(

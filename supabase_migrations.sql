@@ -138,3 +138,80 @@ ALTER TABLE reviews
   ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT false;
 
 CREATE INDEX IF NOT EXISTS reviews_pinned_idx ON reviews(pinned DESC, created_at DESC);
+
+-- =============================================
+-- 9. Customer cancel & return (order ID + phone verified)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION cancel_order(p_order_id uuid, p_phone text)
+RETURNS TABLE (
+  id uuid,
+  created_at timestamptz,
+  customer_name text,
+  customer_phone text,
+  customer_address text,
+  items jsonb,
+  total numeric,
+  status text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  rec orders%ROWTYPE;
+BEGIN
+  UPDATE orders o
+  SET status = 'cancelled'
+  WHERE o.id = p_order_id
+    AND o.customer_phone = p_phone
+    AND o.status = 'pending'
+  RETURNING * INTO rec;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order cannot be cancelled. Only pending orders can be cancelled.';
+  END IF;
+
+  RETURN QUERY SELECT rec.id, rec.created_at, rec.customer_name, rec.customer_phone,
+                      rec.customer_address, rec.items, rec.total, rec.status;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION request_return(p_order_id uuid, p_phone text)
+RETURNS TABLE (
+  id uuid,
+  created_at timestamptz,
+  customer_name text,
+  customer_phone text,
+  customer_address text,
+  items jsonb,
+  total numeric,
+  status text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  rec orders%ROWTYPE;
+BEGIN
+  UPDATE orders o
+  SET status = 'return_requested'
+  WHERE o.id = p_order_id
+    AND o.customer_phone = p_phone
+    AND o.status IN ('confirmed', 'shipped', 'delivered')
+  RETURNING * INTO rec;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Return not available. You can return confirmed, shipped, or delivered orders only.';
+  END IF;
+
+  RETURN QUERY SELECT rec.id, rec.created_at, rec.customer_name, rec.customer_phone,
+                      rec.customer_address, rec.items, rec.total, rec.status;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO anon;
+GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO anon;
+GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO authenticated;

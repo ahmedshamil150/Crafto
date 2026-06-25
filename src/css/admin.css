@@ -65,6 +65,16 @@
 .status-shipped   { background: #cfe2ff; color: #084298; }
 .status-delivered { background: #d1e7dd; color: #0f5132; }
 .status-cancelled { background: #f8d7da; color: #842029; }
+.status-return_requested { background: #ffe0b2; color: #e65100; }
+.status-returned { background: #e1bee7; color: #6a1b9a; }
+
+/* Dashboard stat accents */
+.stat-pending h3   { color: #856404; }
+.stat-confirmed h3 { color: #0f5132; }
+.stat-shipped h3   { color: #084298; }
+.stat-delivered h3 { color: #0f5132; }
+.stat-cancelled h3 { color: #842029; }
+.stat-return h3    { color: #e65100; }
 
 /* Modal */
 .modal-overlay {

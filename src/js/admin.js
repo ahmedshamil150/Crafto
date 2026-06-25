@@ -14,6 +14,23 @@ function stars(rating) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
+const ORDER_STATUSES = [
+  'pending', 'confirmed', 'shipped', 'delivered',
+  'cancelled', 'return_requested', 'returned',
+];
+
+const REVENUE_STATUSES = new Set(['cancelled', 'return_requested', 'returned']);
+
+function countStatus(orders, status) {
+  return orders.filter(o => o.status === status).length;
+}
+
+function calcRevenue(orders) {
+  return orders
+    .filter(o => !REVENUE_STATUSES.has(o.status))
+    .reduce((s, o) => s + (Number(o.total) || 0), 0);
+}
+
 const ADMIN_USERS = {
   [import.meta.env.VITE_ADMIN_USER1 || 'admin1']: import.meta.env.VITE_ADMIN_PASS1 || 'pass1',
   [import.meta.env.VITE_ADMIN_USER2 || 'admin2']: import.meta.env.VITE_ADMIN_PASS2 || 'pass2',
@@ -50,11 +67,25 @@ document.getElementById('logout-btn')?.addEventListener('click', e => {
 // --- Dashboard stats ---
 if (document.getElementById('stat-products')) {
   (async () => {
-    const [products, orders] = await Promise.all([getProducts(), getOrders()]);
-    document.getElementById('stat-products').textContent = products.length;
-    document.getElementById('stat-orders').textContent = orders.filter(o => o.status === 'pending').length;
-    const revenue = orders.reduce((s, o) => s + (o.total || 0), 0);
-    document.getElementById('stat-revenue').textContent = `PKR ${revenue.toLocaleString()}`;
+    const [products, orders, reviews] = await Promise.all([
+      getProducts(), getOrders(), getAllReviews(),
+    ]);
+
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    set('stat-products', products.length);
+    set('stat-revenue', `PKR ${calcRevenue(orders).toLocaleString()}`);
+    set('stat-reviews', reviews.length);
+    set('stat-pending', countStatus(orders, 'pending'));
+    set('stat-confirmed', countStatus(orders, 'confirmed'));
+    set('stat-shipped', countStatus(orders, 'shipped'));
+    set('stat-delivered', countStatus(orders, 'delivered'));
+    set('stat-cancelled', countStatus(orders, 'cancelled'));
+    set('stat-return-requested', countStatus(orders, 'return_requested'));
+    set('stat-returned', countStatus(orders, 'returned'));
   })();
 }
 
@@ -209,8 +240,8 @@ if (ordersTable) {
               <td>${Number(o.total || 0).toLocaleString()}</td>
               <td>
                 <select class="status-select" data-id="${o.id}">
-                  ${['pending','confirmed','shipped','delivered','cancelled'].map(s =>
-                    `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`
+                  ${ORDER_STATUSES.map(s =>
+                    `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`
                   ).join('')}
                 </select>
               </td>
@@ -239,7 +270,7 @@ const revenueContent = document.getElementById('revenue-content');
 if (revenueContent) {
   (async () => {
     const orders = await getOrders();
-    const active = orders.filter(o => o.status !== 'cancelled');
+    const active = orders.filter(o => !REVENUE_STATUSES.has(o.status));
 
     const lines = [];
     const summary = new Map();
@@ -276,7 +307,7 @@ if (revenueContent) {
     revenueContent.innerHTML = `
       <div class="revenue-total-card">
         <h3>PKR ${grandTotal.toLocaleString()}</h3>
-        <p>Total revenue (${active.length} order${active.length === 1 ? '' : 's'}, cancelled excluded)</p>
+        <p>Total revenue (${active.length} order${active.length === 1 ? '' : 's'}, cancelled &amp; returns excluded)</p>
       </div>
 
       <h3 class="admin-subtitle">Sales Detail</h3>
