@@ -93,3 +93,25 @@ export async function trackOrder(orderId, phone) {
   }
   return res.json();
 }
+
+export async function getReviews(productId) {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=created_at.desc`,
+    { headers: headers() }
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createReview(review) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, {
+    method: 'POST',
+    headers: { ...headers(), 'Prefer': 'return=minimal' },
+    body: JSON.stringify(review),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+}

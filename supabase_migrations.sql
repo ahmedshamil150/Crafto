@@ -91,3 +91,41 @@ $$;
 
 GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO anon;
 GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO authenticated;
+
+-- =============================================
+-- 7. Product reviews
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL,
+  rating      INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment     TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS reviews_product_id_idx ON reviews(product_id);
+CREATE INDEX IF NOT EXISTS reviews_created_at_idx ON reviews(created_at DESC);
+
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read reviews" ON reviews;
+DROP POLICY IF EXISTS "Anyone can post reviews" ON reviews;
+
+CREATE POLICY "Anyone can read reviews"
+  ON reviews FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Anyone can post reviews"
+  ON reviews FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (
+    char_length(trim(author_name)) > 0
+    AND char_length(trim(comment)) >= 10
+    AND rating >= 1 AND rating <= 5
+  );
+
+GRANT SELECT, INSERT ON reviews TO anon;
+GRANT SELECT, INSERT ON reviews TO authenticated;
