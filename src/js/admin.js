@@ -303,7 +303,7 @@ if (ordersTable) {
                 `}
               </td>
             </tr>
-            <tr class="items-detail-row" id="items-${CSS.escape(o.id)}" style="display:none;">
+            <tr class="items-detail-row" id="items-${o.id}" style="display:none;">
               <td colspan="7" style="padding:0.75rem 1rem;background:#f9f9f9;">
                 <div style="font-weight:600;margin-bottom:0.5rem;">Order Items</div>
                 ${renderItems(o.items)}
@@ -318,7 +318,7 @@ if (ordersTable) {
     ordersTable.querySelectorAll('.toggle-items-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
-        const detailRow = document.getElementById(`items-${CSS.escape(id)}`);
+        const detailRow = document.getElementById(`items-${id}`);
         if (!detailRow) return;
         const isHidden = detailRow.style.display === 'none';
         detailRow.style.display = isHidden ? 'table-row' : 'none';
