@@ -72,8 +72,20 @@ export async function getOrders() {
 export async function createOrder(order) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
     method: 'POST',
-    headers: { ...headers(), 'Prefer': 'return=representation' },
+    headers: { ...headers(), 'Prefer': 'return=minimal' },
     body: JSON.stringify(order),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+}
+
+export async function trackOrder(orderId, phone) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_order_status`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ p_order_id: orderId, p_phone: phone }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

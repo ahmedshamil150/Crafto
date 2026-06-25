@@ -35,9 +35,12 @@ form?.addEventListener('submit', async e => {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Placing order…';
 
+  const orderId = crypto.randomUUID();
+  const phone   = document.getElementById('phone').value.trim();
   const order = {
+    id:               orderId,
     customer_name:    document.getElementById('name').value.trim(),
-    customer_phone:   document.getElementById('phone').value.trim(),
+    customer_phone:   phone,
     customer_address: document.getElementById('address').value.trim(),
     items:            cart,
     total:            cart.reduce((s, i) => s + i.price * i.qty, 0),
@@ -47,8 +50,9 @@ form?.addEventListener('submit', async e => {
   try {
     await createOrder(order);
     localStorage.removeItem('crafto_cart');
-    showToast('Order placed! We will contact you to confirm delivery.');
-    setTimeout(() => window.location.href = './index.html', 2000);
+    sessionStorage.setItem('crafto_track_phone', phone);
+    showToast('Order placed! Save your Order ID to track delivery.');
+    setTimeout(() => window.location.href = `./order-status.html?id=${orderId}`, 2000);
   } catch (err) {
     showToast(`Order failed: ${err.message}`, 'error');
     submitBtn.disabled = false;

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crafto – Product Detail</title>
-  <meta name="description" content="View details and purchase handcrafted products from Crafto.">
+  <title>Crafto – Track Order</title>
+  <meta name="description" content="Track your Crafto order status.">
   <link rel="stylesheet" href="./css/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
@@ -26,8 +26,19 @@
     </div>
   </header>
 
-  <main class="container section" id="product-detail">
-    <p class="loading">Loading product…</p>
+  <main class="container section" style="max-width:560px;">
+    <h2 class="section-title">Track Your Order</h2>
+    <p style="margin-bottom:1.5rem;color:#666;">Enter your Order ID and phone number to see delivery status.</p>
+    <form id="track-form" class="checkout-form">
+      <label>Order ID *
+        <input id="order-id" type="text" placeholder="e.g. a1b2c3d4-..." required />
+      </label>
+      <label>Phone Number *
+        <input id="phone" type="tel" placeholder="+92 300 0000000" required />
+      </label>
+      <button type="submit" class="button" style="width:100%;">Check Status</button>
+    </form>
+    <div id="track-result" style="margin-top:2rem;"></div>
   </main>
 
   <footer class="site-footer">
@@ -35,6 +46,6 @@
   </footer>
 
   <script type="module" src="./js/main.js"></script>
-  <script type="module" src="./js/product.js"></script>
+  <script type="module" src="./js/order-status.js"></script>
 </body>
 </html>

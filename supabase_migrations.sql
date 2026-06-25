@@ -47,13 +47,47 @@ UPDATE products SET
 WHERE title = 'Camel Bone Jewelry Box';
 
 -- =============================================
--- 5. Lock down orders RLS
+-- 5. Orders RLS — customers place orders; admin uses service key
 -- =============================================
+
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Anon can read orders" ON orders;
 DROP POLICY IF EXISTS "Anon can update order status" ON orders;
+DROP POLICY IF EXISTS "Anyone can place an order" ON orders;
+DROP POLICY IF EXISTS "Anon can insert orders" ON orders;
 
 CREATE POLICY "Anon can insert orders"
   ON orders FOR INSERT
   TO anon
   WITH CHECK (true);
+
+-- =============================================
+-- 6. Secure order tracking (order ID + phone must match)
+-- =============================================
+
+CREATE OR REPLACE FUNCTION get_order_status(p_order_id uuid, p_phone text)
+RETURNS TABLE (
+  id uuid,
+  created_at timestamptz,
+  customer_name text,
+  customer_phone text,
+  customer_address text,
+  items jsonb,
+  total numeric,
+  status text
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT id, created_at, customer_name, customer_phone, customer_address, items, total, status
+  FROM orders
+  WHERE id = p_order_id
+    AND customer_phone = p_phone
+  LIMIT 1;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO anon;
+GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO authenticated;
