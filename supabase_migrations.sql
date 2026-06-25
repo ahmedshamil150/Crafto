@@ -215,3 +215,59 @@ GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO anon;
 GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO anon;
 GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO authenticated;
+
+-- =============================================
+-- 10. Atomic checkout: validate stock → decrement → place order
+-- =============================================
+
+CREATE OR REPLACE FUNCTION place_order(
+  p_id               uuid,
+  p_customer_name    text,
+  p_customer_phone   text,
+  p_customer_address text,
+  p_items            jsonb,
+  p_total            numeric
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  item      jsonb;
+  prod_id   uuid;
+  prod_qty  int;
+  prod_rec  RECORD;
+BEGIN
+  FOR item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    prod_id  := (item->>'id')::uuid;
+    prod_qty := (item->>'qty')::int;
+
+    SELECT * INTO prod_rec
+    FROM products
+    WHERE id = prod_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Product not found: %', item->>'title';
+    END IF;
+
+    IF prod_rec.stock < prod_qty THEN
+      RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+        prod_rec.title, prod_rec.stock, prod_qty;
+    END IF;
+
+    UPDATE products
+    SET stock = stock - prod_qty
+    WHERE id = prod_id;
+  END LOOP;
+
+  INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status)
+  VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending');
+
+  RETURN jsonb_build_object('success', true, 'order_id', p_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric) TO anon;

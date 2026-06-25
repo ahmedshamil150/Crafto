@@ -94,6 +94,26 @@ export async function trackOrder(orderId, phone) {
   return res.json();
 }
 
+export async function placeOrder(order) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/place_order`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      p_id: order.id,
+      p_customer_name: order.customer_name,
+      p_customer_phone: order.customer_phone,
+      p_customer_address: order.customer_address,
+      p_items: order.items,
+      p_total: order.total,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function cancelOrder(orderId, phone) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/cancel_order`, {
     method: 'POST',

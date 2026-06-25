@@ -1,5 +1,5 @@
 // src/js/checkout.js
-import { createOrder } from './api.js';
+import { placeOrder } from './api.js';
 import { showToast } from './main.js';
 
 const form      = document.getElementById('checkout-form');
@@ -48,7 +48,7 @@ form?.addEventListener('submit', async e => {
   };
 
   try {
-    await createOrder(order);
+    await placeOrder(order);
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast('Order placed! Save your Order ID to track delivery.');
