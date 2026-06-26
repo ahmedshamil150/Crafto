@@ -345,6 +345,12 @@
 }
 .rating-stars { color: var(--color-accent); letter-spacing: 1px; white-space: nowrap; }
 
+/* Checkbox label (featured toggle) */
+.checkbox-label {
+  display: flex; align-items: center; gap: 0.5rem; font-weight: 400; cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] { width: auto; margin: 0; }
+
 /* Image upload */
 .img-upload-row { margin-top: 0.25rem; }
 .img-upload-row input[type="file"] {

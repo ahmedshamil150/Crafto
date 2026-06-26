@@ -139,9 +139,15 @@ function renderGrid() {
 async function renderShop() {
   if (!grid) return;
   grid.innerHTML = '<p class="loading">Loading products…</p>';
-  allProducts = await getProducts();
-  if (!allProducts.length) { grid.innerHTML = '<p>No products found.</p>'; return; }
-  renderTabs();
+
+  const isShop = document.getElementById('shop-tabs') !== null;
+  allProducts = isShop ? await getProducts() : await getProducts({ featured: true });
+
+  if (!allProducts.length) {
+    grid.innerHTML = isShop ? '<p>No products found.</p>' : '<p class="loading">No featured products yet — check back soon!</p>';
+    return;
+  }
+  if (isShop) renderTabs();
   renderGrid();
 
   const searchInput = document.getElementById('search-input');

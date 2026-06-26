@@ -12,11 +12,12 @@ function headers(useService = false) {
   };
 }
 
-export async function getProducts({ limit, offset } = {}) {
+export async function getProducts({ limit, offset, featured } = {}) {
   if (!SUPABASE_URL) return [];
   const params = new URLSearchParams({ order: 'created_at.desc' });
   if (limit) params.set('limit', limit);
   if (offset != null) params.set('offset', offset);
+  if (featured != null) params.set('featured', `eq.${featured}`);
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${params}`, { headers: headers() });
   if (!res.ok) return [];
   return res.json();

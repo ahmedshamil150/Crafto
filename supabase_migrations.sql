@@ -239,6 +239,11 @@ CREATE POLICY "Public can view product images"
 ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 
 -- =============================================
+-- 12. Add featured flag to products
+-- =============================================
+ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
+
+-- =============================================
 -- 12. Atomic checkout: validate stock → decrement → place order
 -- =============================================
 

@@ -142,6 +142,10 @@ if (productsTable) {
           </label>
           <label>Stock<input id="p-stock" type="number" min="0" value="0" /></label>
           <label>Discount (%)<input id="p-discount" type="number" min="0" max="100" value="0" /></label>
+          <label class="checkbox-label">
+            <input id="p-featured" type="checkbox" />
+            Featured product (shows on homepage)
+          </label>
           <label>Image 1 *
             <div class="img-upload-row">
               <input id="p-img1-file" type="file" accept="image/jpeg,image/png,image/webp" />
@@ -190,6 +194,7 @@ if (productsTable) {
     document.getElementById('p-category').value = product?.category?.toLowerCase() || '';
     document.getElementById('p-stock').value    = product?.stock ?? 0;
     document.getElementById('p-discount').value = product?.discount_percent ?? 0;
+    document.getElementById('p-featured').checked = product?.featured || false;
     document.getElementById('p-img1').value     = product?.image_url || '';
     document.getElementById('p-img2').value     = product?.image_url_2 || '';
     document.getElementById('p-img3').value     = product?.image_url_3 || '';
@@ -243,6 +248,7 @@ if (productsTable) {
         category:        document.getElementById('p-category').value,
         stock:           parseInt(document.getElementById('p-stock').value) || 0,
         discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
+        featured:        document.getElementById('p-featured').checked,
         image_url,
         image_url_2: image_url_2 || null,
         image_url_3: image_url_3 || null,
@@ -283,7 +289,7 @@ if (productsTable) {
       <table>
         <thead>
           <tr>
-            <th>Image</th><th>Title</th><th>Price (PKR)</th><th>Discount</th><th>Stock</th><th>Actions</th>
+            <th>Image</th><th>Title</th><th>Price (PKR)</th><th>Discount</th><th>Stock</th><th>Featured</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -294,6 +300,7 @@ if (productsTable) {
               <td>${Number(p.price).toLocaleString()}</td>
               <td>${p.discount_percent ? `${p.discount_percent}%` : '–'}</td>
               <td>${p.stock ?? 0}</td>
+              <td style="text-align:center;font-size:1.1rem;">${p.featured ? '⭐' : '–'}</td>
               <td class="action-cell">
                 <button class="button edit-btn" data-id="${p.id}">Edit</button>
                 <button class="button delete-btn" data-id="${p.id}" style="background:#c62828;">Delete</button>
