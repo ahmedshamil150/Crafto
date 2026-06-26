@@ -33,3 +33,14 @@ export function showToast(msg, type = 'success') {
   setTimeout(() => toast.classList.add('show'), 10);
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
 }
+
+function getCart() { return JSON.parse(localStorage.getItem('crafto_cart') || '[]'); }
+
+export function addToCart(id, title, price, qty = 1) {
+  const cart = getCart();
+  const existing = cart.find(i => i.id === id);
+  if (existing) { existing.qty += qty; }
+  else { cart.push({ id, title, price, qty }); }
+  localStorage.setItem('crafto_cart', JSON.stringify(cart));
+  updateCartBadge();
+}
