@@ -25,7 +25,7 @@ let activeTab = 'all';
 let sortLow = false;
 let filterDisc = false;
 let searchQuery = '';
-const DISPLAY_PAGE_SIZE = 12;
+const DISPLAY_PAGE_SIZE = 16;
 let visibleCount = DISPLAY_PAGE_SIZE;
 
 function esc(str) {
@@ -85,8 +85,8 @@ function renderTabs() {
   if (!tabsEl) return;
   const tabs = ['all', ...CATEGORIES.map(c => c.toLowerCase()), 'others'];
   tabsEl.innerHTML = tabs.map(t => `
-    <button class="tab-btn${activeTab === t ? ' active' : ''}" data-tab="${t}">
-      ${t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+    <button class="tab-btn px-5 py-2 rounded-full text-sm font-label-caps whitespace-nowrap transition-all duration-300 ${activeTab === t ? 'bg-deep-emerald text-white shadow-md' : 'bg-surface-container-high text-on-surface-variant hover:text-deep-emerald hover:bg-surface-container'}" data-tab="${t}">
+      ${t === 'all' ? 'All' : t === 'others' ? 'Other' : t.charAt(0).toUpperCase() + t.slice(1)}
     </button>
   `).join('');
   tabsEl.querySelectorAll('.tab-btn').forEach(btn => {
