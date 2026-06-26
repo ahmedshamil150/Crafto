@@ -253,6 +253,8 @@ async function renderDetail() {
         </form>
       </div>
     </section>
+
+    <section id="recommended" class="section" style="margin-top:2.5rem;"></section>
   `;
 
   detail.querySelectorAll('.thumb').forEach(thumb => {
@@ -266,6 +268,41 @@ async function renderDetail() {
   document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
   setupReviewForm(id);
   loadReviews(id);
+  loadRecommended(p.category, id);
+}
+
+async function loadRecommended(category, currentId) {
+  if (!category) return;
+  const recSection = document.getElementById('recommended');
+  if (!recSection) return;
+  recSection.innerHTML = '<p class="loading">Loading recommendations…</p>';
+  const products = await getProducts({ category, limit: 5 });
+  const filtered = products.filter(p => p.id !== currentId).slice(0, 4);
+  if (!filtered.length) { recSection.innerHTML = ''; return; }
+  recSection.innerHTML = `
+    <h3 class="section-title" style="margin-bottom:1rem;">You May Also Like</h3>
+    <div class="product-grid recommended-grid">
+      ${filtered.map(p => {
+        const fp = discPrice(p.price, p.discount_percent);
+        const os = hasDisc(p.discount_percent);
+        return `
+          <div class="product-card">
+            <a href="./product.html?id=${p.id}">
+              <img src="${p.image_url || 'https://placehold.co/600x450?text=Crafto'}" alt="${esc(p.title)}" loading="lazy" />
+              <div class="card-body">
+                <h4>${esc(p.title)}</h4>
+                ${os ? `<span class="disc-badge">-${p.discount_percent}%</span>` : ''}
+                <p class="price">
+                  ${os ? `<span style="text-decoration:line-through;color:#999;font-size:0.85rem;">PKR ${Number(p.price).toLocaleString()}</span> ` : ''}
+                  PKR ${fp.toLocaleString()}
+                </p>
+              </div>
+            </a>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
 function setupStarInput() {

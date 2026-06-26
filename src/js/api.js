@@ -12,12 +12,13 @@ function headers(useService = false) {
   };
 }
 
-export async function getProducts({ limit, offset, featured } = {}) {
+export async function getProducts({ limit, offset, featured, category } = {}) {
   if (!SUPABASE_URL) return [];
   const params = new URLSearchParams({ order: 'created_at.desc' });
   if (limit) params.set('limit', limit);
   if (offset != null) params.set('offset', offset);
   if (featured != null) params.set('featured', `eq.${featured}`);
+  if (category) params.set('category', `eq.${category}`);
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${params}`, { headers: headers() });
   if (!res.ok) return [];
   return res.json();

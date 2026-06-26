@@ -667,6 +667,71 @@ if (revenueContent) {
       </table>
       </div>
     `;
+
+    // --- Revenue page chart ---
+    const chartCanvas = document.getElementById('revenue-chart-canvas');
+    if (chartCanvas) {
+      let chartInstance = null;
+
+      function buildChartData(days) {
+        const labels = [];
+        const values = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        for (let i = days - 1; i >= 0; i--) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
+          const dayOrders = active.filter(o => {
+            const t = new Date(o.created_at).getTime();
+            return t >= d.getTime() && t < d.getTime() + 86400000;
+          });
+          values.push(dayOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
+        }
+        return { labels, values };
+      }
+
+      function renderChart(days) {
+        const { labels, values } = buildChartData(days);
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(chartCanvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Revenue (PKR)',
+              data: values,
+              backgroundColor: 'rgba(0, 96, 100, 0.6)',
+              borderColor: '#006064',
+              borderWidth: 1,
+              borderRadius: 4,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { callback: v => `PKR ${v.toLocaleString()}` } },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+      }
+
+      renderChart(7);
+
+      document.getElementById('revenue-chart-7d')?.addEventListener('click', () => {
+        document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
+        document.getElementById('revenue-chart-7d').classList.add('active');
+        renderChart(7);
+      });
+      document.getElementById('revenue-chart-30d')?.addEventListener('click', () => {
+        document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
+        document.getElementById('revenue-chart-30d').classList.add('active');
+        renderChart(30);
+      });
+    }
   })();
 }
 

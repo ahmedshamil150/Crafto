@@ -347,6 +347,10 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
   position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden;
 }
 
+.recommended-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem;
+}
+
 .button-location {
   width: 100%; margin-bottom: 0.5rem;
   background: #4a6fa5; color: #fff;

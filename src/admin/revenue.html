@@ -28,8 +28,16 @@
   </aside>
   <main class="admin-main">
     <h2>Revenue</h2>
+    <div class="chart-controls">
+      <button class="button chart-btn active" id="revenue-chart-7d">7 Days</button>
+      <button class="button chart-btn" id="revenue-chart-30d">30 Days</button>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="revenue-chart-canvas" height="280"></canvas>
+    </div>
     <div id="revenue-content"><p>Loading…</p></div>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script type="module" src="../js/admin.js"></script>
 </body>
 </html>
