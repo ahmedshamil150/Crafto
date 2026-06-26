@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crafto Admin – Hero Section</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="admin-body">
+  <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"></div>
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <h2>Crafto Admin</h2>
+    <nav>
+      <ul>
+        <li><a href="./dashboard.html">Dashboard</a></li>
+        <li><a href="./hero.html" class="active">Hero</a></li>
+        <li><a href="./products.html">Products</a></li>
+        <li><a href="./orders.html">Orders</a></li>
+        <li><a href="./revenue.html">Revenue</a></li>
+        <li><a href="./coupons.html">Coupons</a></li>
+        <li><a href="./reviews.html">Reviews</a></li>
+        <li><a href="../index.html">← Storefront</a></li>
+        <li><a href="#" id="logout-btn">Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <h2>Hero Section</h2>
+
+    <div class="admin-card" style="max-width:100%;margin-bottom:1.5rem;margin-top:1rem;">
+      <h3 style="margin-bottom:0.75rem;font-size:1rem;">Image Requirements</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead>
+          <tr style="background:#f7f8fa;">
+            <th style="padding:0.5rem 0.75rem;text-align:left;">Device</th>
+            <th style="padding:0.5rem 0.75rem;text-align:left;">Recommended Size</th>
+            <th style="padding:0.5rem 0.75rem;text-align:left;">Max File Size</th>
+            <th style="padding:0.5rem 0.75rem;text-align:left;">Aspect Ratio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">Desktop</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">1920 × 1000 px</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">2 MB</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">~1.92:1 landscape</td>
+          </tr>
+          <tr>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">Mobile</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">750 × 1334 px</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">2 MB</td>
+            <td style="padding:0.5rem 0.75rem;border-top:1px solid #e0e0e0;">~0.56:1 portrait</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:0.75rem;font-size:0.82rem;color:#666;line-height:1.5;">
+        The desktop image covers the full hero width. The mobile image is optional &mdash; if not provided, the desktop image will be used on all screens.
+        Upload <strong>JPEG</strong>, <strong>PNG</strong>, or <strong>WebP</strong> format.
+      </p>
+    </div>
+
+    <div id="hero-current" style="margin-bottom:1.5rem;"></div>
+
+    <div class="admin-card" style="max-width:100%;">
+      <h3 style="margin-bottom:1rem;font-size:1.05rem;">Change Hero Image</h3>
+      <form id="hero-form">
+        <label>Desktop Image *
+          <div class="img-upload-row">
+            <input id="hero-desktop-file" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <div class="img-preview" id="hero-desktop-preview"></div>
+            <input id="hero-desktop-url" type="hidden" />
+          </div>
+        </label>
+        <label>Mobile Image <span style="font-weight:400;color:#888;">(optional)</span>
+          <div class="img-upload-row">
+            <input id="hero-mobile-file" type="file" accept="image/jpeg,image/png,image/webp" />
+            <div class="img-preview" id="hero-mobile-preview"></div>
+            <input id="hero-mobile-url" type="hidden" />
+          </div>
+        </label>
+        <div class="modal-actions" style="margin-top:0.5rem;">
+          <button type="submit" class="button" id="hero-save-btn">Save Hero Image</button>
+        </div>
+        <p id="hero-form-msg" style="color:red;display:none;margin-top:0.75rem;"></p>
+      </form>
+    </div>
+  </main>
+  <script type="module" src="../js/admin.js"></script>
+</body>
+</html>

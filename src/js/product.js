@@ -36,8 +36,14 @@ function esc(str) {
 
 function renderStars(rating) {
   return Array.from({ length: 5 }, (_, i) =>
-    `<span class="star ${i < rating ? 'filled' : ''}">★</span>`
+    '<span class="' + (i < rating ? 'text-metallic-gold' : 'text-outline-variant') + '">★</span>'
   ).join('');
+}
+
+function starBtns() {
+  return [1, 2, 3, 4, 5].map(function(n) {
+    return '<button type="button" class="star-btn text-outline-variant hover:text-metallic-gold transition-colors cursor-pointer" data-rating="' + n + '" aria-label="' + n + ' star' + (n > 1 ? 's' : '') + '">★</button>';
+  }).join('');
 }
 
 function avgRating(reviews) {
@@ -232,34 +238,29 @@ async function renderDetail() {
             <span class="material-symbols-outlined text-sm">search</span> Zoom
           </div>
         </div>
-        ${images.length > 1 ? `
-        <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-          ${images.map((u, i) => `
-            <button class="thumb-btn flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${i === 0 ? 'border-deep-emerald ring-1 ring-deep-emerald' : 'border-outline-variant/50 hover:border-deep-emerald/50'}" data-src="${u}">
-              <img class="w-full h-full object-cover" src="${u}" alt="${esc(p.title)} ${i + 1}" />
-            </button>
-          `).join('')}
-        </div>` : ''}
+        ${images.length > 1 ? '<div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">' + images.map(function(u, i) {
+          return '<button class="thumb-btn flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ' + (i === 0 ? 'border-deep-emerald ring-1 ring-deep-emerald' : 'border-outline-variant/50 hover:border-deep-emerald/50') + '" data-src="' + u + '"><img class="w-full h-full object-cover" src="' + u + '" alt="' + esc(p.title) + ' ' + (i + 1) + '" /></button>';
+        }).join('') + '</div>' : ''}
       </div>
 
       <div class="fade-in-up" style="transition-delay:0.1s">
         <div class="flex flex-wrap items-center gap-3 mb-3">
-          ${p.category ? `<span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${esc(p.category)}</span>` : ''}
-          ${onSale ? `<span class="bg-red-100 text-red-700 text-[10px] font-label-caps px-2.5 py-0.5 rounded-full">-${p.discount_percent}%</span>` : ''}
+          ${p.category ? '<span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">' + esc(p.category) + '</span>' : ''}
+          ${onSale ? '<span class="bg-red-100 text-red-700 text-[10px] font-label-caps px-2.5 py-0.5 rounded-full">-' + p.discount_percent + '%</span>' : ''}
         </div>
         <h1 class="font-headline-lg text-headline-lg text-deep-emerald mb-4">${esc(p.title)}</h1>
         <p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">${esc(p.description || 'No description available.')}</p>
 
         <div class="mb-4">
           <span class="font-headline-md text-headline-md text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
-          ${onSale ? `<span class="text-on-surface-variant/60 line-through ml-3 text-lg">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+          ${onSale ? '<span class="text-on-surface-variant/60 line-through ml-3 text-lg">PKR ' + Number(p.price).toLocaleString() + '</span>' : ''}
         </div>
-        ${onSale ? `<p class="text-red-600 text-sm font-label-caps mb-4">You save ${p.discount_percent}%</p>` : ''}
+        ${onSale ? '<p class="text-red-600 text-sm font-label-caps mb-4">You save ' + p.discount_percent + '%</p>' : ''}
 
         <div class="mb-6">
           ${p.stock > 0
-            ? `<span class="inline-flex items-center gap-1.5 text-deep-emerald font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-deep-emerald"></span> In stock (${p.stock} available)</span>`
-            : `<span class="inline-flex items-center gap-1.5 text-red-600 font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-red-600"></span> Out of stock</span>`}
+            ? '<span class="inline-flex items-center gap-1.5 text-deep-emerald font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-deep-emerald"></span> In stock (' + p.stock + ' available)</span>'
+            : '<span class="inline-flex items-center gap-1.5 text-red-600 font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-red-600"></span> Out of stock</span>'}
         </div>
 
         <div class="flex gap-3 items-center">
@@ -293,7 +294,7 @@ async function renderDetail() {
           <div>
             <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5">Rating *</label>
             <div class="star-input flex gap-1 text-2xl" id="star-input">
-              ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn text-outline-variant hover:text-metallic-gold transition-colors cursor-pointer" data-rating="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}
+              ${starBtns()}
             </div>
             <input type="hidden" id="review-rating" required />
           </div>
@@ -349,34 +350,6 @@ async function renderDetail() {
   loadReviews(id);
   loadRecommended(p.category, id);
 }
-
-// --- Image Zoom ---
-window.zoomIn = function() {
-  document.getElementById('zoom-container')?.classList.add('zoomed');
-};
-window.zoomOut = function() {
-  document.getElementById('zoom-container')?.classList.remove('zoomed');
-};
-window.zoomMove = function(e) {
-  const container = document.getElementById('zoom-container');
-  if (!container || !container.classList.contains('zoomed')) return;
-  const rect = container.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-  container.querySelector('img').style.transformOrigin = `${x}% ${y}%`;
-};
-window.openLightbox = function() {
-  const src = document.getElementById('gallery-main')?.src;
-  if (!src) return;
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('zoom-lightbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
-};
-window.closeLightbox = function(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('zoom-lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-};
 
 async function loadRecommended(category, currentId) {
   if (!category) return;
@@ -524,6 +497,34 @@ async function loadReviews(productId) {
     </article>
   `).join('');
 }
+
+// --- Image Zoom (must be on window before renderDetail runs) ---
+window.zoomIn = function() {
+  const c = document.getElementById('zoom-container');
+  if (c) c.classList.add('zoomed');
+};
+window.zoomOut = function() {
+  const c = document.getElementById('zoom-container');
+  if (c) c.classList.remove('zoomed');
+};
+window.zoomMove = function(e) {
+  const c = document.getElementById('zoom-container');
+  if (!c || !c.classList.contains('zoomed')) return;
+  const r = c.getBoundingClientRect();
+  c.querySelector('img').style.transformOrigin = `${((e.clientX - r.left) / r.width * 100).toFixed(1)}% ${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`;
+};
+window.openLightbox = function() {
+  const src = document.getElementById('gallery-main')?.src;
+  if (!src) return;
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('zoom-lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeLightbox = function(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('zoom-lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+};
 
 renderShop();
 renderDetail();

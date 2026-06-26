@@ -3,6 +3,7 @@ import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
+  getActiveHeroImage, getHeroImages, setHeroImage,
 } from './api.js';
 
 function esc(str) {
@@ -880,5 +881,111 @@ if (couponsTable) {
       msg.style.display = 'block';
     }
     btn.disabled = false; btn.textContent = 'Create Coupon';
+  });
+}
+
+// --- Hero Section ---
+const heroCurrent = document.getElementById('hero-current');
+const heroForm = document.getElementById('hero-form');
+if (heroForm) {
+  function showHeroPreview(hero) {
+    if (!heroCurrent) return;
+    if (!hero) {
+      heroCurrent.innerHTML = '<div class="admin-card" style="max-width:100%;text-align:center;"><p>No hero image set yet. Upload one below.</p></div>';
+      return;
+    }
+    heroCurrent.innerHTML = `
+      <div class="admin-card" style="max-width:100%;">
+        <h3 style="margin-bottom:0.75rem;font-size:1rem;">Current Hero Image</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+          <div>
+            <p style="font-size:0.82rem;color:#666;margin-bottom:0.35rem;">Desktop</p>
+            <div style="border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;background:#f7f8fa;">
+              <img src="${hero.image_url}" alt="Desktop hero" style="display:block;width:100%;height:auto;aspect-ratio:192/100;object-fit:cover;" />
+            </div>
+          </div>
+          ${hero.mobile_image_url ? `
+          <div>
+            <p style="font-size:0.82rem;color:#666;margin-bottom:0.35rem;">Mobile</p>
+            <div style="border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;background:#f7f8fa;max-width:200px;">
+              <img src="${hero.mobile_image_url}" alt="Mobile hero" style="display:block;width:100%;height:auto;aspect-ratio:75/133;object-fit:cover;" />
+            </div>
+          </div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  (async () => {
+    const active = await getActiveHeroImage();
+    showHeroPreview(active);
+  })();
+
+  heroForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('hero-save-btn');
+    const msg = document.getElementById('hero-form-msg');
+    btn.disabled = true; btn.textContent = 'Saving…'; msg.style.display = 'none';
+
+    try {
+      const desktopFile = document.getElementById('hero-desktop-file');
+      const mobileFile = document.getElementById('hero-mobile-file');
+      const desktopHidden = document.getElementById('hero-desktop-url');
+      const mobileHidden = document.getElementById('hero-mobile-url');
+
+      if (desktopFile.files && desktopFile.files[0]) {
+        const file = desktopFile.files[0];
+        if (file.size > 2 * 1024 * 1024) throw new Error('Desktop image exceeds 2MB limit.');
+        desktopHidden.value = await uploadImage(file, 'hero');
+      }
+      if (mobileFile.files && mobileFile.files[0]) {
+        const file = mobileFile.files[0];
+        if (file.size > 2 * 1024 * 1024) throw new Error('Mobile image exceeds 2MB limit.');
+        mobileHidden.value = await uploadImage(file, 'hero');
+      }
+
+      if (!desktopHidden.value.trim()) throw new Error('Desktop image is required.');
+
+      await setHeroImage(desktopHidden.value.trim(), mobileHidden.value.trim() || null);
+
+      // Reset previews
+      document.getElementById('hero-desktop-preview').innerHTML = '';
+      document.getElementById('hero-mobile-preview').innerHTML = '';
+      desktopFile.value = '';
+      mobileFile.value = '';
+      desktopHidden.value = '';
+      mobileHidden.value = '';
+
+      // Refresh preview
+      const updated = await getActiveHeroImage();
+      showHeroPreview(updated);
+      msg.textContent = 'Hero image updated successfully!';
+      msg.style.color = '#0f5132';
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    } catch (err) {
+      msg.textContent = err.message || 'Failed to save hero image.';
+      msg.style.color = 'red';
+      msg.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Save Hero Image';
+  });
+
+  // File preview handler
+  ['hero-desktop-file', 'hero-mobile-file'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', function() {
+      const preview = document.getElementById(id.replace('-file', '-preview'));
+      const hidden = document.getElementById(id.replace('-file', '-url'));
+      if (this.files && this.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview" />`;
+        };
+        reader.readAsDataURL(this.files[0]);
+      } else {
+        preview.innerHTML = '';
+        hidden.value = '';
+      }
+    });
   });
 }

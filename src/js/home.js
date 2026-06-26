@@ -1,4 +1,4 @@
-import { getProducts } from './api.js';
+import { getProducts, getActiveHeroImage } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const grid = document.getElementById('home-product-grid');
@@ -73,6 +73,26 @@ async function loadHome() {
       icon.dataset.icon = isNow ? 'favorite' : 'favorite_border';
     });
   });
+
+  // Load hero image from DB
+  try {
+    const hero = await getActiveHeroImage();
+    if (hero) {
+      const bgEl = document.getElementById('hero-bg');
+      if (bgEl) {
+        bgEl.style.backgroundImage = `url('${hero.image_url}')`;
+        // Switch to mobile image on small screens if available
+        if (hero.mobile_image_url) {
+          const mq = window.matchMedia('(max-width: 767px)');
+          function updateHeroBg(e) {
+            bgEl.style.backgroundImage = e.matches ? `url('${hero.mobile_image_url}')` : `url('${hero.image_url}')`;
+          }
+          mq.addEventListener('change', updateHeroBg);
+          updateHeroBg(mq);
+        }
+      }
+    }
+  } catch (e) { /* fall back to default hero */ }
 
   // Show "Authentic" badge only for the first card
   if (products[0]) {

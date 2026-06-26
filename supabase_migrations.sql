@@ -375,3 +375,25 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION validate_coupon(TEXT) TO anon;
+
+-- =============================================
+-- 13. Hero images for homepage slider
+-- =============================================
+CREATE TABLE IF NOT EXISTS hero_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_url TEXT NOT NULL,
+  mobile_image_url TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE hero_images ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read active hero" ON hero_images
+  FOR SELECT USING (is_active = true);
+
+CREATE POLICY "Allow service all hero" ON hero_images
+  FOR ALL USING (true) WITH CHECK (true);
+
+GRANT SELECT ON hero_images TO anon;

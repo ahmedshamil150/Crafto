@@ -282,3 +282,40 @@ export async function setReviewPinned(id, pinned) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
+
+export async function getActiveHeroImage() {
+  if (!SUPABASE_URL) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/hero_images?is_active=eq.true&limit=1`, { headers: headers() });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data[0] || null;
+}
+
+export async function getHeroImages() {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/hero_images?order=created_at.desc`, { headers: headers(true) });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function setHeroImage(image_url, mobile_image_url) {
+  // Deactivate all existing rows, then insert the new one
+  const existing = await getHeroImages();
+  for (const h of existing) {
+    await fetch(`${SUPABASE_URL}/rest/v1/hero_images?id=eq.${h.id}`, {
+      method: 'PATCH',
+      headers: headers(true),
+      body: JSON.stringify({ is_active: false }),
+    });
+  }
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/hero_images`, {
+    method: 'POST',
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
+    body: JSON.stringify({ image_url, mobile_image_url: mobile_image_url || null, is_active: true }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
