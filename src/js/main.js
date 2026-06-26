@@ -79,7 +79,7 @@ export function updateCartBadge() {
   const count = cart.reduce((s, i) => s + i.qty, 0);
   document.querySelectorAll('.cart-badge').forEach(el => {
     el.textContent = count || '';
-    el.style.display = count ? 'inline' : 'none';
+    el.style.display = count ? '' : 'none';
   });
 }
 
@@ -131,7 +131,7 @@ export function updateWishlistBadge() {
   const count = getWishlist().length;
   document.querySelectorAll('.wishlist-badge').forEach(el => {
     el.textContent = count || '';
-    el.style.display = count ? 'inline' : 'none';
+    el.style.display = count ? '' : 'none';
   });
 }
 

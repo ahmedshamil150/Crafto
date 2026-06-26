@@ -21,24 +21,24 @@ function productCard(p) {
   const inWl = isInWishlist(p.id);
   return `
     <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
-      <div class="relative aspect-[4/5] overflow-hidden">
+      <div class="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
         <a href="./product.html?id=${p.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
         </a>
-        <button class="home-wishlist absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
+        <button class="home-wishlist absolute top-2 left-2 md:top-3 md:left-3 z-10 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
           data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}">
-          <span class="material-symbols-outlined text-sm" data-icon="${inWl ? 'favorite' : 'favorite_border'}">${inWl ? 'favorite' : 'favorite_border'}</span>
+          <span class="material-symbols-outlined text-xs md:text-sm" data-icon="${inWl ? 'favorite' : 'favorite_border'}">${inWl ? 'favorite' : 'favorite_border'}</span>
         </button>
-        <div class="absolute top-3 left-3 z-10 made-in-pakistan-badge text-white text-[10px] px-3 py-1 rounded-full font-label-caps uppercase tracking-wider" style="display:none;" id="badge-${p.id}">Authentic</div>
+        <div class="absolute top-2 right-2 md:top-3 md:right-3 z-10 made-in-pakistan-badge text-white text-[10px] px-3 py-1 rounded-full font-label-caps uppercase tracking-wider" style="display:none;" id="badge-${p.id}">Authentic</div>
       </div>
-      <div class="p-6 text-center">
-        <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase mb-2 block">${p.category ? esc(p.category) : 'Heritage'}</span>
-        <h3 class="font-headline-md text-headline-md text-charcoal-text mb-2">${esc(p.title)}</h3>
-        <p class="font-body-lg text-deep-emerald font-semibold">PKR ${fp.toLocaleString()}</p>
-        <div class="mt-4 flex gap-2 justify-center">
-          <button class="home-add-cart btn-shine px-6 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors"
+      <div class="p-3 md:p-6 text-center">
+        <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase mb-1 md:mb-2 block">${p.category ? esc(p.category) : 'Heritage'}</span>
+        <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mb-1 md:mb-2 leading-tight">${esc(p.title)}</h3>
+        <p class="text-sm md:text-body-lg text-deep-emerald font-semibold">PKR ${fp.toLocaleString()}</p>
+        <div class="mt-2 md:mt-4 flex flex-col md:flex-row gap-1.5 md:gap-2 justify-center">
+          <button class="home-add-cart btn-shine w-full md:w-auto px-4 md:px-6 py-1.5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}">Add to Cart</button>
-          <a href="./product.html?id=${p.id}" class="px-6 py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors">View Details</a>
+          <a href="./product.html?id=${p.id}" class="w-full md:w-auto px-4 md:px-6 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View Details</a>
         </div>
       </div>
     </div>

@@ -201,15 +201,15 @@ async function loadRecommended() {
           const inWl = isInWishlist(p.id);
           return `
             <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10 product-card">
-              <div class="relative aspect-[4/5] overflow-hidden">
+              <div class="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
                 <a href="./product.html?id=${p.id}">
                   <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
                 </a>
-                <button class="checkout-wishlist absolute top-3 left-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-all ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
+                <button class="checkout-wishlist absolute top-2 left-2 md:top-3 md:left-3 z-10 w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-all ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
                   data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}">
-                  <span class="material-symbols-outlined text-sm">${inWl ? 'favorite' : 'favorite_border'}</span>
+                  <span class="material-symbols-outlined text-xs md:text-sm">${inWl ? 'favorite' : 'favorite_border'}</span>
                 </button>
-                ${p.discount_percent ? `<span class="absolute top-3 right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-label-caps">-${p.discount_percent}%</span>` : ''}
+                ${p.discount_percent ? `<span class="absolute top-2 right-2 md:top-3 md:right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-label-caps">-${p.discount_percent}%</span>` : ''}
               </div>
               <div class="p-4 text-center">
                 <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc(p.category) : 'Heritage'}</span>
