@@ -1,48 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crafto – Shop</title>
-  <meta name="description" content="Browse Crafto's handcrafted home décor and handicrafts.">
-  <link rel="stylesheet" href="./css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Crafto – Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,400&amp;family=Hanken+Grotesk:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: { "charcoal-text": "#1A1A1A", "on-error": "#ffffff", "primary-fixed-dim": "#83d7b4", "surface-variant": "#e4e2dd", "on-background": "#1b1c19", "on-surface": "#1b1c19", "inverse-on-surface": "#f2f1ec", "truck-art-blue": "#0096FF", "on-primary-container": "#92e7c3", "error": "#ba1a1a", "tertiary-fixed-dim": "#ffb4aa", "inverse-primary": "#83d7b4", "surface-tint": "#046c50", "secondary-fixed": "#ffe088", "on-secondary": "#ffffff", "surface-dim": "#dbdad5", "on-secondary-fixed-variant": "#574500", "tertiary-fixed": "#ffdad5", "on-surface-variant": "#3f4944", "on-primary-fixed-variant": "#00513b", "on-tertiary-container": "#ffcac3", "secondary-container": "#fed65b", "deep-emerald": "#006A4E", "on-secondary-container": "#745c00", "surface-container": "#f0eee9", "outline-variant": "#bec9c2", "surface-container-lowest": "#ffffff", "on-tertiary-fixed-variant": "#75322b", "on-error-container": "#93000a", "on-tertiary-fixed": "#3c0705", "metallic-gold": "#D4AF37", "secondary-fixed-dim": "#e9c349", "primary-container": "#006a4e", "outline": "#6f7a73", "on-secondary-fixed": "#241a00", "on-primary": "#ffffff", "surface-bright": "#fbf9f4", "tertiary": "#74302a", "truck-art-orange": "#FF8C00", "surface-container-high": "#eae8e3", "on-tertiary": "#ffffff", "cream-canvas": "#F9F7F2", "secondary": "#735c00", "surface-container-highest": "#e4e2dd", "background": "#fbf9f4", "primary-fixed": "#9ef4d0", "surface-container-low": "#f5f3ee", "on-primary-fixed": "#002116", "error-container": "#ffdad6", "tertiary-container": "#91473f", "inverse-surface": "#30312e", "primary": "#00503a", "surface": "#fbf9f4" },
+    borderRadius: { DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem" },
+    spacing: { "stack-sm": "0.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "stack-md": "1.5rem", "margin-desktop": "5rem", "section-gap": "4rem" },
+    fontFamily: { "headline-lg": ["Bodoni Moda"], "display-hero-mobile": ["Bodoni Moda"], "headline-md": ["Bodoni Moda"], "body-lg": ["Hanken Grotesk"], "display-hero": ["Bodoni Moda"], "body-md": ["Hanken Grotesk"], "label-caps": ["Hanken Grotesk"] },
+    fontSize: { "headline-lg": ["32px", { lineHeight: "1.3", fontWeight: "600" }], "display-hero-mobile": ["32px", { lineHeight: "1.2", fontWeight: "700" }], "headline-md": ["24px", { lineHeight: "1.4", fontWeight: "600" }], "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }], "display-hero": ["48px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }], "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }], "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.1em", fontWeight: "700" }] }
+  } }
+};
+</script>
+<style>.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 </head>
-<body>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a href="./index.html" class="logo">Crafto</a>
-      <button class="burger" id="burger" aria-label="Menu">&#9776;</button>
-      <nav id="nav-menu">
-        <ul>
-          <li><a href="./index.html">Home</a></li>
-          <li><a href="./shop.html">Shop</a></li>
-          <li><a href="./about.html">About</a></li>
-          <li><a href="./contact.html">Contact</a></li>
-          <li><a href="./order-status.html">Track Order</a></li>
-          <li><a href="./cart.html">Cart <span class="cart-badge"></span></a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+<body class="bg-cream-canvas text-charcoal-text font-body-md selection:bg-metallic-gold/30">
 
-  <main class="container section">
-    <h2 class="section-title">Shop</h2>
-    <div class="shop-tabs" id="shop-tabs"></div>
-    <div class="shop-controls" id="shop-controls">
-      <input type="search" id="search-input" class="shop-search" placeholder="Search products…" autocomplete="off" />
-      <button class="filter-btn active" data-filter="all" id="sort-price">Price: Low to High</button>
-      <button class="filter-btn" data-filter="discounted" id="filter-discounted">Discounted Only</button>
-    </div>
-    <div class="grid" id="product-grid"></div>
-    <div id="load-more-wrap" style="text-align:center;margin-top:2rem;"></div>
-  </main>
+<header class="fixed top-0 w-full z-50 bg-cream-canvas shadow-sm">
+<nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
+<div class="flex items-center gap-4">
+<button class="md:hidden active:scale-95 transition-transform" id="burger"><span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span></button>
+<a href="./index.html" class="font-headline-lg text-headline-lg text-deep-emerald tracking-tight">Crafto</a>
+</div>
+<div class="hidden md:flex gap-8 items-center" id="nav-menu">
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./index.html">Home</a>
+<a class="font-label-caps text-label-caps text-metallic-gold transition-colors" href="./shop.html">Shop</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./about.html">About</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./contact.html">Contact</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./order-status.html">Track Order</a>
+</div>
+<div class="flex items-center gap-4">
+<a href="./wishlist.html" class="relative text-deep-emerald"><span class="material-symbols-outlined" data-icon="favorite">favorite</span><span class="wishlist-badge absolute -top-1 -right-1 bg-metallic-gold text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center" style="display:none;">0</span></a>
+<a href="./cart.html" class="relative text-deep-emerald"><span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span><span class="cart-badge absolute -top-1 -right-1 bg-metallic-gold text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center" style="display:none;">0</span></a>
+</div>
+</nav>
+</header>
 
-  <footer class="site-footer">
-    <p>&copy; 2026 Crafto. All rights reserved.</p>
-  </footer>
+<main class="pt-24 pb-20 overflow-x-hidden">
+<!-- Hero -->
+<section class="px-margin-mobile md:px-margin-desktop mb-8 text-center max-w-[1200px] mx-auto">
+<div class="mb-4 inline-block px-4 py-1 rounded-full border border-metallic-gold/30 bg-metallic-gold/5">
+<span class="text-label-caps font-label-caps text-metallic-gold">Premium Heritage Selection</span>
+</div>
+<h2 class="font-display-hero text-display-hero-mobile md:text-display-hero text-deep-emerald mb-stack-md leading-tight">Discover Pakistani Artistry</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">A curated journey through the masterfully crafted textiles, ceramics, and woodwork of Pakistan's finest artisans.</p>
+</section>
 
-  <script type="module" src="./js/main.js"></script>
-  <script type="module" src="./js/product.js"></script>
+<!-- Controls Row -->
+<section class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop mb-6">
+<div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+<input type="search" id="search-input" class="w-full md:w-72 px-4 py-2.5 rounded-full border border-outline-variant bg-white text-sm focus:outline-none focus:border-deep-emerald transition-colors" placeholder="Search products…" autocomplete="off" />
+<div class="flex gap-2">
+<button class="filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:border-deep-emerald hover:text-deep-emerald transition-colors" id="sort-price">Price: Low to High</button>
+<button class="filter-btn px-4 py-2 rounded-full border border-outline-variant text-sm text-on-surface-variant hover:border-deep-emerald hover:text-deep-emerald transition-colors" id="filter-discounted">Discounted Only</button>
+</div>
+</div>
+</section>
+
+<!-- Category Tabs -->
+<section class="sticky top-20 z-40 bg-cream-canvas/80 backdrop-blur-md py-3 border-y border-outline-variant/10">
+<div class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="shop-tabs"></div>
+</div>
+</section>
+
+<!-- Product Grid -->
+<section class="max-w-[1200px] mx-auto px-margin-mobile md:px-margin-desktop mt-8">
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-gutter" id="product-grid"></div>
+<div id="load-more-wrap" class="text-center mt-10"></div>
+</section>
+</main>
+
+<footer class="bg-surface-container-low border-t border-outline-variant/20 py-8 mt-12">
+<div class="container mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<p class="font-body-md text-on-surface-variant/70 text-sm">&copy; 2026 Crafto. Authentic Craftsmanship from Pakistan.</p>
+</div>
+</footer>
+
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-full bg-surface-container shadow-[0_-4px_12px_rgba(0,106,78,0.08)] border-t border-outline-variant/10">
+<div class="flex justify-around items-center h-16 px-2">
+<a href="./index.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined" data-icon="home">home</span><span class="font-label-caps text-[10px] uppercase">Home</span></a>
+<a href="./shop.html" class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90"><span class="material-symbols-outlined" data-icon="grid_view" data-weight="fill">grid_view</span><span class="font-label-caps text-[10px] uppercase">Shop</span></a>
+<a href="./wishlist.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined" data-icon="favorite">favorite</span><span class="font-label-caps text-[10px] uppercase">Wishlist</span></a>
+<a href="./order-status.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span><span class="font-label-caps text-[10px] uppercase">Orders</span></a>
+</div>
+</nav>
+
+<div id="toast-container"></div>
+<script type="module" src="./js/main.js"></script>
+<script type="module" src="./js/product.js"></script>
 </body>
 </html>

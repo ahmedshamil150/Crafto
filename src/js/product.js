@@ -1,6 +1,6 @@
 // src/js/product.js
 import { getProducts, getProductById, getReviews, createReview } from './api.js';
-import { updateCartBadge, showToast, isInWishlist, toggleWishlist } from './main.js';
+import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } from './main.js';
 
 const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
 
@@ -48,22 +48,34 @@ function avgRating(reviews) {
 function productCardHtml(p) {
   const finalPrice = discPrice(p.price, p.discount_percent);
   const onSale = hasDisc(p.discount_percent);
+  const img = p.image_url || 'https://placehold.co/600x450?text=Crafto';
+  const inWl = isInWishlist(p.id);
   return `
-    <div class="card">
-      <a href="./product.html?id=${p.id}">
-        <img src="${p.image_url || 'https://placehold.co/400x300?text=Crafto'}" alt="${p.title}" loading="lazy" />
-      </a>
-      <h3>${p.title}</h3>
-      ${p.category ? `<span class="badge">${p.category}</span>` : ''}
-      <p class="price">
-        ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:0.85rem;margin-right:6px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
-        PKR ${finalPrice.toLocaleString()}
-        ${onSale ? `<span class="disc-badge">-${p.discount_percent}%</span>` : ''}
-      </p>
-      <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;">
-        <a class="button button-outline" href="./product.html?id=${p.id}">View</a>
-        <button class="button add-cart-btn"
-          data-id="${p.id}" data-title="${p.title}" data-price="${finalPrice}">Add to Cart</button>
+    <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
+      <div class="relative aspect-[4/5] overflow-hidden">
+        <a href="./product.html?id=${p.id}">
+          <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
+        </a>
+        <button class="shop-wishlist absolute top-3 left-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
+          data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${img}">
+          <span class="material-symbols-outlined text-sm" data-icon="${inWl ? 'favorite' : 'favorite_border'}">${inWl ? 'favorite' : 'favorite_border'}</span>
+        </button>
+        ${onSale ? `<div class="absolute top-3 right-3 z-10 bg-deep-emerald text-white text-[10px] px-2.5 py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
+      </div>
+      <div class="p-5 text-center">
+        <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(p.category) : 'Heritage'}</span>
+        <a href="./product.html?id=${p.id}">
+          <h3 class="font-headline-md text-headline-md text-charcoal-text mt-1 mb-2 hover:text-deep-emerald transition-colors">${esc(p.title)}</h3>
+        </a>
+        <p class="font-body-lg font-semibold">
+          ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:0.9rem;font-weight:400;margin-right:6px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+          <span class="text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
+        </p>
+        <div class="mt-4 flex gap-2 justify-center">
+          <button class="shop-add-cart px-5 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95"
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}">Add to Cart</button>
+          <a href="./product.html?id=${p.id}" class="px-5 py-2 border border-deep-emerald text-deep-emerald rounded-full font-label-caps text-[10px] hover:bg-deep-emerald hover:text-white transition-colors">View</a>
+        </div>
       </div>
     </div>
   `;
@@ -120,7 +132,23 @@ function renderGrid() {
 
   const page = filtered.slice(0, visibleCount);
   grid.innerHTML = page.map(productCardHtml).join('');
-  grid.querySelectorAll('.add-cart-btn').forEach(btn => btn.addEventListener('click', addToCart));
+  grid.querySelectorAll('.shop-add-cart').forEach(btn => {
+    btn.addEventListener('click', function() {
+      addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price));
+      showToast(`${this.dataset.title} added to cart!`);
+    });
+  });
+  grid.querySelectorAll('.shop-wishlist').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const { id, title, price, image } = this.dataset;
+      toggleWishlist(id, title, price, image);
+      const icon = this.querySelector('.material-symbols-outlined');
+      const inWl = isInWishlist(id);
+      this.classList.toggle('text-red-500', inWl);
+      this.classList.toggle('text-on-surface-variant', !inWl);
+      icon.textContent = inWl ? 'favorite' : 'favorite_border';
+    });
+  });
 
   const wrap = document.getElementById('load-more-wrap');
   if (wrap) {
@@ -271,7 +299,10 @@ async function renderDetail() {
     });
   });
 
-  document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
+  document.getElementById('add-to-cart')?.addEventListener('click', function() {
+    addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price));
+    showToast(`${this.dataset.title} added to cart!`);
+  });
   document.getElementById('detail-wishlist')?.addEventListener('click', function() {
     const { id, title, price, image } = this.dataset;
     toggleWishlist(id, title, price, image);
@@ -424,17 +455,6 @@ async function loadReviews(productId) {
       <p class="review-comment">${esc(r.comment)}</p>
     </article>
   `).join('');
-}
-
-function addToCart(e) {
-  const { id, title, price } = e.target.dataset;
-  const cart = JSON.parse(localStorage.getItem('crafto_cart') || '[]');
-  const existing = cart.find(i => i.id === id);
-  if (existing) existing.qty++;
-  else cart.push({ id, title, price: Number(price), qty: 1 });
-  localStorage.setItem('crafto_cart', JSON.stringify(cart));
-  updateCartBadge();
-  showToast(`${title} added to cart!`);
 }
 
 renderShop();
