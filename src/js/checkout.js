@@ -105,6 +105,7 @@ form?.addEventListener('submit', async e => {
 
   const orderId = crypto.randomUUID();
   const phone   = document.getElementById('phone').value.trim();
+  const email   = document.getElementById('email').value.trim();
   const total   = Math.max(0, calcSubtotal() - couponDiscount);
   const order = {
     id:               orderId,
@@ -118,6 +119,20 @@ form?.addEventListener('submit', async e => {
 
   try {
     await placeOrder(order, appliedCoupon);
+    fetch('https://formsubmit.co/ajax/craftostore.pk@gmail.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `New Order #${orderId.slice(0, 8)}`,
+        name: order.customer_name,
+        email,
+        phone: order.customer_phone,
+        address: order.customer_address,
+        items: cart.map(i => `${i.title} × ${i.qty}`).join(', '),
+        total: `PKR ${total.toLocaleString()}`,
+        coupon: appliedCoupon || 'None',
+      }),
+    }).catch(() => {});
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast('Order placed! Save your Order ID to track delivery.');
