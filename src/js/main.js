@@ -1,10 +1,17 @@
 // src/js/main.js
 
-// --- Loading Screen ---
+// --- Loading Screen (once per session) ---
 let ready = false;
 let minTime = false;
 
+if (sessionStorage.getItem('crafto_splash_shown')) {
+  document.getElementById('loading-left')?.remove();
+  document.getElementById('loading-right')?.remove();
+  document.getElementById('loading-content')?.remove();
+}
+
 function openDoors() {
+  sessionStorage.setItem('crafto_splash_shown', '1');
   const left = document.getElementById('loading-left');
   const right = document.getElementById('loading-right');
   const content = document.getElementById('loading-content');
