@@ -208,9 +208,9 @@ async function renderShop() {
 async function renderDetail() {
   if (!detail) return;
   const id = new URLSearchParams(location.search).get('id');
-  if (!id) { detail.innerHTML = '<p>Product not found.</p>'; return; }
+  if (!id) { detail.innerHTML = '<p class="text-center text-on-surface-variant py-20">Product not found.</p>'; return; }
   const p = await getProductById(id);
-  if (!p) { detail.innerHTML = '<p>Product not found.</p>'; return; }
+  if (!p) { detail.innerHTML = '<p class="text-center text-on-surface-variant py-20">Product not found.</p>'; return; }
 
   const images = [p.image_url, p.image_url_2, p.image_url_3]
     .filter(Boolean)
@@ -222,80 +222,112 @@ async function renderDetail() {
   const onSale = hasDisc(p.discount_percent);
 
   detail.innerHTML = `
-    <div class="product-detail-grid">
-      <div class="product-gallery">
-        <img id="gallery-main" src="${images[0]}" alt="${esc(p.title)}" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-12 mb-section-gap">
+      <div class="fade-in-up">
+        <div class="relative overflow-hidden rounded-xl bg-surface-container-low mb-4 cursor-zoom-in group" id="zoom-container"
+          onmousemove="zoomMove(event)" onmouseenter="zoomIn()" onmouseleave="zoomOut()" onclick="openLightbox()">
+          <img id="gallery-main" class="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-[2.5]" src="${images[0]}" alt="${esc(p.title)}" />
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none"></div>
+          <div class="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1 text-[10px] font-label-caps text-on-surface-variant flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <span class="material-symbols-outlined text-sm">search</span> Zoom
+          </div>
+        </div>
         ${images.length > 1 ? `
-        <div class="gallery-thumbs">
+        <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
           ${images.map((u, i) => `
-            <img src="${u}" alt="${esc(p.title)} ${i + 1}" class="thumb ${i === 0 ? 'active' : ''}" data-src="${u}" />
+            <button class="thumb-btn flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${i === 0 ? 'border-deep-emerald ring-1 ring-deep-emerald' : 'border-outline-variant/50 hover:border-deep-emerald/50'}" data-src="${u}">
+              <img class="w-full h-full object-cover" src="${u}" alt="${esc(p.title)} ${i + 1}" />
+            </button>
           `).join('')}
         </div>` : ''}
       </div>
-      <div class="product-info">
-        <h2>${esc(p.title)}</h2>
-        ${p.category ? `<span class="badge">${esc(p.category)}</span>` : ''}
-        ${onSale ? `<span class="disc-badge" style="font-size:0.85rem;margin-left:6px;">-${p.discount_percent}%</span>` : ''}
-        <p class="product-desc">${esc(p.description || '')}</p>
-        <p class="price" style="font-size:1.6rem;">
-          ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:1.1rem;margin-right:8px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
-          PKR ${finalPrice.toLocaleString()}
-        </p>
-        ${onSale ? `<p style="color:#c62828;font-size:0.9rem;margin-top:-0.25rem;">You save ${p.discount_percent}%</p>` : ''}
-        ${p.stock > 0
-          ? `<p class="stock-ok">✓ In stock (${p.stock} available)</p>`
-          : `<p class="stock-out">✗ Out of stock</p>`}
-        <div style="display:flex;gap:0.5rem;margin-top:1.25rem;">
-        <button class="button" id="add-to-cart"
-          data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
-          ${p.stock === 0 ? 'disabled' : ''} style="flex:1;">
-          Add to Cart
-        </button>
-        <button class="button" id="detail-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${images[0]}"
-          style="width:48px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:2px solid var(--color-primary);color:var(--color-primary);${isInWishlist(p.id) ? 'background:var(--color-primary);color:#fff;' : ''}">
-          <span class="material-symbols-outlined" style="font-size:1.3rem;">${isInWishlist(p.id) ? 'favorite' : 'favorite_border'}</span>
-        </button>
+
+      <div class="fade-in-up" style="transition-delay:0.1s">
+        <div class="flex flex-wrap items-center gap-3 mb-3">
+          ${p.category ? `<span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${esc(p.category)}</span>` : ''}
+          ${onSale ? `<span class="bg-red-100 text-red-700 text-[10px] font-label-caps px-2.5 py-0.5 rounded-full">-${p.discount_percent}%</span>` : ''}
+        </div>
+        <h1 class="font-headline-lg text-headline-lg text-deep-emerald mb-4">${esc(p.title)}</h1>
+        <p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">${esc(p.description || 'No description available.')}</p>
+
+        <div class="mb-4">
+          <span class="font-headline-md text-headline-md text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
+          ${onSale ? `<span class="text-on-surface-variant/60 line-through ml-3 text-lg">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+        </div>
+        ${onSale ? `<p class="text-red-600 text-sm font-label-caps mb-4">You save ${p.discount_percent}%</p>` : ''}
+
+        <div class="mb-6">
+          ${p.stock > 0
+            ? `<span class="inline-flex items-center gap-1.5 text-deep-emerald font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-deep-emerald"></span> In stock (${p.stock} available)</span>`
+            : `<span class="inline-flex items-center gap-1.5 text-red-600 font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-red-600"></span> Out of stock</span>`}
+        </div>
+
+        <div class="flex gap-3 items-center">
+          <button class="btn-shine flex-1 px-8 py-3 bg-deep-emerald text-white rounded-full font-label-caps text-xs uppercase tracking-widest hover:bg-primary transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed" id="add-to-cart"
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
+            ${p.stock === 0 ? 'disabled' : ''}>
+            <span class="material-symbols-outlined text-base align-middle mr-1.5">shopping_bag</span> Add to Cart
+          </button>
+          <button id="detail-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${images[0]}"
+            class="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-90 ${isInWishlist(p.id) ? 'bg-deep-emerald border-deep-emerald text-white' : 'border-deep-emerald text-deep-emerald hover:bg-deep-emerald/5'}"
+            aria-label="Toggle wishlist">
+            <span class="material-symbols-outlined" style="font-size:1.3rem;">${isInWishlist(p.id) ? 'favorite' : 'favorite_border'}</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <section class="reviews-section">
-      <h3 class="section-title">Customer Reviews</h3>
-      <div id="reviews-summary" class="reviews-summary"></div>
-      <div id="reviews-list"><p class="loading">Loading reviews…</p></div>
+    <section class="mb-section-gap fade-in">
+      <h2 class="font-headline-md text-headline-md text-deep-emerald mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-1/2 after:h-0.5 after:bg-metallic-gold">Customer Reviews</h2>
+      <div id="reviews-summary" class="flex items-center gap-3 mb-4"></div>
+      <div id="reviews-list" class="space-y-4 mb-8"></div>
 
-      <div class="review-form-box">
-        <h4>Write a Review</h4>
-        <form id="review-form" class="checkout-form">
-          <label>Your Name *
-            <input id="review-name" type="text" placeholder="Your name" required maxlength="80" />
-          </label>
-          <label>Rating *
-            <div class="star-input" id="star-input">
-              ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn" data-rating="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}
+      <div class="bg-surface-container-low rounded-xl p-6 md:p-8 border border-outline-variant/10">
+        <h3 class="font-headline-md text-headline-md text-deep-emerald mb-4">Write a Review</h3>
+        <form id="review-form" class="space-y-4 max-w-lg">
+          <div>
+            <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5" for="review-name">Your Name *</label>
+            <input id="review-name" type="text" placeholder="Your name" required maxlength="80"
+              class="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-white text-sm focus:outline-none focus:border-deep-emerald transition-colors" />
+          </div>
+          <div>
+            <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5">Rating *</label>
+            <div class="star-input flex gap-1 text-2xl" id="star-input">
+              ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="star-btn text-outline-variant hover:text-metallic-gold transition-colors cursor-pointer" data-rating="${n}" aria-label="${n} star${n > 1 ? 's' : ''}">★</button>`).join('')}
             </div>
             <input type="hidden" id="review-rating" required />
-          </label>
-          <label>Your Review *
-            <textarea id="review-comment" rows="4" placeholder="Share your experience with this product…" required minlength="10" maxlength="1000"></textarea>
-          </label>
-          <div class="honeypot" aria-hidden="true">
+          </div>
+          <div>
+            <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5" for="review-comment">Your Review *</label>
+            <textarea id="review-comment" rows="4" placeholder="Share your experience with this product…" required minlength="10" maxlength="1000"
+              class="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-white text-sm focus:outline-none focus:border-deep-emerald transition-colors resize-y"></textarea>
+          </div>
+          <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden;">
             <label for="hp-review-website">Leave this empty</label>
             <input id="hp-review-website" name="website" type="text" tabindex="-1" autocomplete="off" />
           </div>
-          <button type="submit" class="button">Submit Review</button>
+          <button type="submit" class="btn-shine px-8 py-2.5 bg-deep-emerald text-white rounded-full font-label-caps text-xs uppercase tracking-widest hover:bg-primary transition-all active:scale-[0.97]">Submit Review</button>
         </form>
       </div>
     </section>
 
-    <section id="recommended" class="section" style="margin-top:2.5rem;"></section>
+    <section id="recommended" class="mt-8"></section>
+
+    <div id="zoom-lightbox" class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 p-4" onclick="closeLightbox(event)">
+      <button class="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors text-2xl" onclick="closeLightbox()">✕</button>
+      <img id="lightbox-img" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" src="" alt="Zoomed view" />
+    </div>
   `;
 
-  detail.querySelectorAll('.thumb').forEach(thumb => {
-    thumb.addEventListener('click', () => {
-      document.getElementById('gallery-main').src = thumb.dataset.src;
-      detail.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-      thumb.classList.add('active');
+  detail.querySelectorAll('.thumb-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('gallery-main').src = btn.dataset.src;
+      detail.querySelectorAll('.thumb-btn').forEach(t => {
+        t.classList.remove('border-deep-emerald', 'ring-1', 'ring-deep-emerald');
+        t.classList.add('border-outline-variant/50');
+      });
+      btn.classList.remove('border-outline-variant/50');
+      btn.classList.add('border-deep-emerald', 'ring-1', 'ring-deep-emerald');
     });
   });
 
@@ -307,8 +339,10 @@ async function renderDetail() {
     const { id, title, price, image } = this.dataset;
     toggleWishlist(id, title, price, image);
     const inWl = isInWishlist(id);
-    this.style.background = inWl ? 'var(--color-primary)' : 'transparent';
-    this.style.color = inWl ? '#fff' : 'var(--color-primary)';
+    this.classList.toggle('bg-deep-emerald', inWl);
+    this.classList.toggle('border-deep-emerald', inWl);
+    this.classList.toggle('text-white', inWl);
+    this.classList.toggle('text-deep-emerald', !inWl);
     this.querySelector('.material-symbols-outlined').textContent = inWl ? 'favorite' : 'favorite_border';
   });
   setupReviewForm(id);
@@ -316,36 +350,66 @@ async function renderDetail() {
   loadRecommended(p.category, id);
 }
 
+// --- Image Zoom ---
+window.zoomIn = function() {
+  document.getElementById('zoom-container')?.classList.add('zoomed');
+};
+window.zoomOut = function() {
+  document.getElementById('zoom-container')?.classList.remove('zoomed');
+};
+window.zoomMove = function(e) {
+  const container = document.getElementById('zoom-container');
+  if (!container || !container.classList.contains('zoomed')) return;
+  const rect = container.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+  container.querySelector('img').style.transformOrigin = `${x}% ${y}%`;
+};
+window.openLightbox = function() {
+  const src = document.getElementById('gallery-main')?.src;
+  if (!src) return;
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('zoom-lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeLightbox = function(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('zoom-lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
 async function loadRecommended(category, currentId) {
   if (!category) return;
   const recSection = document.getElementById('recommended');
   if (!recSection) return;
-  recSection.innerHTML = '<p class="loading">Loading recommendations…</p>';
+  recSection.innerHTML = '<p class="text-center text-on-surface-variant py-8 text-sm">Loading recommendations…</p>';
   const products = await getProducts({ category, limit: 5 });
   const filtered = products.filter(p => p.id !== currentId).slice(0, 4);
   if (!filtered.length) { recSection.innerHTML = ''; return; }
   recSection.innerHTML = `
-    <h3 class="section-title" style="margin-bottom:1rem;">You May Also Like</h3>
-    <div class="product-grid recommended-grid">
+    <h2 class="font-headline-md text-headline-md text-deep-emerald mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-1/2 after:h-0.5 after:bg-metallic-gold">You May Also Like</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter stagger">
       ${filtered.map(p => {
         const fp = discPrice(p.price, p.discount_percent);
         const os = hasDisc(p.discount_percent);
         const inWl = isInWishlist(p.id);
         const img = p.image_url || 'https://placehold.co/600x450?text=Crafto';
         return `
-          <div class="product-card" style="position:relative;">
-            <button class="rec-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}"
-              style="position:absolute;top:8px;right:8px;z-index:2;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.1);transition:transform 0.2s;color:${inWl ? '#c62828' : '#666'};">
-              <span class="material-symbols-outlined" style="font-size:1.1rem;">${inWl ? 'favorite' : 'favorite_border'}</span>
+          <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10 product-card">
+            <button class="rec-wishlist absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
+              data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}">
+              <span class="material-symbols-outlined text-sm">${inWl ? 'favorite' : 'favorite_border'}</span>
             </button>
+            ${os ? `<div class="absolute top-3 left-3 z-10 bg-deep-emerald text-white text-[10px] px-2.5 py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
             <a href="./product.html?id=${p.id}">
-              <img src="${img}" alt="${esc(p.title)}" loading="lazy" />
-              <div class="card-body">
-                <h4>${esc(p.title)}</h4>
-                ${os ? `<span class="disc-badge">-${p.discount_percent}%</span>` : ''}
-                <p class="price">
-                  ${os ? `<span style="text-decoration:line-through;color:#999;font-size:0.85rem;">PKR ${Number(p.price).toLocaleString()}</span> ` : ''}
-                  PKR ${fp.toLocaleString()}
+              <div class="relative aspect-[4/5] overflow-hidden">
+                <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
+              </div>
+              <div class="p-4 text-center">
+                <h3 class="font-headline-md text-headline-md text-charcoal-text hover:text-deep-emerald transition-colors text-lg">${esc(p.title)}</h3>
+                <p class="font-body-md font-semibold mt-1">
+                  ${os ? `<span class="text-on-surface-variant/50 line-through text-sm mr-1">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
+                  <span class="text-deep-emerald">PKR ${fp.toLocaleString()}</span>
                 </p>
               </div>
             </a>
@@ -360,7 +424,8 @@ async function loadRecommended(category, currentId) {
       const { id, title, price, image } = this.dataset;
       toggleWishlist(id, title, price, image);
       const inWl = isInWishlist(id);
-      this.style.color = inWl ? '#c62828' : '#666';
+      this.classList.toggle('text-red-500', inWl);
+      this.classList.toggle('text-on-surface-variant', !inWl);
       this.querySelector('.material-symbols-outlined').textContent = inWl ? 'favorite' : 'favorite_border';
     });
   });
@@ -433,10 +498,10 @@ async function loadReviews(productId) {
 
   if (summaryEl) {
     summaryEl.innerHTML = reviews.length
-      ? `<div class="stars">${renderStars(Math.round(avg))}</div>
-         <span class="reviews-avg">${avg.toFixed(1)} out of 5</span>
-         <span class="reviews-count">(${reviews.length} review${reviews.length === 1 ? '' : 's'})</span>`
-      : '<p class="reviews-empty">No reviews yet — be the first!</p>';
+      ? `<div class="flex items-center gap-2 text-metallic-gold text-lg">${renderStars(Math.round(avg))}</div>
+         <span class="text-deep-emerald font-label-caps text-sm">${avg.toFixed(1)} out of 5</span>
+         <span class="text-on-surface-variant/60 text-sm">(${reviews.length} review${reviews.length === 1 ? '' : 's'})</span>`
+      : '<p class="text-on-surface-variant/60 text-sm">No reviews yet — be the first!</p>';
   }
 
   if (!reviews.length) {
@@ -445,14 +510,17 @@ async function loadReviews(productId) {
   }
 
   listEl.innerHTML = reviews.map(r => `
-    <article class="review-card ${r.pinned ? 'review-pinned' : ''}">
-      <div class="review-header">
-        <strong>${esc(r.author_name)}</strong>
-        <span class="stars">${renderStars(r.rating)}</span>
+    <article class="bg-white rounded-xl p-5 border border-outline-variant/10 shadow-sm ${r.pinned ? 'ring-1 ring-metallic-gold/20 bg-gradient-to-r from-metallic-gold/[0.03] to-transparent' : ''}">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-deep-emerald/10 flex items-center justify-center text-deep-emerald font-label-caps text-sm font-bold">${esc(r.author_name).charAt(0).toUpperCase()}</div>
+          <strong class="font-label-caps text-xs text-charcoal-text">${esc(r.author_name)}</strong>
+        </div>
+        <span class="text-metallic-gold text-sm flex gap-0.5">${renderStars(r.rating)}</span>
       </div>
-      ${r.pinned ? '<span class="badge pinned-badge">Pinned</span>' : ''}
-      <time class="review-date">${new Date(r.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
-      <p class="review-comment">${esc(r.comment)}</p>
+      ${r.pinned ? '<span class="inline-block text-[10px] font-label-caps text-metallic-gold uppercase tracking-wider bg-metallic-gold/10 px-2 py-0.5 rounded mb-2">★ Pinned Review</span>' : ''}
+      <time class="text-on-surface-variant/50 text-xs block mb-2">${new Date(r.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })}</time>
+      <p class="text-sm text-on-surface-variant leading-relaxed">${esc(r.comment)}</p>
     </article>
   `).join('');
 }
