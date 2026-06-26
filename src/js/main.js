@@ -50,6 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   burger?.addEventListener('click', () => toggleNav());
   navOverlay?.addEventListener('click', () => toggleNav(false));
+  navMenu?.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => toggleNav(false));
+  });
 
   // Scroll-triggered animations
   const observer = new IntersectionObserver((entries) => {

@@ -18,7 +18,7 @@
         <button class="md:hidden active:scale-95 transition-transform" id="burger"><span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span></button>
         <a href="./index.html" class="font-headline-lg text-headline-lg text-deep-emerald tracking-tight">Crafto</a>
       </div>
-      <div class="hidden md:flex gap-8 items-center" id="nav-menu">
+      <div class="md:flex gap-8 items-center" id="nav-menu">
         <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./index.html">Home</a>
         <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./shop.html">Shop</a>
         <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./about.html">About</a>
@@ -31,7 +31,7 @@
       </div>
     </nav>
   </header><div id="nav-overlay"></div>
-  <main class="pt-28 pb-24 fade-in">
+  <main class="pt-28 pb-4 md:pb-0 fade-in">
     <section class="container mx-auto px-margin-mobile md:px-margin-desktop fade-in-up">
       <div class="flex items-center gap-3 mb-6">
         <span class="w-10 h-10 rounded-full bg-deep-emerald/10 flex items-center justify-center text-deep-emerald"><span class="material-symbols-outlined">receipt_long</span></span>
@@ -104,15 +104,6 @@
       </div>
     </div>
   </footer>
-
-  <nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-full bg-surface-container shadow-[0_-4px_12px_rgba(0,106,78,0.08)] border-t border-outline-variant/10">
-    <div class="flex justify-around items-center h-16 px-2">
-      <a href="./index.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined">home</span><span class="font-label-caps text-[10px] uppercase">Home</span></a>
-      <a href="./shop.html" class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90"><span class="material-symbols-outlined" data-weight="fill">grid_view</span><span class="font-label-caps text-[10px] uppercase">Shop</span></a>
-      <a href="./wishlist.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined">favorite</span><span class="font-label-caps text-[10px] uppercase">Wishlist</span></a>
-      <a href="./order-status.html" class="flex flex-col items-center justify-center text-on-surface-variant active:scale-90"><span class="material-symbols-outlined">receipt_long</span><span class="font-label-caps text-[10px] uppercase">Orders</span></a>
-    </div>
-  </nav>
 
   <script type="module" src="./js/main.js"></script>
   <script type="module" src="./js/order-status.js"></script>
