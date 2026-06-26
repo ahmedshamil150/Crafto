@@ -63,9 +63,9 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
   background: linear-gradient(135deg, #006A4E, #00503a);
   box-shadow: 0 4px 10px rgba(0, 106, 78, 0.2);
 }
-</style>
+@media(max-width:767px){#nav-menu{position:fixed;top:0;left:0;width:280px;height:100dvh;background:var(--cream-canvas,#F9F7F2);z-index:60;padding:5rem 2rem 2rem;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.1);display:flex!important;flex-direction:column;gap:1.5rem}#nav-menu.open{transform:translateX(0)}#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;opacity:0;pointer-events:none;transition:opacity .3s ease}#nav-overlay.open{opacity:1;pointer-events:auto}body.nav-open{overflow:hidden!important}}</style>
 </head>
-<body class="bg-cream-canvas text-charcoal-text font-body-md selection:bg-metallic-gold selection:text-white">
+<body class="bg-cream-canvas text-charcoal-text font-body-md selection:bg-metallic-gold selection:text-white overflow-x-hidden">
 
 <header class="bg-cream-canvas dark:bg-surface shadow-sm fixed top-0 w-full z-50">
 <nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
@@ -94,9 +94,7 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
 </a>
 </div>
 </nav>
-</header>
-
-<main class="pt-20">
+</header><div id="nav-overlay"></div><main class="pt-20 pb-4 md:pb-0">
 <!-- Hero Section -->
 <section class="relative h-[80vh] md:h-[90vh] flex items-center overflow-hidden">
 <div class="absolute inset-0 z-0">
@@ -104,14 +102,14 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
 <div class="absolute inset-0 bg-black/30 md:bg-black/20"></div>
 </div>
 <div class="container mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
-<div class="max-w-2xl bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-xl border border-white/20">
+<div class="max-w-2xl bg-white/10 backdrop-blur-md p-8 md:p-12 rounded-xl border border-white/20 fade-in-up">
 <h1 class="font-display-hero-mobile md:font-display-hero text-display-hero-mobile md:text-display-hero text-white mb-stack-md">
 Handcrafted with Love, <br class="hidden md:block"/> Made in Pakistan
 </h1>
-<p class="font-body-lg text-body-lg text-white/90 mb-section-gap max-w-lg">
+<p class="font-body-lg text-body-lg text-white/90 mb-section-gap max-w-lg fade-in-up" style="transition-delay:0.15s">
 Discover unique home décor and handicrafts meticulously created by skilled Pakistani artisans who preserve centuries of heritage.
 </p>
-<a class="inline-block bg-deep-emerald text-white px-10 py-4 rounded-full font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary transition-all shadow-xl hover:shadow-deep-emerald/20 active:scale-95" href="./shop.html">Shop Now</a>
+<a class="inline-block bg-deep-emerald text-white px-10 py-4 rounded-full font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary transition-all shadow-xl hover:shadow-deep-emerald/20 active:scale-95 btn-shine fade-in-up" style="transition-delay:0.25s" href="./shop.html">Shop Now</a>
 </div>
 </div>
 <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
@@ -130,22 +128,22 @@ Discover unique home décor and handicrafts meticulously created by skilled Paki
 </div>
 
 <!-- Featured Collections -->
-<section class="py-section-gap container mx-auto px-margin-mobile md:px-margin-desktop">
-<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+<section class="py-section-gap container mx-auto px-margin-mobile md:px-margin-desktop fade-in">
+<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-4 fade-in-up">
 <div>
 <h2 class="font-headline-lg text-headline-lg text-deep-emerald">Featured Collections</h2>
 <div class="h-1 w-24 bg-metallic-gold mt-2"></div>
 </div>
 <a class="font-label-caps text-label-caps text-deep-emerald hover:text-metallic-gold transition-all border-b border-metallic-gold/30 pb-1" href="./shop.html">View All Products</a>
 </div>
-<div id="home-product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter"></div>
+<div id="home-product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter stagger"></div>
 </section>
 
 <!-- Trust Features -->
-<section class="py-section-gap bg-surface-container-low relative overflow-hidden">
+<section class="py-section-gap bg-surface-container-low relative overflow-hidden fade-in">
 <div class="pattern-bg absolute inset-0"></div>
 <div class="container mx-auto px-margin-mobile md:px-margin-desktop relative z-10">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md md:gap-gutter text-center">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-md md:gap-gutter text-center stagger">
 <div class="flex flex-col items-center p-8 bg-white/50 backdrop-blur-sm rounded-2xl border border-white/50 hover:bg-white transition-all duration-300">
 <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-deep-emerald mb-6">
 <span class="material-symbols-outlined text-4xl" data-icon="vaping_rooms" style="font-variation-settings: 'FILL' 1;">vaping_rooms</span>
@@ -172,7 +170,7 @@ Discover unique home décor and handicrafts meticulously created by skilled Paki
 </section>
 
 <!-- Artisans Section -->
-<section class="py-section-gap container mx-auto px-margin-mobile md:px-margin-desktop">
+<section class="py-section-gap container mx-auto px-margin-mobile md:px-margin-desktop fade-in">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md items-center bg-deep-emerald rounded-[2rem] overflow-hidden text-white p-8 md:p-16">
 <div>
 <h2 class="font-display-hero-mobile md:font-headline-lg text-display-hero-mobile md:text-headline-lg mb-stack-md">Preserving Centuries of Skill</h2>

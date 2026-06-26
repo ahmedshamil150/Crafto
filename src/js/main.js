@@ -6,7 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mobile nav toggle
   const burger = document.getElementById('burger');
   const navMenu = document.getElementById('nav-menu');
-  burger?.addEventListener('click', () => navMenu?.classList.toggle('open'));
+  const navOverlay = document.getElementById('nav-overlay');
+  function toggleNav(force) {
+    const isOpen = navMenu?.classList.toggle('open', force);
+    navOverlay?.classList.toggle('open', isOpen);
+    document.body.classList.toggle('nav-open', isOpen);
+  }
+  burger?.addEventListener('click', () => toggleNav());
+  navOverlay?.addEventListener('click', () => toggleNav(false));
 
   // Scroll-triggered animations
   const observer = new IntersectionObserver((entries) => {
