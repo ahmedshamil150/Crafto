@@ -431,6 +431,21 @@
 .page-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .page-info { font-size: 0.9rem; color: var(--admin-muted); }
 
+/* Revenue chart */
+.chart-wrap {
+  background: var(--admin-surface); border-radius: 12px; padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07); margin-bottom: 1.5rem;
+}
+.chart-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.chart-btn {
+  padding: 0.35rem 0.85rem; border-radius: 6px; border: 1px solid var(--admin-border);
+  background: var(--admin-surface); color: var(--admin-text); cursor: pointer;
+  font-family: var(--font-body); font-size: 0.82rem; transition: background 0.2s, color 0.2s;
+}
+.chart-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.chart-btn:hover:not(.active) { border-color: var(--color-primary); color: var(--color-primary); }
+.chart-wrap canvas { max-height: 260px; max-width: 100%; }
+
 /* Order items expand */
 .toggle-items-btn:hover { background: #e0e0e0; }
 .items-detail-row td { font-size: 0.88rem; }

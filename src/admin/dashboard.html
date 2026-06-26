@@ -75,7 +75,17 @@
         <p>Returned</p>
       </div>
     </div>
+
+    <h3 class="admin-subtitle">Revenue Trend</h3>
+    <div class="chart-wrap">
+      <div class="chart-controls">
+        <button class="chart-btn active" data-days="7" id="chart-7d">7 Days</button>
+        <button class="chart-btn" data-days="30" id="chart-30d">30 Days</button>
+      </div>
+      <canvas id="revenue-chart"></canvas>
+    </div>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script type="module" src="../js/admin.js"></script>
 </body>
 </html>
