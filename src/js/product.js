@@ -22,7 +22,7 @@ const tabsEl = document.getElementById('shop-tabs');
 
 let allProducts = [];
 let activeTab = 'all';
-let sortLow = false;
+let sortState = ''; // '', 'asc', 'desc'
 let filterDisc = false;
 let searchQuery = '';
 const DISPLAY_PAGE_SIZE = 16;
@@ -58,7 +58,7 @@ function productCardHtml(p) {
   const inWl = isInWishlist(p.id);
   return `
     <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
-      <div class="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
+      <div class="relative aspect-[4/5] overflow-hidden">
         <a href="./product.html?id=${p.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
         </a>
@@ -69,7 +69,7 @@ function productCardHtml(p) {
         ${onSale ? `<div class="absolute top-2 right-2 md:top-3 md:right-3 z-10 bg-deep-emerald text-white text-[10px] px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
       </div>
       <div class="p-3 md:p-5 text-center">
-        <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(p.category) : 'Heritage'}</span>
+        <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(p.category) : 'Heritage'}</span>
         <a href="./product.html?id=${p.id}">
           <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mt-1 mb-1 md:mb-2 hover:text-deep-emerald transition-colors leading-tight">${esc(p.title)}</h3>
         </a>
@@ -77,10 +77,10 @@ function productCardHtml(p) {
           ${onSale ? `<span style="text-decoration:line-through;color:#999;font-size:0.75rem;font-weight:400;margin-right:4px;">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
           <span class="text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
         </p>
-        <div class="mt-2 md:mt-4 flex flex-col md:flex-row gap-1.5 md:gap-2 justify-center">
-          <button class="shop-add-cart btn-shine w-full md:w-auto px-4 md:px-5 py-1.5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95"
-            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}">Add to Cart</button>
-          <a href="./product.html?id=${p.id}" class="w-full md:w-auto px-4 md:px-5 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald rounded-full font-label-caps text-[10px] hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
+        <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
+          <a href="./product.html?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-5 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
+          <button class="shop-add-cart btn-shine flex-none md:flex-none w-8 h-8 md:w-auto md:px-5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95 flex items-center justify-center"
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
         </div>
       </div>
     </div>
@@ -125,8 +125,10 @@ function renderGrid() {
     filtered = filtered.filter(p => hasDisc(p.discount_percent));
   }
 
-  if (sortLow) {
+  if (sortState === 'asc') {
     filtered.sort((a, b) => discPrice(a.price, a.discount_percent) - discPrice(b.price, b.discount_percent));
+  } else if (sortState === 'desc') {
+    filtered.sort((a, b) => discPrice(b.price, b.discount_percent) - discPrice(a.price, a.discount_percent));
   }
 
   if (!filtered.length) {
@@ -196,10 +198,14 @@ async function renderShop() {
   }
 
   document.getElementById('sort-price')?.addEventListener('click', () => {
-    sortLow = !sortLow;
+    if (sortState === '') sortState = 'asc';
+    else if (sortState === 'asc') sortState = 'desc';
+    else sortState = '';
     visibleCount = DISPLAY_PAGE_SIZE;
-    document.getElementById('sort-price').classList.toggle('active', sortLow);
-    document.getElementById('sort-price').textContent = sortLow ? 'Price: High to Low' : 'Price: Low to High';
+    const btn = document.getElementById('sort-price');
+    btn.classList.toggle('active', sortState !== '');
+    const labels = { '': 'Price', asc: 'Price ↑', desc: 'Price ↓' };
+    btn.textContent = labels[sortState] || 'Price';
     renderGrid();
   });
 
@@ -380,7 +386,7 @@ async function loadRecommended(category, currentId) {
             </button>
             ${os ? `<div class="absolute top-2 left-2 md:top-3 md:left-3 z-10 bg-deep-emerald text-white text-[10px] px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
             <a href="./product.html?id=${p.id}">
-              <div class="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
+              <div class="relative aspect-[4/5] overflow-hidden">
                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
               </div>
               <div class="p-2 md:p-4 text-center">

@@ -201,7 +201,7 @@ async function loadRecommended() {
           const inWl = isInWishlist(p.id);
           return `
             <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10 product-card">
-              <div class="relative aspect-[3/4] md:aspect-[4/5] overflow-hidden">
+              <div class="relative aspect-[4/5] overflow-hidden">
                 <a href="./product.html?id=${p.id}">
                   <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
                 </a>
