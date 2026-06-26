@@ -39,6 +39,11 @@
         <label>Delivery Address *
           <textarea id="address" rows="3" placeholder="House no., Street, City, Province" required></textarea>
         </label>
+        <div class="coupon-row">
+          <input id="coupon-input" type="text" placeholder="Coupon code" autocomplete="off" />
+          <button type="button" class="button" id="apply-coupon-btn" style="white-space:nowrap;">Apply</button>
+        </div>
+        <p id="coupon-msg" class="coupon-msg"></p>
         <button type="submit" class="button" style="width:100%;margin-top:0.5rem;">Place Order (COD)</button>
       </form>
       <div id="order-summary"></div>

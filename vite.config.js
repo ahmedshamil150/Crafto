@@ -27,6 +27,7 @@ export default defineConfig({
         adminOrders:    resolve(__dirname, 'src/admin/orders.html'),
         adminRevenue:   resolve(__dirname, 'src/admin/revenue.html'),
         adminReviews:   resolve(__dirname, 'src/admin/reviews.html'),
+        adminCoupons:   resolve(__dirname, 'src/admin/coupons.html'),
       },
     },
   },

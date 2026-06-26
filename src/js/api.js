@@ -144,18 +144,20 @@ export async function trackOrder(orderId, phone) {
   return res.json();
 }
 
-export async function placeOrder(order) {
+export async function placeOrder(order, couponCode) {
+  const body = {
+    p_id: order.id,
+    p_customer_name: order.customer_name,
+    p_customer_phone: order.customer_phone,
+    p_customer_address: order.customer_address,
+    p_items: order.items,
+    p_total: order.total,
+  };
+  if (couponCode) body.p_coupon_code = couponCode;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/place_order`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({
-      p_id: order.id,
-      p_customer_name: order.customer_name,
-      p_customer_phone: order.customer_phone,
-      p_customer_address: order.customer_address,
-      p_items: order.items,
-      p_total: order.total,
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -228,6 +230,42 @@ export async function deleteReview(id) {
     headers: headers(true),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+export async function getCoupons() {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/coupons?order=created_at.desc`, { headers: headers(true) });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createCoupon(data) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/coupons`, {
+    method: 'POST',
+    headers: { ...headers(true), 'Prefer': 'return=representation' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function deleteCoupon(id) {
+  await fetch(`${SUPABASE_URL}/rest/v1/coupons?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: headers(true),
+  });
+}
+
+export async function validateCoupon(code) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/validate_coupon`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ p_code: code }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
+  return res.json();
 }
 
 export async function setReviewPinned(id, pinned) {

@@ -2,6 +2,7 @@
 import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
+  getCoupons, createCoupon, deleteCoupon,
 } from './api.js';
 
 function esc(str) {
@@ -742,4 +743,77 @@ if (reviewsTable) {
   }
 
   loadReviews();
+}
+
+// --- Coupons ---
+const couponsTable = document.getElementById('coupons-table');
+if (couponsTable) {
+  async function loadCoupons() {
+    couponsTable.innerHTML = '<p>Loading…</p>';
+    const coupons = await getCoupons();
+    if (!coupons.length) {
+      couponsTable.innerHTML = '<p>No coupons yet. Create one above.</p>';
+      return;
+    }
+    couponsTable.innerHTML = `
+      <div class="admin-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th><th>Discount</th><th>Uses</th><th>Expires</th><th>Active</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${coupons.map(c => `
+            <tr>
+              <td><strong>${esc(c.code)}</strong></td>
+              <td>${c.discount_percent}%</td>
+              <td>${c.used_count}${c.max_uses > 0 ? ` / ${c.max_uses}` : ' / ∞'}</td>
+              <td>${c.expires_at ? new Date(c.expires_at).toLocaleDateString('en-PK') : '–'}</td>
+              <td>${c.is_active ? '✓' : '✗'}</td>
+              <td class="action-cell">
+                <button class="button delete-coupon-btn" data-id="${c.id}" style="background:#c62828;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    `;
+    couponsTable.querySelectorAll('.delete-coupon-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this coupon?')) return;
+        btn.disabled = true;
+        try {
+          await deleteCoupon(btn.dataset.id);
+          loadCoupons();
+        } catch { btn.disabled = false; }
+      });
+    });
+  }
+
+  loadCoupons();
+
+  document.getElementById('coupon-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('create-coupon-btn');
+    const msg = document.getElementById('coupon-form-msg');
+    btn.disabled = true; btn.textContent = 'Creating…'; msg.style.display = 'none';
+    try {
+      const data = {
+        code: document.getElementById('c-code').value.trim().toUpperCase(),
+        discount_percent: parseInt(document.getElementById('c-discount').value),
+        max_uses: parseInt(document.getElementById('c-max-uses').value) || 0,
+      };
+      const expires = document.getElementById('c-expires').value;
+      if (expires) data.expires_at = new Date(expires).toISOString();
+      await createCoupon(data);
+      e.target.reset();
+      loadCoupons();
+    } catch (err) {
+      msg.textContent = err.message || 'Failed to create coupon.';
+      msg.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Create Coupon';
+  });
 }

@@ -253,7 +253,8 @@ CREATE OR REPLACE FUNCTION place_order(
   p_customer_phone   text,
   p_customer_address text,
   p_items            jsonb,
-  p_total            numeric
+  p_total            numeric,
+  p_coupon_code      text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -265,6 +266,7 @@ DECLARE
   prod_id   uuid;
   prod_qty  int;
   prod_rec  RECORD;
+  coup_rec  coupons%ROWTYPE;
 BEGIN
   FOR item IN SELECT * FROM jsonb_array_elements(p_items)
   LOOP
@@ -290,6 +292,25 @@ BEGIN
     WHERE id = prod_id;
   END LOOP;
 
+  -- Apply coupon if provided
+  IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(code) = LOWER(p_coupon_code) AND is_active = true FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Invalid coupon code.';
+    END IF;
+
+    IF coup_rec.expires_at IS NOT NULL AND coup_rec.expires_at < now() THEN
+      RAISE EXCEPTION 'Coupon has expired.';
+    END IF;
+
+    IF coup_rec.max_uses > 0 AND coup_rec.used_count >= coup_rec.max_uses THEN
+      RAISE EXCEPTION 'Coupon usage limit reached.';
+    END IF;
+
+    UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
+  END IF;
+
   INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status)
   VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending');
 
@@ -297,4 +318,54 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric) TO anon;
+GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text) TO anon;
+
+-- =============================================
+-- 13. Coupon / discount codes
+-- =============================================
+CREATE TABLE IF NOT EXISTS coupons (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code             TEXT NOT NULL UNIQUE,
+  discount_percent INT NOT NULL CHECK (discount_percent >= 1 AND discount_percent <= 100),
+  max_uses         INT DEFAULT 0,
+  used_count       INT DEFAULT 0,
+  expires_at       TIMESTAMPTZ,
+  is_active        BOOLEAN DEFAULT true,
+  created_at       TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read coupons" ON coupons;
+CREATE POLICY "Anyone can read coupons"
+  ON coupons FOR SELECT TO anon USING (true);
+
+-- validate_coupon: returns discount info or raises error
+CREATE OR REPLACE FUNCTION validate_coupon(p_code TEXT)
+RETURNS TABLE (id UUID, discount_percent INT, code TEXT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  rec coupons%ROWTYPE;
+BEGIN
+  SELECT * INTO rec FROM coupons WHERE LOWER(code) = LOWER(p_code) AND is_active = true;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invalid coupon code.';
+  END IF;
+
+  IF rec.expires_at IS NOT NULL AND rec.expires_at < now() THEN
+    RAISE EXCEPTION 'Coupon has expired.';
+  END IF;
+
+  IF rec.max_uses > 0 AND rec.used_count >= rec.max_uses THEN
+    RAISE EXCEPTION 'Coupon usage limit reached.';
+  END IF;
+
+  RETURN QUERY SELECT rec.id, rec.discount_percent, rec.code;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION validate_coupon(TEXT) TO anon;
