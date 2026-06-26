@@ -170,6 +170,12 @@ form?.addEventListener('submit', async e => {
         coupon: appliedCoupon || 'None',
       }),
     }).catch(() => {});
+    // Send branded confirmation email via Resend
+    fetch('/api/send-order-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: order.customer_name, email, orderId, items: cart, total }),
+    }).catch(() => {});
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast('Order placed! Save your Order ID to track delivery.');
