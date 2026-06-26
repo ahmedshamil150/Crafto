@@ -40,6 +40,31 @@ function renderSummary() {
   `;
 }
 
+document.getElementById('location-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('location-btn');
+  const addr = document.getElementById('address');
+  if (!navigator.geolocation) { showToast('Geolocation not supported by your browser.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Getting location…';
+  try {
+    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+    const { latitude, longitude } = pos.coords;
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      { headers: { 'User-Agent': 'Crafto/1.0 (ecommerce)' } }
+    );
+    if (!resp.ok) throw new Error('Could not fetch address.');
+    const data = await resp.json();
+    const display = data.display_name || `${latitude}, ${longitude}`;
+    addr.value = display;
+    addr.focus();
+    showToast('Location filled. You can edit it if needed.');
+  } catch (err) {
+    if (err.code === 1) showToast('Location access denied. Please enter address manually.', 'error');
+    else showToast(`Could not get location: ${err.message}`, 'error');
+  }
+  btn.disabled = false; btn.textContent = '📍 Use Current Location';
+});
+
 applyBtn?.addEventListener('click', async () => {
   const code = couponInput.value.trim();
   if (!code) return;
