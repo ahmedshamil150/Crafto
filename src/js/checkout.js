@@ -70,6 +70,8 @@ applyBtn?.addEventListener('click', async () => {
 
 form?.addEventListener('submit', async e => {
   e.preventDefault();
+  const hp = document.getElementById('hp-website');
+  if (hp && hp.value.trim()) return;
   const cart = getCart();
   if (!cart.length) return;
 

@@ -263,9 +263,14 @@ DROP POLICY IF EXISTS "Anyone can read coupons" ON coupons;
 CREATE POLICY "Anyone can read coupons"
   ON coupons FOR SELECT TO anon USING (true);
 
+-- Add coupon_code to orders
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
+
 -- =============================================
 -- 12. Atomic checkout: validate stock → decrement → place order (updated with coupon support)
 -- =============================================
+
+DROP FUNCTION IF EXISTS place_order();
 
 CREATE OR REPLACE FUNCTION place_order(
   p_id               uuid,
@@ -314,7 +319,7 @@ BEGIN
 
   -- Apply coupon if provided
   IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
-    SELECT * INTO coup_rec FROM coupons WHERE LOWER(code) = LOWER(p_coupon_code) AND is_active = true FOR UPDATE;
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(p_coupon_code) AND coupons.is_active = true FOR UPDATE;
 
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Invalid coupon code.';
@@ -331,8 +336,9 @@ BEGIN
     UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
   END IF;
 
-  INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status)
-  VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending');
+  INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code)
+  VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
+          CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END);
 
   RETURN jsonb_build_object('success', true, 'order_id', p_id);
 END;
@@ -350,7 +356,7 @@ AS $$
 DECLARE
   rec coupons%ROWTYPE;
 BEGIN
-  SELECT * INTO rec FROM coupons WHERE LOWER(code) = LOWER(p_code) AND is_active = true;
+  SELECT * INTO rec FROM coupons WHERE LOWER(coupons.code) = LOWER(p_code) AND coupons.is_active = true;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Invalid coupon code.';

@@ -245,6 +245,10 @@ async function renderDetail() {
           <label>Your Review *
             <textarea id="review-comment" rows="4" placeholder="Share your experience with this product…" required minlength="10" maxlength="1000"></textarea>
           </label>
+          <div class="honeypot" aria-hidden="true">
+            <label for="hp-review-website">Leave this empty</label>
+            <input id="hp-review-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+          </div>
           <button type="submit" class="button">Submit Review</button>
         </form>
       </div>
@@ -289,6 +293,8 @@ function setupReviewForm(productId) {
 
   document.getElementById('review-form')?.addEventListener('submit', async e => {
     e.preventDefault();
+    const hp = document.getElementById('hp-review-website');
+    if (hp && hp.value.trim()) return;
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const name = document.getElementById('review-name').value.trim();
     const rating = Number(document.getElementById('review-rating').value);

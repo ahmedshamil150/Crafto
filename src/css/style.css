@@ -341,3 +341,8 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
   background: var(--color-primary); color: rgba(255,255,255,0.8);
   text-align: center; padding: 1.5rem; margin-top: 3rem; font-size: 0.9rem;
 }
+
+/* Honeypot — hidden from humans, visible to bots */
+.honeypot {
+  position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden;
+}
