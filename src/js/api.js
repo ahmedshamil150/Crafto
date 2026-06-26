@@ -245,6 +245,10 @@ export async function createCoupon(data) {
     headers: { ...headers(true), 'Prefer': 'return=representation' },
     body: JSON.stringify(data),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 

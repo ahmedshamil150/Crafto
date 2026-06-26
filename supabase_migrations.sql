@@ -244,7 +244,27 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 0;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
 
 -- =============================================
--- 12. Atomic checkout: validate stock → decrement → place order
+-- 13. Coupon / discount codes (must be before place_order)
+-- =============================================
+CREATE TABLE IF NOT EXISTS coupons (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code             TEXT NOT NULL UNIQUE,
+  discount_percent INT NOT NULL CHECK (discount_percent >= 1 AND discount_percent <= 100),
+  max_uses         INT DEFAULT 0,
+  used_count       INT DEFAULT 0,
+  expires_at       TIMESTAMPTZ,
+  is_active        BOOLEAN DEFAULT true,
+  created_at       TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read coupons" ON coupons;
+CREATE POLICY "Anyone can read coupons"
+  ON coupons FOR SELECT TO anon USING (true);
+
+-- =============================================
+-- 12. Atomic checkout: validate stock → decrement → place order (updated with coupon support)
 -- =============================================
 
 CREATE OR REPLACE FUNCTION place_order(
@@ -319,26 +339,6 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text) TO anon;
-
--- =============================================
--- 13. Coupon / discount codes
--- =============================================
-CREATE TABLE IF NOT EXISTS coupons (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code             TEXT NOT NULL UNIQUE,
-  discount_percent INT NOT NULL CHECK (discount_percent >= 1 AND discount_percent <= 100),
-  max_uses         INT DEFAULT 0,
-  used_count       INT DEFAULT 0,
-  expires_at       TIMESTAMPTZ,
-  is_active        BOOLEAN DEFAULT true,
-  created_at       TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Anyone can read coupons" ON coupons;
-CREATE POLICY "Anyone can read coupons"
-  ON coupons FOR SELECT TO anon USING (true);
 
 -- validate_coupon: returns discount info or raises error
 CREATE OR REPLACE FUNCTION validate_coupon(p_code TEXT)
