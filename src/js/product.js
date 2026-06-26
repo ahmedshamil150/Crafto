@@ -1,6 +1,6 @@
 // src/js/product.js
 import { getProducts, getProductById, getReviews, createReview } from './api.js';
-import { updateCartBadge, showToast } from './main.js';
+import { updateCartBadge, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
 
@@ -217,11 +217,17 @@ async function renderDetail() {
         ${p.stock > 0
           ? `<p class="stock-ok">✓ In stock (${p.stock} available)</p>`
           : `<p class="stock-out">✗ Out of stock</p>`}
+        <div style="display:flex;gap:0.5rem;margin-top:1.25rem;">
         <button class="button" id="add-to-cart"
           data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
-          ${p.stock === 0 ? 'disabled' : ''} style="margin-top:1.25rem;width:100%;">
+          ${p.stock === 0 ? 'disabled' : ''} style="flex:1;">
           Add to Cart
         </button>
+        <button class="button" id="detail-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${images[0]}"
+          style="width:48px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:2px solid var(--color-primary);color:var(--color-primary);${isInWishlist(p.id) ? 'background:var(--color-primary);color:#fff;' : ''}">
+          <span class="material-symbols-outlined" style="font-size:1.3rem;">${isInWishlist(p.id) ? 'favorite' : 'favorite_border'}</span>
+        </button>
+        </div>
       </div>
     </div>
 
@@ -266,6 +272,14 @@ async function renderDetail() {
   });
 
   document.getElementById('add-to-cart')?.addEventListener('click', addToCart);
+  document.getElementById('detail-wishlist')?.addEventListener('click', function() {
+    const { id, title, price, image } = this.dataset;
+    toggleWishlist(id, title, price, image);
+    const inWl = isInWishlist(id);
+    this.style.background = inWl ? 'var(--color-primary)' : 'transparent';
+    this.style.color = inWl ? '#fff' : 'var(--color-primary)';
+    this.querySelector('.material-symbols-outlined').textContent = inWl ? 'favorite' : 'favorite_border';
+  });
   setupReviewForm(id);
   loadReviews(id);
   loadRecommended(p.category, id);
@@ -285,10 +299,16 @@ async function loadRecommended(category, currentId) {
       ${filtered.map(p => {
         const fp = discPrice(p.price, p.discount_percent);
         const os = hasDisc(p.discount_percent);
+        const inWl = isInWishlist(p.id);
+        const img = p.image_url || 'https://placehold.co/600x450?text=Crafto';
         return `
-          <div class="product-card">
+          <div class="product-card" style="position:relative;">
+            <button class="rec-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}"
+              style="position:absolute;top:8px;right:8px;z-index:2;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.1);transition:transform 0.2s;color:${inWl ? '#c62828' : '#666'};">
+              <span class="material-symbols-outlined" style="font-size:1.1rem;">${inWl ? 'favorite' : 'favorite_border'}</span>
+            </button>
             <a href="./product.html?id=${p.id}">
-              <img src="${p.image_url || 'https://placehold.co/600x450?text=Crafto'}" alt="${esc(p.title)}" loading="lazy" />
+              <img src="${img}" alt="${esc(p.title)}" loading="lazy" />
               <div class="card-body">
                 <h4>${esc(p.title)}</h4>
                 ${os ? `<span class="disc-badge">-${p.discount_percent}%</span>` : ''}
@@ -303,6 +323,16 @@ async function loadRecommended(category, currentId) {
       }).join('')}
     </div>
   `;
+  recSection.querySelectorAll('.rec-wishlist').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const { id, title, price, image } = this.dataset;
+      toggleWishlist(id, title, price, image);
+      const inWl = isInWishlist(id);
+      this.style.color = inWl ? '#c62828' : '#666';
+      this.querySelector('.material-symbols-outlined').textContent = inWl ? 'favorite' : 'favorite_border';
+    });
+  });
 }
 
 function setupStarInput() {

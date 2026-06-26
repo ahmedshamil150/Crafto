@@ -1,6 +1,7 @@
 // src/js/main.js
 document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
+  updateWishlistBadge();
 
   // Mobile nav toggle
   const burger = document.getElementById('burger');
@@ -44,3 +45,37 @@ export function addToCart(id, title, price, qty = 1) {
   localStorage.setItem('crafto_cart', JSON.stringify(cart));
   updateCartBadge();
 }
+
+// --- Wishlist ---
+function getWishlist() { return JSON.parse(localStorage.getItem('crafto_wishlist') || '[]'); }
+
+export function isInWishlist(id) {
+  return getWishlist().some(i => i.id === id);
+}
+
+export function toggleWishlist(id, title, price, image) {
+  let list = getWishlist();
+  const idx = list.findIndex(i => i.id === id);
+  if (idx > -1) { list.splice(idx, 1); showToast('Removed from Wishlist'); }
+  else { list.push({ id, title, price, image }); showToast('Added to Wishlist'); }
+  localStorage.setItem('crafto_wishlist', JSON.stringify(list));
+  updateWishlistBadge();
+  return idx > -1;
+}
+
+export function removeFromWishlist(id) {
+  let list = getWishlist();
+  list = list.filter(i => i.id !== id);
+  localStorage.setItem('crafto_wishlist', JSON.stringify(list));
+  updateWishlistBadge();
+}
+
+export function updateWishlistBadge() {
+  const count = getWishlist().length;
+  document.querySelectorAll('.wishlist-badge').forEach(el => {
+    el.textContent = count || '';
+    el.style.display = count ? 'inline' : 'none';
+  });
+}
+
+export { getWishlist };
