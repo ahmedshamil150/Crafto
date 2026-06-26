@@ -1,4 +1,33 @@
 // src/js/main.js
+
+// --- Loading Screen ---
+let ready = false;
+let minTime = false;
+
+function openDoors() {
+  const left = document.getElementById('loading-left');
+  const right = document.getElementById('loading-right');
+  const content = document.getElementById('loading-content');
+  if (!left) return;
+  content?.classList.add('hide');
+  setTimeout(() => {
+    left.classList.add('open');
+    right.classList.add('open');
+  }, 300);
+  setTimeout(() => {
+    left?.remove();
+    right?.remove();
+    content?.remove();
+  }, 1600);
+}
+
+function checkReady() {
+  if (ready && minTime) openDoors();
+}
+
+document.addEventListener('page-ready', () => { ready = true; checkReady(); });
+setTimeout(() => { minTime = true; checkReady(); }, 2500);
+
 document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   updateWishlistBadge();

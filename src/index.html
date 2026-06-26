@@ -63,9 +63,35 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
   background: linear-gradient(135deg, #006A4E, #00503a);
   box-shadow: 0 4px 10px rgba(0, 106, 78, 0.2);
 }
-@media(max-width:767px){#nav-menu{position:fixed;top:0;left:0;width:280px;height:100dvh;background:var(--cream-canvas,#F9F7F2);z-index:60;padding:5rem 2rem 2rem;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.1);display:flex!important;flex-direction:column;gap:1.5rem}#nav-menu.open{transform:translateX(0)}#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;opacity:0;pointer-events:none;transition:opacity .3s ease}#nav-overlay.open{opacity:1;pointer-events:auto}body.nav-open{overflow:hidden!important}}</style>
+/* Loading Screen */
+.loading-panel{position:fixed;top:0;height:100%;z-index:9999;background:#F9F7F2;transition:transform 1s cubic-bezier(.4,0,.2,1),box-shadow 1s cubic-bezier(.4,0,.2,1);pointer-events:none}.loading-left{left:0;width:50%}.loading-right{right:0;width:50%}.loading-panel.open{pointer-events:none}.loading-left.open{transform:translateX(-100%);box-shadow:4px 0 40px rgba(0,0,0,.2)}.loading-right.open{transform:translateX(100%);box-shadow:-4px 0 40px rgba(0,0,0,.2)}.loading-content{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;text-align:center;transition:opacity .5s ease,transform .5s ease}.loading-content.hide{opacity:0;transform:translate(-50%,-50%) scale(.92);pointer-events:none}.content-inner{position:relative;z-index:2}.loading-dot{width:8px;height:8px;border-radius:50%;background:#D4AF37;display:inline-block;animation:loadingPulse 1.2s ease-in-out infinite}@keyframes loadingPulse{0%,60%,100%{opacity:.2;transform:scale(.8)}30%{opacity:1;transform:scale(1.2)}}.floating-decor{position:absolute;top:50%;left:50%;width:400px;height:400px;transform:translate(-50%,-50%);z-index:1;pointer-events:none}.float-item{position:absolute;border-radius:50%;opacity:.12}.float-diamond{width:20px;height:20px;background:#D4AF37;transform:rotate(45deg);top:5%;left:10%;animation:floatDrift 6s ease-in-out infinite}.float-circle{width:14px;height:14px;background:#006A4E;top:80%;left:5%;animation:floatDrift 8s ease-in-out infinite reverse}.float-square{width:16px;height:16px;border:2px solid #D4AF37;background:transparent;top:15%;right:8%;animation:floatDrift 7s ease-in-out infinite}.float-dot{width:8px;height:8px;background:#006A4E;top:70%;right:10%;animation:floatDrift 5s ease-in-out infinite reverse}.float-ring{width:28px;height:28px;border:2px solid #D4AF37;background:transparent;top:10%;right:25%;animation:floatDrift 9s ease-in-out infinite}.float-cross{width:24px;height:24px;background:transparent;border:2px solid #006A4E;border-radius:4px;top:75%;left:20%;animation:floatDrift 6.5s ease-in-out infinite reverse}@keyframes floatDrift{0%,100%{transform:translateY(0) rotate(0deg)}25%{transform:translateY(-18px) rotate(8deg)}75%{transform:translateY(12px) rotate(-5deg)}}@media(max-width:767px){.floating-decor{width:280px;height:280px}}@media(max-width:767px){#nav-menu{position:fixed;top:0;left:0;width:280px;height:100dvh;background:var(--cream-canvas,#F9F7F2);z-index:60;padding:5rem 2rem 2rem;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.1);display:flex!important;flex-direction:column;gap:1.5rem}#nav-menu.open{transform:translateX(0)}#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;opacity:0;pointer-events:none;transition:opacity .3s ease}#nav-overlay.open{opacity:1;pointer-events:auto}body.nav-open{overflow:hidden!important}}</style>
 </head>
 <body class="bg-cream-canvas text-charcoal-text font-body-md selection:bg-metallic-gold selection:text-white overflow-x-hidden">
+
+<div id="loading-left" class="loading-panel loading-left"></div>
+<div id="loading-right" class="loading-panel loading-right"></div>
+<div id="loading-content" class="loading-content">
+  <div class="floating-decor">
+    <div class="float-item float-diamond"></div>
+    <div class="float-item float-circle"></div>
+    <div class="float-item float-square"></div>
+    <div class="float-item float-dot"></div>
+    <div class="float-item float-ring"></div>
+    <div class="float-item float-cross"></div>
+  </div>
+  <div class="content-inner">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-deep-emerald/5 mb-6">
+      <span class="material-symbols-outlined text-4xl text-deep-emerald" style="font-variation-settings:'FILL' 1">handcraft</span>
+    </div>
+    <h1 class="font-headline-lg text-headline-lg text-deep-emerald tracking-tight mb-2">Crafto</h1>
+    <p class="font-body-md text-on-surface-variant/70">Getting the store ready for you...</p>
+    <div class="mt-6 flex justify-center gap-1.5">
+      <span class="loading-dot"></span>
+      <span class="loading-dot" style="animation-delay:0.2s"></span>
+      <span class="loading-dot" style="animation-delay:0.4s"></span>
+    </div>
+  </div>
+</div>
 
 <header class="bg-cream-canvas dark:bg-surface shadow-sm fixed top-0 w-full z-50">
 <nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">

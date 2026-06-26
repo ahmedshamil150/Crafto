@@ -99,6 +99,8 @@ async function loadHome() {
     const badge = document.getElementById(`badge-${products[0].id}`);
     if (badge) badge.style.display = '';
   }
+
+  document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
 loadHome();
