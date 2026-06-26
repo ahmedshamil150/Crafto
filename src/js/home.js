@@ -36,7 +36,7 @@ function productCard(p) {
         <h3 class="font-headline-md text-headline-md text-charcoal-text mb-2">${esc(p.title)}</h3>
         <p class="font-body-lg text-deep-emerald font-semibold">PKR ${fp.toLocaleString()}</p>
         <div class="mt-4 flex gap-2 justify-center">
-          <button class="home-add-cart px-6 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors"
+          <button class="home-add-cart btn-shine px-6 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}">Add to Cart</button>
           <a href="./product.html?id=${p.id}" class="px-6 py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors">View Details</a>
         </div>

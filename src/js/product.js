@@ -72,7 +72,7 @@ function productCardHtml(p) {
           <span class="text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
         </p>
         <div class="mt-4 flex gap-2 justify-center">
-          <button class="shop-add-cart px-5 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95"
+          <button class="shop-add-cart btn-shine px-5 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}">Add to Cart</button>
           <a href="./product.html?id=${p.id}" class="px-5 py-2 border border-deep-emerald text-deep-emerald rounded-full font-label-caps text-[10px] hover:bg-deep-emerald hover:text-white transition-colors">View</a>
         </div>

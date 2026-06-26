@@ -8,6 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const navMenu = document.getElementById('nav-menu');
   burger?.addEventListener('click', () => navMenu?.classList.toggle('open'));
 
+  // Scroll-triggered animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.fade-in, .fade-in-up, .stagger, .reveal').forEach(el => observer.observe(el));
+
   // Contact form handler
   const contactForm = document.getElementById('contact-form');
   contactForm?.addEventListener('submit', e => {
