@@ -346,6 +346,11 @@ async function renderDetail() {
     this.classList.toggle('text-deep-emerald', !inWl);
     this.querySelector('.material-symbols-outlined').textContent = inWl ? 'favorite' : 'favorite_border';
   });
+  // Observer already unobserved parent — make new animated children visible
+  detail.querySelectorAll('.fade-in, .fade-in-up, .stagger, .reveal').forEach(el => {
+    el.classList.add('visible');
+  });
+
   setupReviewForm(id);
   loadReviews(id);
   loadRecommended(p.category, id);
