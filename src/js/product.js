@@ -366,7 +366,7 @@ async function loadRecommended(category, currentId) {
   if (!filtered.length) { recSection.innerHTML = ''; return; }
   recSection.innerHTML = `
     <h2 class="font-headline-md text-headline-md text-deep-emerald mb-6 relative inline-block after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-1/2 after:h-0.5 after:bg-metallic-gold">You May Also Like</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter stagger">
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-gutter stagger">
       ${filtered.map(p => {
         const fp = discPrice(p.price, p.discount_percent);
         const os = hasDisc(p.discount_percent);
@@ -396,6 +396,7 @@ async function loadRecommended(category, currentId) {
       }).join('')}
     </div>
   `;
+  recSection.querySelector('.stagger')?.classList.add('visible');
   recSection.querySelectorAll('.rec-wishlist').forEach(btn => {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
