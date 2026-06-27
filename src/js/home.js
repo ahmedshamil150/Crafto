@@ -177,19 +177,23 @@ function initRotatingText() {
 
 async function renderCardProducts() {
   const section = document.getElementById('card-products-section');
-  const container = document.getElementById('card-stack-container');
-  if (!section || !container) return;
+  const inner = document.getElementById('card-stack-inner');
+  if (!section || !inner) return;
 
   const cards = await getCardProducts();
   if (!cards.length) return;
 
   section.style.display = '';
-  container.innerHTML = cards.map(c => {
-    const bg = c.image_url ? `url('${c.image_url}')` : c.card_color || '#006A4E';
+  // Set a fixed height so the scroller works
+  const scroller = document.getElementById('card-stack-scroller');
+  scroller.style.height = '80vh';
+
+  inner.innerHTML = cards.map(c => {
+    const bg = c.image_url ? `url('${esc(c.image_url)}')` : (c.card_color || '#006A4E');
     const color = c.card_color || '#006A4E';
     return `
-      <div class="card-stack-item" style="background:${bg};background-size:cover;background-position:center;">
-        <div class="card-stack-content">
+      <div class="scroll-stack-card" style="background:${bg};background-size:cover;background-position:center;">
+        <div class="scroll-stack-card-content">
           <h3>${esc(c.title)}</h3>
           ${c.subtitle ? '<p>' + esc(c.subtitle) + '</p>' : ''}
           ${c.price ? '<span class="card-price" style="background:' + color + ';">PKR ' + Number(c.price).toLocaleString() + '</span>' : ''}
@@ -197,33 +201,60 @@ async function renderCardProducts() {
       </div>
     `;
   }).join('');
+  // Append end marker
+  inner.insertAdjacentHTML('beforeend', '<div class="scroll-stack-end"></div>');
 
-  // Scroll-stack scale effect
-  function updateCardScales() {
-    const items = container.querySelectorAll('.card-stack-item');
-    const stackTop = window.innerWidth < 768 ? 80 : 100;
-    const viewH = window.innerHeight;
-    items.forEach(card => {
-      const rect = card.getBoundingClientRect();
-      const cardMid = rect.top + rect.height / 2;
-      const progress = Math.max(0, Math.min(1, (cardMid - stackTop) / (viewH - stackTop)));
-      const scale = 0.88 + (1 - 0.88) * progress;
-      const opacity = 0.7 + 0.3 * progress;
-      card.style.transform = `scale(${scale})`;
-      card.style.opacity = opacity;
+  // --- Scroll-stack transforms (ported from React component) ---
+  const itemStackDistance = 30;
+  const stackPosition = 0.2; // 20%
+  const scaleEndPosition = 0.1; // 10%
+  const baseScale = 0.85;
+  const itemScale = 0.03;
+
+  let rafId = null;
+  const cardsEls = Array.from(inner.querySelectorAll('.scroll-stack-card'));
+  const endEl = inner.querySelector('.scroll-stack-end');
+
+  function updateTransforms() {
+    const scrollTop = scroller.scrollTop;
+    const containerH = scroller.clientHeight;
+    const stackPosPx = containerH * stackPosition;
+    const scaleEndPx = containerH * scaleEndPosition;
+    const endTop = endEl ? endEl.offsetTop : 0;
+
+    cardsEls.forEach((card, i) => {
+      const cardTop = card.offsetTop;
+      const triggerStart = cardTop - stackPosPx - itemStackDistance * i;
+      const triggerEnd = cardTop - scaleEndPx;
+
+      // Scale progress
+      let scaleProgress = 0;
+      if (triggerEnd > triggerStart) {
+        scaleProgress = Math.max(0, Math.min(1, (scrollTop - triggerStart) / (triggerEnd - triggerStart)));
+      }
+      const targetScale = baseScale + i * itemScale;
+      const scale = 1 - scaleProgress * (1 - targetScale);
+
+      // Translate Y (stacking)
+      const pinStart = cardTop - stackPosPx - itemStackDistance * i;
+      const pinEnd = endTop - containerH / 2;
+      let translateY = 0;
+      if (scrollTop >= pinStart && scrollTop <= pinEnd) {
+        translateY = scrollTop - cardTop + stackPosPx + itemStackDistance * i;
+      } else if (scrollTop > pinEnd) {
+        translateY = pinEnd - cardTop + stackPosPx + itemStackDistance * i;
+      }
+
+      card.style.transform = `translate3d(0, ${Math.round(translateY * 100) / 100}px, 0) scale(${Math.round(scale * 1000) / 1000})`;
     });
-    requestAnimationFrame(updateCardScales);
+
+    rafId = requestAnimationFrame(updateTransforms);
   }
 
-  // Start after fonts/images settle
-  setTimeout(() => requestAnimationFrame(updateCardScales), 500);
+  rafId = requestAnimationFrame(updateTransforms);
 
-  // Re-trigger on orientation/resize
-  let resizeTimer;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => requestAnimationFrame(updateCardScales), 200);
-  });
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => { if (rafId) cancelAnimationFrame(rafId); }, { once: true });
 }
 
 loadHome();
