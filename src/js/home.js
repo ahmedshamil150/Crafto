@@ -181,23 +181,29 @@ function renderCategoryCards() {
   if (!section || !grid) return;
 
   const categories = [
-    { id: 'vase', label: 'Vases', desc: 'Handcrafted ceramic and glass vessels', img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80' },
-    { id: 'jewelry boxes', label: 'Jewelry Boxes', desc: 'Elegant keepsake chests and organizers', img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80' },
-    { id: 'lamps', label: 'Lamps', desc: 'Artisan-crafted ambient lighting', img: 'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=800&q=80' },
-    { id: 'tables', label: 'Tables', desc: 'Distinctive center and side tables', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=800' },
-    { id: 'candle stands', label: 'Candle Stands', desc: 'Sculptural holders for every space', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800' },
+    { id: 'vase', label: 'Vases', desc: 'Handcrafted ceramic and glass vessels, each piece tells a story of ancient pottery traditions passed down through generations of skilled Pakistani artisans.', img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80' },
+    { id: 'jewelry boxes', label: 'Jewelry Boxes', desc: 'Elegant keepsake chests adorned with intricate hand-painted motifs and mirror work, designed to hold your most treasured possessions.', img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80' },
+    { id: 'lamps', label: 'Lamps', desc: 'Artisan-crafted ambient lighting that transforms any space with warm, diffused glow — from carved brass lanterns to embroidered fabric shades.', img: 'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=800&q=80' },
+    { id: 'tables', label: 'Tables', desc: 'Distinctive center and side tables hand-carved from sustainable sheesham wood, blending traditional craftsmanship with contemporary design.', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=800' },
+    { id: 'candle stands', label: 'Candle Stands', desc: 'Sculptural holders handcrafted from brass, marble, and ceramic — each piece adds a touch of refined elegance to any room.', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800' },
   ];
 
   section.style.display = '';
 
-  grid.innerHTML = categories.map(c => `
-    <a href="./shop.html?category=${encodeURIComponent(c.id)}" class="category-card" style="background:url('${c.img}');background-size:cover;background-position:center;">
-      <div class="category-card-content">
-        <h3>${c.label}</h3>
-        <p>${c.desc}</p>
+  grid.innerHTML = categories.map((c, i) => {
+    const isReversed = i % 2 === 1;
+    return `
+      <div class="category-section ${isReversed ? 'category-section--reverse' : ''}">
+        <div class="category-section__image" style="background-image:url('${c.img}')"></div>
+        <div class="category-section__content">
+          <span class="category-section__number">0${i + 1}</span>
+          <h3 class="category-section__title">${c.label}</h3>
+          <p class="category-section__desc">${c.desc}</p>
+          <a href="./shop.html?category=${encodeURIComponent(c.id)}" class="category-section__btn">Shop Now</a>
+        </div>
       </div>
-    </a>
-  `).join('');
+    `;
+  }).join('');
 }
 
 loadHome();
