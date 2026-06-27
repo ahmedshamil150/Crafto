@@ -154,7 +154,7 @@ function renderOrder(order, id, phone) {
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Order ID</span>
-            <p class="font-body-md text-charcoal-text break-all">${esc(order.id)}</p>
+            <p class="font-body-md text-charcoal-text break-all font-bold">${esc(order.order_number || order.id)}</p>
           </div>
           <div>
             <span class="font-label-caps text-[10px] text-on-surface-variant uppercase">Placed On</span>

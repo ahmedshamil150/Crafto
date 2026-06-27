@@ -66,9 +66,10 @@ CREATE POLICY "Anon can insert orders"
 -- 6. Secure order tracking (order ID + phone must match)
 -- =============================================
 
-CREATE OR REPLACE FUNCTION get_order_status(p_order_id uuid, p_phone text)
+CREATE OR REPLACE FUNCTION get_order_status(p_order_id text, p_phone text)
 RETURNS TABLE (
   id uuid,
+  order_number text,
   created_at timestamptz,
   customer_name text,
   customer_phone text,
@@ -82,15 +83,15 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT id, created_at, customer_name, customer_phone, customer_address, items, total, status
+  SELECT id, order_number, created_at, customer_name, customer_phone, customer_address, items, total, status
   FROM orders
-  WHERE id = p_order_id
+  WHERE (id::text = p_order_id OR order_number = p_order_id)
     AND customer_phone = p_phone
   LIMIT 1;
 $$;
 
-GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO anon;
-GRANT EXECUTE ON FUNCTION get_order_status(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_order_status(text, text) TO anon;
+GRANT EXECUTE ON FUNCTION get_order_status(text, text) TO authenticated;
 
 -- =============================================
 -- 7. Product reviews
@@ -143,9 +144,10 @@ CREATE INDEX IF NOT EXISTS reviews_pinned_idx ON reviews(pinned DESC, created_at
 -- 9. Customer cancel & return (order ID + phone verified)
 -- =============================================
 
-CREATE OR REPLACE FUNCTION cancel_order(p_order_id uuid, p_phone text)
+CREATE OR REPLACE FUNCTION cancel_order(p_order_id text, p_phone text)
 RETURNS TABLE (
   id uuid,
+  order_number text,
   created_at timestamptz,
   customer_name text,
   customer_phone text,
@@ -163,7 +165,7 @@ DECLARE
 BEGIN
   UPDATE orders o
   SET status = 'cancelled'
-  WHERE o.id = p_order_id
+  WHERE (o.id::text = p_order_id OR o.order_number = p_order_id)
     AND o.customer_phone = p_phone
     AND o.status = 'pending'
   RETURNING * INTO rec;
@@ -172,14 +174,15 @@ BEGIN
     RAISE EXCEPTION 'Order cannot be cancelled. Only pending orders can be cancelled.';
   END IF;
 
-  RETURN QUERY SELECT rec.id, rec.created_at, rec.customer_name, rec.customer_phone,
+  RETURN QUERY SELECT rec.id, rec.order_number, rec.created_at, rec.customer_name, rec.customer_phone,
                       rec.customer_address, rec.items, rec.total, rec.status;
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION request_return(p_order_id uuid, p_phone text)
+CREATE OR REPLACE FUNCTION request_return(p_order_id text, p_phone text)
 RETURNS TABLE (
   id uuid,
+  order_number text,
   created_at timestamptz,
   customer_name text,
   customer_phone text,
@@ -197,7 +200,7 @@ DECLARE
 BEGIN
   UPDATE orders o
   SET status = 'return_requested'
-  WHERE o.id = p_order_id
+  WHERE (o.id::text = p_order_id OR o.order_number = p_order_id)
     AND o.customer_phone = p_phone
     AND o.status IN ('confirmed', 'shipped', 'delivered')
   RETURNING * INTO rec;
@@ -206,15 +209,15 @@ BEGIN
     RAISE EXCEPTION 'Return not available. You can return confirmed, shipped, or delivered orders only.';
   END IF;
 
-  RETURN QUERY SELECT rec.id, rec.created_at, rec.customer_name, rec.customer_phone,
+  RETURN QUERY SELECT rec.id, rec.order_number, rec.created_at, rec.customer_name, rec.customer_phone,
                       rec.customer_address, rec.items, rec.total, rec.status;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO anon;
-GRANT EXECUTE ON FUNCTION cancel_order(uuid, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO anon;
-GRANT EXECUTE ON FUNCTION request_return(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION cancel_order(text, text) TO anon;
+GRANT EXECUTE ON FUNCTION cancel_order(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION request_return(text, text) TO anon;
+GRANT EXECUTE ON FUNCTION request_return(text, text) TO authenticated;
 
 -- =============================================
 -- 10. Storage bucket for product images
@@ -270,6 +273,10 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
 -- 12. Atomic checkout: validate stock → decrement → place order (updated with coupon support)
 -- =============================================
 
+-- Add order_number column for user-friendly tracking IDs
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number text;
+CREATE UNIQUE INDEX IF NOT EXISTS orders_order_number_idx ON orders (order_number);
+
 DROP FUNCTION IF EXISTS place_order();
 
 CREATE OR REPLACE FUNCTION place_order(
@@ -287,12 +294,35 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  item      jsonb;
-  prod_id   uuid;
-  prod_qty  int;
-  prod_rec  RECORD;
-  coup_rec  coupons%ROWTYPE;
+  item       jsonb;
+  prod_id    uuid;
+  prod_qty   int;
+  prod_rec   RECORD;
+  coup_rec   coupons%ROWTYPE;
+  ord_num    text;
+  done       bool;
+  rnd_str    text;
+  chars      text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 BEGIN
+  -- Generate unique order_number (CRAFTOID-XXXXXX)
+  done := false;
+  WHILE NOT done LOOP
+    rnd_str := '';
+    FOR i IN 1..6 LOOP
+      rnd_str := rnd_str || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+    END LOOP;
+    ord_num := 'CRAFTOID-' || rnd_str;
+    BEGIN
+      INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code, order_number)
+      VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
+              CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END,
+              ord_num);
+      done := true;
+    EXCEPTION WHEN unique_violation THEN
+      -- collision, retry
+    END;
+  END LOOP;
+
   FOR item IN SELECT * FROM jsonb_array_elements(p_items)
   LOOP
     prod_id  := (item->>'id')::uuid;
@@ -336,11 +366,7 @@ BEGIN
     UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
   END IF;
 
-  INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code)
-  VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
-          CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END);
-
-  RETURN jsonb_build_object('success', true, 'order_id', p_id);
+  RETURN jsonb_build_object('success', true, 'order_id', p_id, 'order_number', ord_num);
 END;
 $$;
 

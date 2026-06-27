@@ -155,12 +155,13 @@ form?.addEventListener('submit', async e => {
   };
 
   try {
-    await placeOrder(order, appliedCoupon);
+    const result = await placeOrder(order, appliedCoupon);
+    const orderNumber = result?.order_number || orderId;
     fetch('https://formsubmit.co/ajax/craftostore.pk@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
-        _subject: `New Order #${orderId.slice(0, 8)}`,
+        _subject: `New Order ${orderNumber}`,
         name: order.customer_name,
         email,
         phone: order.customer_phone,
@@ -174,12 +175,12 @@ form?.addEventListener('submit', async e => {
     fetch('/api/send-order-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: order.customer_name, email, orderId, items: cart, total }),
+      body: JSON.stringify({ name: order.customer_name, email, orderId: orderNumber, items: cart, total }),
     }).catch(() => {});
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
-    showToast('Order placed! Save your Order ID to track delivery.');
-    setTimeout(() => window.location.href = `./order-status.html?id=${orderId}`, 2000);
+    showToast(`Order placed! Your Order ID: ${orderNumber}`);
+    setTimeout(() => window.location.href = `./order-status.html?id=${orderNumber}`, 2000);
   } catch (err) {
     showToast(`Order failed: ${err.message}`, 'error');
     submitBtn.disabled = false;
