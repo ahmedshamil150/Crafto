@@ -23,22 +23,22 @@ function render() {
   }
 
   grid.innerHTML = items.map(item => `
-    <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10" data-id="${item.id}">
+    <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10" data-id="${item.id}">
       <div class="relative aspect-[4/5] overflow-hidden">
         <a href="./product.html?id=${item.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${item.image || 'https://placehold.co/600x450?text=Crafto'}" alt="${esc(item.title)}" loading="lazy" />
         </a>
-        <button class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-red-500 shadow-md hover:scale-110 transition-transform remove-wishlist" data-id="${item.id}">
-          <span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+        <button class="absolute top-2 right-2 md:top-3 md:right-3 w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-red-500 shadow-md hover:scale-110 transition-transform remove-wishlist" data-id="${item.id}">
+          <span class="material-symbols-outlined text-xs md:text-sm" data-icon="close">close</span>
         </button>
       </div>
-      <div class="p-5 text-center">
-        <h3 class="font-headline-md text-headline-md text-charcoal-text mb-2">${esc(item.title)}</h3>
-        <p class="text-deep-emerald font-semibold text-lg mb-4">PKR ${Number(item.price).toLocaleString()}</p>
-        <div class="flex gap-2">
-          <button class="flex-1 py-2 bg-deep-emerald text-white rounded-full font-label-caps text-label-caps add-cart-wishlist" data-id="${item.id}" data-title="${esc(item.title)}" data-price="${item.price}">Add to Cart</button>
-          <a href="./product.html?id=${item.id}" class="px-4 py-2 border border-outline-variant rounded-full text-on-surface-variant hover:border-deep-emerald hover:text-deep-emerald transition-colors">
-            <span class="material-symbols-outlined text-sm" data-icon="visibility">visibility</span>
+      <div class="p-3 md:p-5 text-center">
+        <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mb-1 md:mb-2 leading-tight">${esc(item.title)}</h3>
+        <p class="text-sm md:text-lg text-deep-emerald font-semibold">PKR ${Number(item.price).toLocaleString()}</p>
+        <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
+          <button class="flex-1 md:flex-none px-3 md:px-5 py-1.5 md:py-2 bg-deep-emerald text-white rounded font-label-caps text-[10px] hover:bg-primary transition-colors add-cart-wishlist" data-id="${item.id}" data-title="${esc(item.title)}" data-price="${item.price}">Add to Cart</button>
+          <a href="./product.html?id=${item.id}" class="flex-none w-8 h-8 md:w-auto md:px-4 md:py-2 border border-outline-variant rounded text-on-surface-variant hover:border-deep-emerald hover:text-deep-emerald transition-colors flex items-center justify-center">
+            <span class="material-symbols-outlined text-xs md:text-sm md:mr-1" data-icon="visibility">visibility</span><span class="hidden md:inline font-label-caps text-[10px]">View</span>
           </a>
         </div>
       </div>

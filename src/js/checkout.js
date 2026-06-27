@@ -1,4 +1,4 @@
-import { placeOrder, validateCoupon, getProducts } from './api.js';
+import { placeOrder, validateCoupon, getProducts, getProductById } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const form      = document.getElementById('checkout-form');
@@ -140,12 +140,12 @@ form?.addEventListener('submit', async e => {
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Placing Order…';
 
-  const orderId = crypto.randomUUID();
+  const errorEl = document.getElementById('checkout-error');
   const phone   = document.getElementById('phone').value.trim();
   const email   = document.getElementById('email').value.trim();
   const total   = Math.max(0, calcSubtotal() - couponDiscount + SHIPPING_FEE);
   const order = {
-    id:               orderId,
+    id:               crypto.randomUUID(),
     customer_name:    document.getElementById('name').value.trim(),
     customer_phone:   phone,
     customer_address: document.getElementById('address').value.trim(),
@@ -155,8 +155,17 @@ form?.addEventListener('submit', async e => {
   };
 
   try {
+    // Validate stock before placing order
+    for (const item of cart) {
+      const prod = await getProductById(item.id);
+      if (!prod) continue;
+      if (item.qty > prod.stock) {
+        throw new Error(`"${item.title}" — only ${prod.stock} in stock but you ordered ${item.qty}. Please reduce the quantity.`);
+      }
+    }
+
     const result = await placeOrder(order, appliedCoupon);
-    const orderNumber = result?.order_number || orderId;
+    const orderNumber = result?.order_number || order.id;
     fetch('https://formsubmit.co/ajax/craftostore.pk@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -182,7 +191,10 @@ form?.addEventListener('submit', async e => {
     showToast(`Order placed! Your Order ID: ${orderNumber}`);
     setTimeout(() => window.location.href = `./order-status.html?id=${orderNumber}`, 2000);
   } catch (err) {
-    showToast(`Order failed: ${err.message}`, 'error');
+    errorEl.textContent = err.message;
+    errorEl.classList.remove('hidden');
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showToast(err.message, 'error');
     submitBtn.disabled = false;
     submitBtn.textContent = 'Place Order (COD)';
   }

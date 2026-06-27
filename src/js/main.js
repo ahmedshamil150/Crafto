@@ -97,8 +97,8 @@ function getCart() { return JSON.parse(localStorage.getItem('crafto_cart') || '[
 export function addToCart(id, title, price, qty = 1) {
   const cart = getCart();
   const existing = cart.find(i => i.id === id);
-  if (existing) { existing.qty += qty; }
-  else { cart.push({ id, title, price, qty }); }
+  if (existing) { existing.qty += qty; showToast(`${title} quantity increased to ${existing.qty}!`); }
+  else { cart.push({ id, title, price, qty }); showToast(`${title} added to cart!`); }
   localStorage.setItem('crafto_cart', JSON.stringify(cart));
   updateCartBadge();
 }

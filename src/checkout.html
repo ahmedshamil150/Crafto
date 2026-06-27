@@ -82,7 +82,8 @@
             <button type="button" class="flex items-center gap-2 px-5 py-2.5 border border-deep-emerald text-deep-emerald rounded-lg font-label-caps text-label-caps hover:bg-deep-emerald hover:text-white transition-all text-sm" id="location-btn">
               <span class="material-symbols-outlined text-base">my_location</span> Use Current Location
             </button>
-            <div class="honeypot" aria-hidden="true" style="display:none;">
+            <div id="checkout-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-body-md text-sm"></div>
+          <div class="honeypot" aria-hidden="true" style="display:none;">
               <label for="hp-website">Leave this empty</label>
               <input id="hp-website" name="website" type="text" tabindex="-1" autocomplete="off" />
             </div>

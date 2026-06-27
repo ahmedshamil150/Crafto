@@ -1,4 +1,5 @@
 import { updateCartBadge, showToast } from './main.js';
+import { getProductById } from './api.js';
 
 const cartItemsEl  = document.getElementById('cart-items');
 const cartSidebar  = document.getElementById('cart-sidebar');
@@ -92,8 +93,18 @@ cartItemsEl.addEventListener('click', e => {
   const action = btn.dataset.action;
 
   if (action === 'inc') {
-    cart[index].qty += 1;
-    saveCart(cart); render();
+    getProductById(cart[index].id).then(prod => {
+      const stock = prod?.stock ?? Infinity;
+      if (cart[index].qty >= stock) {
+        showToast(`Only ${stock} in stock`, 'error');
+        return;
+      }
+      cart[index].qty += 1;
+      saveCart(cart); render();
+    }).catch(() => {
+      cart[index].qty += 1;
+      saveCart(cart); render();
+    });
   } else if (action === 'dec') {
     if (cart[index].qty > 1) {
       cart[index].qty -= 1;
