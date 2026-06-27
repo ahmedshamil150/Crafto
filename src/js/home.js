@@ -183,7 +183,7 @@ function renderCategoryCards() {
       id: 'vase',
       label: 'Vases',
       desc: 'Each vase in our collection is a testament to generations of ceramic mastery. Hand-thrown on traditional wheels and finished with natural glazes, these pieces transform simple blooms into living art.',
-      img: 'https://images.unsplash.com/photo-1605117882932-f9e32f03fea9?w=1000&q=90'
+      img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=1000&q=90'
     },
     {
       id: 'jewelry boxes',
@@ -216,7 +216,7 @@ function renderCategoryCards() {
   grid.innerHTML = categories.map((c, i) => {
     const isReversed = i % 2 === 1;
     return `
-      <div class="category-section ${isReversed ? 'category-section--reverse' : ''}">
+      <div class="category-section scroll-stack-card ${isReversed ? 'category-section--reverse' : ''}">
         <div class="category-section__image" style="background-image:url('${c.img}')"></div>
         <div class="category-section__content">
           <span class="category-section__number">0${i + 1}</span>
@@ -227,6 +227,74 @@ function renderCategoryCards() {
       </div>
     `;
   }).join('');
+
+  initScrollStack();
+}
+
+/* =============================================
+   ScrollStack — stacking card effect via Lenis
+   ============================================= */
+function initScrollStack() {
+  const cards = Array.from(document.querySelectorAll('.category-section'));
+  if (!cards.length) return;
+
+  let lenis = null;
+  let rafId = null;
+
+  // ensure Lenis is available
+  if (typeof Lenis === 'undefined') {
+    // fallback: no smooth scroll but stacking still works
+  } else {
+    lenis = new Lenis({
+      duration: 1.2,
+      easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      lerp: 0.1,
+    });
+    lenis.on('scroll', update);
+    function raf(time) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+  }
+
+  function update() {
+    const scrollTop = window.scrollY;
+    const vh = window.innerHeight;
+    const stackPos = vh * 0.2;
+    const endEl = document.querySelector('.scroll-stack-end');
+    const pinEnd = endEl ? endEl.offsetTop - vh * 0.5 : document.documentElement.scrollHeight;
+
+    cards.forEach((card, i) => {
+      const cardTop = card.offsetTop;
+      const triggerStart = cardTop - stackPos - 30 * i;
+      const scaleEnd = cardTop - vh * 0.1;
+
+      const scaleProgress = Math.max(0, Math.min(1, (scrollTop - triggerStart) / (scaleEnd - triggerStart || 1)));
+      const targetScale = 0.85 + i * 0.03;
+      const scale = 1 - scaleProgress * (1 - targetScale);
+
+      let translateY = 0;
+      if (scrollTop >= triggerStart && scrollTop <= pinEnd) {
+        translateY = scrollTop - cardTop + stackPos + 30 * i;
+      } else if (scrollTop > pinEnd) {
+        translateY = pinEnd - cardTop + stackPos + 30 * i;
+      }
+
+      card.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+      card.style.transformOrigin = 'top center';
+    });
+
+    if (!lenis) requestAnimationFrame(update);
+  }
+
+  update();
+
+  if (!lenis) {
+    window.addEventListener('scroll', update);
+  }
 }
 
 loadHome();
