@@ -84,12 +84,44 @@ export function updateCartBadge() {
 }
 
 export function showToast(msg, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    Object.assign(container.style, {
+      position: 'fixed', bottom: '20px', right: '20px', zIndex: '99999',
+      display: 'flex', flexDirection: 'column', gap: '10px',
+      maxWidth: '360px', width: '100%', pointerEvents: 'none',
+    });
+    document.body.appendChild(container);
+  }
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
   toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+  Object.assign(toast.style, {
+    padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '500',
+    fontFamily: 'Hanken Grotesk, sans-serif',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)',
+    transform: 'translateX(120%)', opacity: '0',
+    transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease',
+    pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '8px',
+    color: type === 'error' ? '#fff' : '#fff',
+    background: type === 'error' ? '#dc2626' : '#006A4E',
+  });
+  const icon = document.createElement('span');
+  icon.className = 'material-symbols-outlined';
+  icon.textContent = type === 'error' ? 'error' : 'check_circle';
+  Object.assign(icon.style, { fontSize: '18px' });
+  toast.prepend(icon);
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateX(0)';
+    toast.style.opacity = '1';
+  });
+  setTimeout(() => {
+    toast.style.transform = 'translateX(120%)';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
 }
 
 function getCart() { return JSON.parse(localStorage.getItem('crafto_cart') || '[]'); }
