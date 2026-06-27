@@ -359,7 +359,7 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 .button-location:disabled { opacity: 0.6; }
 
 /* =============================================
-   CARD PRODUCTS — Scroll Stack (matching React component)
+   CARD PRODUCTS — Scroll Stack (exact React port)
    ============================================= */
 .scroll-stack-scroller {
   position: relative;
@@ -376,15 +376,15 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 }
 
 .scroll-stack-inner {
-  padding: 20vh 1.5rem 50rem;
+  padding: 20vh 5rem 50rem;
   min-height: 100vh;
   max-width: 900px;
   margin: 0 auto;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   .scroll-stack-inner {
-    padding: 20vh 5rem 50rem;
+    padding: 15vh 1.5rem 30rem;
   }
 }
 
@@ -461,12 +461,8 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
     height: 16rem;
     padding: 1.5rem;
     border-radius: 24px;
-    margin: 20px 0;
   }
   .scroll-stack-card-content h3 {
     font-size: 1.4rem;
-  }
-  .scroll-stack-card-content p {
-    font-size: 0.85rem;
   }
 }
