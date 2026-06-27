@@ -22,13 +22,12 @@
     <nav>
       <ul>
         <li><a href="./dashboard.html">Dashboard</a></li>
-        <li><a href="./hero.html">Hero</a></li>
         <li><a href="./products.html">Products</a></li>
-        <li><a href="./card-products.html">Card Products</a></li>
         <li><a href="./card-products.html" class="active">Card Products</a></li>
         <li><a href="./orders.html">Orders</a></li>
         <li><a href="./revenue.html">Revenue</a></li>
         <li><a href="./coupons.html">Coupons</a></li>
+        <li><a href="./hero.html">Hero</a></li>
         <li><a href="./reviews.html">Reviews</a></li>
         <li><a href="../index.html">← Storefront</a></li>
         <li><a href="#" id="logout-btn">Logout</a></li>
@@ -43,15 +42,14 @@
     <div id="card-products-list"></div>
   </main>
 
-  <div id="card-modal" class="admin-modal" style="display:none;">
-    <div class="admin-modal-content" style="max-width:600px;">
+  <div id="card-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:600px;">
       <span class="admin-modal-close" id="card-modal-close">&times;</span>
       <h3 id="card-modal-title">Add Card Product</h3>
       <form id="card-form">
         <label>Title <input type="text" id="c-title" value="Preserving Centuries of Skill" /></label>
         <label>Subtitle <input type="text" id="c-subtitle" placeholder="Brief tagline" /></label>
         <label>Price (PKR) <input type="number" id="c-price" step="0.01" min="0" /></label>
-        <label>Card Color <input type="color" id="c-color" value="#006A4E" /></label>
         <label>Card Color <input type="color" id="c-color" value="#006A4E" /></label>
         <div class="img-upload-row">
           <span>Image 1 (card background)</span>
