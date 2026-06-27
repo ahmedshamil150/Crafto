@@ -181,11 +181,36 @@ function renderCategoryCards() {
   if (!section || !grid) return;
 
   const categories = [
-    { id: 'vase', label: 'Vases', desc: 'Handcrafted ceramic and glass vessels, each piece tells a story of ancient pottery traditions passed down through generations of skilled Pakistani artisans.', img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80' },
-    { id: 'jewelry boxes', label: 'Jewelry Boxes', desc: 'Elegant keepsake chests adorned with intricate hand-painted motifs and mirror work, designed to hold your most treasured possessions.', img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80' },
-    { id: 'lamps', label: 'Lamps', desc: 'Artisan-crafted ambient lighting that transforms any space with warm, diffused glow — from carved brass lanterns to embroidered fabric shades.', img: 'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=800&q=80' },
-    { id: 'tables', label: 'Tables', desc: 'Distinctive center and side tables hand-carved from sustainable sheesham wood, blending traditional craftsmanship with contemporary design.', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=800' },
-    { id: 'candle stands', label: 'Candle Stands', desc: 'Sculptural holders handcrafted from brass, marble, and ceramic — each piece adds a touch of refined elegance to any room.', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800' },
+    {
+      id: 'vase',
+      label: 'Vases',
+      desc: 'Each vase in our collection is a testament to generations of ceramic mastery. Hand-thrown on traditional wheels and finished with natural glazes, these pieces transform simple blooms into living art.',
+      img: 'https://images.unsplash.com/photo-1605117882932-f9e32f03fea9?w=1000&q=90'
+    },
+    {
+      id: 'jewelry boxes',
+      label: 'Jewelry Boxes',
+      desc: 'Carved from sustainable sheesham wood and adorned with hand-painted motifs, our keepsake chests are crafted by skilled artisans in Chiniot. Each box features traditional brass inlay work passed down through centuries.',
+      img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1000&q=90'
+    },
+    {
+      id: 'lamps',
+      label: 'Lamps',
+      desc: 'From hand-hammered brass lanterns to embroidered fabric shades, our lamps cast warm, diffused light that transforms any room. Each piece is assembled by artisans who have mastered the interplay of light and shadow.',
+      img: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=1000&q=90'
+    },
+    {
+      id: 'tables',
+      label: 'Tables',
+      desc: 'Solid sheesham wood tables hand-carved with geometric patterns and finished with natural oils. Every table tells a story — from the hands that shaped it in Punjab to the centerpiece of your home.',
+      img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=1000&q=90'
+    },
+    {
+      id: 'candle stands',
+      label: 'Candle Stands',
+      desc: 'Sculptural candle holders handcrafted from polished brass, natural marble, and carved wood. Each piece is designed to hold taper or pillar candles, casting dancing shadows across your walls.',
+      img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?w=1000&q=90'
+    },
   ];
 
   section.style.display = '';
