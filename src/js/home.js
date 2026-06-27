@@ -100,77 +100,74 @@ async function loadHome() {
     if (badge) badge.style.display = '';
   }
 
-  // Text pressure effect on hero heading (desktop only)
-  const pressureEl = document.getElementById('hero-pressure');
-  if (pressureEl && window.innerWidth >= 768) {
-    initTextPressure(pressureEl);
-  }
+  // Rotating text effect for hero heading
+  initRotatingText();
 
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
-function initTextPressure(el) {
-  const text = el.textContent;
-  el.innerHTML = '';
-  el.style.display = 'flex';
-  el.style.justifyContent = 'center';
-  el.style.flexWrap = 'wrap';
-  el.style.fontFamily = "'Roboto Flex', sans-serif";
-  el.style.fontWeight = '100';
-  el.style.whiteSpace = 'nowrap';
-  el.style.userSelect = 'none';
+function initRotatingText() {
+  const el = document.getElementById('hero-rotating');
+  if (!el) return;
 
-  const spans = text.split('').map(char => {
-    const span = document.createElement('span');
-    span.textContent = char === ' ' ? '\u00A0' : char;
-    span.style.display = 'inline-block';
-    el.appendChild(span);
-    return span;
-  });
+  const texts = ['Passion', 'Heritage', 'Tradition', 'Love'];
+  let currentIndex = 0;
+  let intervalId = null;
 
-  const mouse = { x: 0, y: 0 };
-  const cursor = { x: 0, y: 0 };
+  function animateTo(text) {
+    const chars = Array.from(text);
+    el.innerHTML = '';
+    el.style.display = 'inline-flex';
+    el.style.gap = '0';
 
-  const rect = el.getBoundingClientRect();
-  mouse.x = rect.left + rect.width / 2;
-  mouse.y = rect.top + rect.height / 2;
-  cursor.x = mouse.x;
-  cursor.y = mouse.y;
-
-  const onMove = e => { cursor.x = e.clientX; cursor.y = e.clientY; };
-  const onResize = () => {
-    const r = el.getBoundingClientRect();
-    mouse.x = r.left + r.width / 2;
-    mouse.y = r.top + r.height / 2;
-    cursor.x = mouse.x;
-    cursor.y = mouse.y;
-  };
-
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('resize', onResize);
-
-  function animate() {
-    mouse.x += (cursor.x - mouse.x) / 15;
-    mouse.y += (cursor.y - mouse.y) / 15;
-
-    const elRect = el.getBoundingClientRect();
-    const maxDist = elRect.width / 2;
-
-    spans.forEach(span => {
-      const spanRect = span.getBoundingClientRect();
-      const cx = spanRect.left + spanRect.width / 2;
-      const cy = spanRect.top + spanRect.height / 2;
-      const d = Math.sqrt((mouse.x - cx) ** 2 + (mouse.y - cy) ** 2);
-      const wdth = Math.round(Math.max(25, 151 - (151 * d) / maxDist));
-      const wght = Math.round(Math.max(100, 900 - (900 * d) / maxDist));
-      const ital = Math.max(0, Math.min(1, 1 - d / maxDist)).toFixed(2);
-      span.style.fontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'ital' ${ital}`;
+    const spans = chars.map((char, i) => {
+      const span = document.createElement('span');
+      span.textContent = char === ' ' ? '\u00A0' : char;
+      span.style.display = 'inline-block';
+      span.style.transform = 'translateY(100%)';
+      span.style.opacity = '0';
+      span.style.transition = `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease`;
+      span.style.transitionDelay = `${i * 0.04}s`;
+      el.appendChild(span);
+      requestAnimationFrame(() => {
+        span.style.transform = 'translateY(0)';
+        span.style.opacity = '1';
+      });
+      return span;
     });
 
-    requestAnimationFrame(animate);
+    return spans;
   }
 
-  animate();
+  function animateOut(spans) {
+    spans.forEach((span, i) => {
+      span.style.transform = 'translateY(-120%)';
+      span.style.opacity = '0';
+      span.style.transitionDelay = `${i * 0.03}s`;
+    });
+  }
+
+  function next() {
+    const prevSpans = el.querySelectorAll('span');
+    const prevCount = prevSpans.length;
+
+    const totalDelay = prevCount * 0.03 + 300;
+    if (prevSpans.length) {
+      animateOut(prevSpans);
+    }
+
+    setTimeout(() => {
+      currentIndex = (currentIndex + 1) % texts.length;
+      animateTo(texts[currentIndex]);
+    }, totalDelay);
+  }
+
+  animateTo(texts[0]);
+  intervalId = setInterval(next, 2500);
+
+  // Pause/resume on hover
+  el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
+  el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2500); });
 }
 
 loadHome();

@@ -161,7 +161,10 @@ form?.addEventListener('submit', async e => {
       if (item.variant_id) {
         const variants = await getProductVariants(item.id);
         const match = variants.find(v => v.id === item.variant_id);
-        if (match && item.qty > match.stock) {
+        if (!match) {
+          throw new Error(`"${item.title}" (${item.variant_label || 'selected variant'}) is no longer available. Please remove it from your cart.`);
+        }
+        if (item.qty > match.stock) {
           throw new Error(`"${item.title}" (${item.variant_label || 'selected variant'}) — only ${match.stock} in stock but you ordered ${item.qty}. Please reduce the quantity.`);
         }
       } else {

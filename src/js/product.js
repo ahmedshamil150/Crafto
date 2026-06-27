@@ -408,6 +408,13 @@ async function renderDetail() {
     const stockEl = document.getElementById('detail-stock');
     const priceEl = document.getElementById('detail-price');
     const match = findVariant();
+
+    const bothDim = sizes.length > 1 && colors.length > 1;
+    const sizeEl = document.getElementById('variant-size');
+    const selSize = sizeEl ? sizeEl.value : '';
+    const sizeChosen = sizes.length <= 1 || selSize;
+    const colorChosen = colors.length <= 1 || selectedColor;
+
     if (match) {
       const vPrice = match.price ? discPrice(match.price, p.discount_percent) : finalPrice;
       const parts = [];
@@ -426,6 +433,21 @@ async function renderDetail() {
         stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs text-red-600';
         btn.disabled = true;
       }
+    } else if (bothDim && sizeChosen && colorChosen) {
+      stockEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-600"></span> This combination is not available';
+      stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs text-red-600';
+      btn.dataset.variantId = '';
+      btn.dataset.variantLabel = '';
+      btn.disabled = true;
+    } else if (bothDim && (!sizeChosen || !colorChosen)) {
+      const need = [];
+      if (!sizeChosen) need.push('size');
+      if (!colorChosen) need.push('color');
+      stockEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-on-surface-variant"></span> Please select ' + need.join(' and ');
+      stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs text-on-surface-variant';
+      btn.dataset.variantId = '';
+      btn.dataset.variantLabel = '';
+      btn.disabled = true;
     } else {
       btn.dataset.variantId = '';
       btn.dataset.variantLabel = '';

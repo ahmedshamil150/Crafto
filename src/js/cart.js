@@ -1,5 +1,5 @@
 import { updateCartBadge, showToast } from './main.js';
-import { getProductById } from './api.js';
+import { getProductById, getProductVariants } from './api.js';
 
 const cartItemsEl  = document.getElementById('cart-items');
 const cartSidebar  = document.getElementById('cart-sidebar');
@@ -94,18 +94,29 @@ cartItemsEl.addEventListener('click', e => {
   const action = btn.dataset.action;
 
   if (action === 'inc') {
-    getProductById(cart[index].id).then(prod => {
-      const stock = prod?.stock ?? Infinity;
-      if (cart[index].qty >= stock) {
-        showToast(`Only ${stock} in stock`, 'error');
-        return;
+    (async () => {
+      const item = cart[index];
+      if (item.variant_id) {
+        const variants = await getProductVariants(item.id);
+        const match = variants.find(v => v.id === item.variant_id);
+        const stock = match ? match.stock : 0;
+        if (item.qty >= stock) {
+          showToast(`Only ${stock} in stock for this variant`, 'error');
+          return;
+        }
+        item.qty += 1;
+        saveCart(cart); render();
+      } else {
+        const prod = await getProductById(item.id);
+        const stock = prod?.stock ?? Infinity;
+        if (item.qty >= stock) {
+          showToast(`Only ${stock} in stock`, 'error');
+          return;
+        }
+        item.qty += 1;
+        saveCart(cart); render();
       }
-      cart[index].qty += 1;
-      saveCart(cart); render();
-    }).catch(() => {
-      cart[index].qty += 1;
-      saveCart(cart); render();
-    });
+    })();
   } else if (action === 'dec') {
     if (cart[index].qty > 1) {
       cart[index].qty -= 1;
