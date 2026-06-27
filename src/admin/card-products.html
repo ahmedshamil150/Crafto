@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <meta property="og:title" content="Crafto Admin – Card Products" />
+  <meta property="og:description" content="Crafto admin panel – manage premium card products." />
+  <meta property="og:image" content="../ogimage.jpeg" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>Crafto Admin – Card Products</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="admin-body">
+  <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"></div>
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <h2>Crafto Admin</h2>
+    <nav>
+      <ul>
+        <li><a href="./dashboard.html">Dashboard</a></li>
+        <li><a href="./hero.html">Hero</a></li>
+        <li><a href="./products.html">Products</a></li>
+        <li><a href="./card-products.html">Card Products</a></li>
+        <li><a href="./card-products.html" class="active">Card Products</a></li>
+        <li><a href="./orders.html">Orders</a></li>
+        <li><a href="./revenue.html">Revenue</a></li>
+        <li><a href="./coupons.html">Coupons</a></li>
+        <li><a href="./reviews.html">Reviews</a></li>
+        <li><a href="../index.html">← Storefront</a></li>
+        <li><a href="#" id="logout-btn">Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-page-header">
+      <h2>Card Products</h2>
+      <button class="button" id="add-card-btn">+ Add Card</button>
+    </div>
+    <div id="card-products-list"></div>
+  </main>
+
+  <div id="card-modal" class="admin-modal" style="display:none;">
+    <div class="admin-modal-content" style="max-width:600px;">
+      <span class="admin-modal-close" id="card-modal-close">&times;</span>
+      <h3 id="card-modal-title">Add Card Product</h3>
+      <form id="card-form">
+        <label>Title <input type="text" id="c-title" value="Preserving Centuries of Skill" /></label>
+        <label>Subtitle <input type="text" id="c-subtitle" placeholder="Brief tagline" /></label>
+        <label>Price (PKR) <input type="number" id="c-price" step="0.01" min="0" /></label>
+        <label>Card Color <input type="color" id="c-color" value="#006A4E" /></label>
+        <label>Image 1 (main card background) <input type="url" id="c-image" placeholder="https://..." /></label>
+        <label>Image 2 <input type="url" id="c-image-2" placeholder="https://..." /></label>
+        <label>Image 3 <input type="url" id="c-image-3" placeholder="https://..." /></label>
+        <label>Sort Order <input type="number" id="c-sort" value="0" min="0" /></label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="c-active" checked /> Active
+        </label>
+        <input type="hidden" id="c-id" />
+        <button type="submit" class="button" id="card-save-btn">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getAllCardProducts, createCardProduct, updateCardProduct, deleteCardProduct, uploadImage } from '../js/api.js';
+
+    const list = document.getElementById('card-products-list');
+    const modal = document.getElementById('card-modal');
+    const form = document.getElementById('card-form');
+    let cards = [];
+
+    function esc(str) {
+      const el = document.createElement('span');
+      el.textContent = str ?? '';
+      return el.innerHTML;
+    }
+
+    async function load() {
+      list.innerHTML = '<p>Loading…</p>';
+      cards = await getAllCardProducts();
+      if (!cards.length) {
+        list.innerHTML = '<p>No card products yet. Click "+ Add Card" to create one.</p>';
+        return;
+      }
+      list.innerHTML = `
+        <div class="admin-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th><th>Title</th><th>Price</th><th>Color</th><th>Sort</th><th>Active</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${cards.map(c => `
+              <tr data-id="${c.id}">
+                <td>${c.image_url ? `<img src="${c.image_url}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" />` : '<span style="color:#999;">–</span>'}</td>
+                <td>${esc(c.title)}</td>
+                <td>${c.price ? 'PKR ' + Number(c.price).toLocaleString() : '–'}</td>
+                <td><span style="display:inline-block;width:24px;height:24px;border-radius:4px;background:${c.card_color || '#006A4E'};border:1px solid #ddd;vertical-align:middle;"></span></td>
+                <td>${c.sort_order ?? 0}</td>
+                <td style="text-align:center;">${c.active ? '✓' : '✗'}</td>
+                <td class="action-cell">
+                  <button class="button edit-btn" data-id="${c.id}">Edit</button>
+                  <button class="button delete-btn" data-id="${c.id}" style="background:#c62828;">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      `;
+
+      list.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const c = cards.find(x => x.id === btn.dataset.id);
+          if (c) openModal(c);
+        });
+      });
+
+      list.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this card product?')) return;
+          await deleteCardProduct(btn.dataset.id);
+          load();
+        });
+      });
+    }
+
+    function openModal(c) {
+      document.getElementById('c-id').value = c.id || '';
+      document.getElementById('c-title').value = c.title || 'Preserving Centuries of Skill';
+      document.getElementById('c-subtitle').value = c.subtitle || '';
+      document.getElementById('c-price').value = c.price || '';
+      document.getElementById('c-color').value = c.card_color || '#006A4E';
+      document.getElementById('c-image').value = c.image_url || '';
+      document.getElementById('c-image-2').value = c.image_url_2 || '';
+      document.getElementById('c-image-3').value = c.image_url_3 || '';
+      document.getElementById('c-sort').value = c.sort_order ?? 0;
+      document.getElementById('c-active').checked = c.active !== false;
+      document.getElementById('card-modal-title').textContent = c.id ? 'Edit Card Product' : 'Add Card Product';
+      modal.style.display = 'flex';
+    }
+
+    document.getElementById('add-card-btn').addEventListener('click', () => openModal({}));
+    document.getElementById('card-modal-close').addEventListener('click', () => modal.style.display = 'none');
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('c-id').value;
+      const data = {
+        title: document.getElementById('c-title').value.trim(),
+        subtitle: document.getElementById('c-subtitle').value.trim(),
+        price: parseFloat(document.getElementById('c-price').value) || 0,
+        card_color: document.getElementById('c-color').value,
+        image_url: document.getElementById('c-image').value.trim(),
+        image_url_2: document.getElementById('c-image-2').value.trim(),
+        image_url_3: document.getElementById('c-image-3').value.trim(),
+        sort_order: parseInt(document.getElementById('c-sort').value) || 0,
+        active: document.getElementById('c-active').checked,
+      };
+      const btn = document.getElementById('card-save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        if (id) await updateCardProduct(id, data);
+        else await createCardProduct(data);
+        modal.style.display = 'none';
+        load();
+      } catch (err) { alert('Save failed: ' + err.message); }
+      btn.disabled = false; btn.textContent = 'Save';
+    });
+
+    load();
+  </script>
+</body>
+</html>

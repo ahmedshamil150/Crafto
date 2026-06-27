@@ -1,4 +1,4 @@
-import { getProducts, getActiveHeroImage } from './api.js';
+import { getProducts, getActiveHeroImage, getCardProducts } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const grid = document.getElementById('home-product-grid');
@@ -103,6 +103,9 @@ async function loadHome() {
   // Rotating text effect for hero heading
   initRotatingText();
 
+  // Card products — scroll stack
+  await renderCardProducts();
+
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
@@ -170,6 +173,57 @@ function initRotatingText() {
 
   el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
   el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
+}
+
+async function renderCardProducts() {
+  const section = document.getElementById('card-products-section');
+  const container = document.getElementById('card-stack-container');
+  if (!section || !container) return;
+
+  const cards = await getCardProducts();
+  if (!cards.length) return;
+
+  section.style.display = '';
+  container.innerHTML = cards.map(c => {
+    const bg = c.image_url ? `url('${c.image_url}')` : c.card_color || '#006A4E';
+    const color = c.card_color || '#006A4E';
+    return `
+      <div class="card-stack-item" style="background:${bg};background-size:cover;background-position:center;">
+        <div class="card-stack-content">
+          <h3>${esc(c.title)}</h3>
+          ${c.subtitle ? '<p>' + esc(c.subtitle) + '</p>' : ''}
+          ${c.price ? '<span class="card-price" style="background:' + color + ';">PKR ' + Number(c.price).toLocaleString() + '</span>' : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Scroll-stack scale effect
+  function updateCardScales() {
+    const items = container.querySelectorAll('.card-stack-item');
+    const stackTop = window.innerWidth < 768 ? 80 : 100;
+    const viewH = window.innerHeight;
+    items.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const cardMid = rect.top + rect.height / 2;
+      const progress = Math.max(0, Math.min(1, (cardMid - stackTop) / (viewH - stackTop)));
+      const scale = 0.88 + (1 - 0.88) * progress;
+      const opacity = 0.7 + 0.3 * progress;
+      card.style.transform = `scale(${scale})`;
+      card.style.opacity = opacity;
+    });
+    requestAnimationFrame(updateCardScales);
+  }
+
+  // Start after fonts/images settle
+  setTimeout(() => requestAnimationFrame(updateCardScales), 500);
+
+  // Re-trigger on orientation/resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => requestAnimationFrame(updateCardScales), 200);
+  });
 }
 
 loadHome();

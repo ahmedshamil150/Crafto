@@ -30,6 +30,7 @@ export default defineConfig({
         adminReviews:   resolve(__dirname, 'src/admin/reviews.html'),
         adminCoupons:   resolve(__dirname, 'src/admin/coupons.html'),
         adminHero:      resolve(__dirname, 'src/admin/hero.html'),
+        adminCardProducts: resolve(__dirname, 'src/admin/card-products.html'),
         contactSuccess: resolve(__dirname, 'src/contact-success.html'),
         privacy:        resolve(__dirname, 'src/privacy.html'),
         wishlist:       resolve(__dirname, 'src/wishlist.html'),
