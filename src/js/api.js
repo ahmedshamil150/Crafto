@@ -321,3 +321,42 @@ export async function setHeroImage(image_url, mobile_image_url) {
   });
   return result.data;
 }
+
+// --- Product Variants ---
+
+export async function getProductVariants(productId) {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/product_variants?product_id=eq.${productId}&order=created_at`,
+    { headers: headers() }
+  );
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createVariant(data) {
+  const result = await adminFetch({
+    path: '/rest/v1/product_variants',
+    method: 'POST',
+    body: data,
+    prefer: 'return=representation',
+  });
+  return result.data;
+}
+
+export async function updateVariant(id, data) {
+  const result = await adminFetch({
+    path: `/rest/v1/product_variants?id=eq.${id}`,
+    method: 'PATCH',
+    body: data,
+    prefer: 'return=representation',
+  });
+  return result.data;
+}
+
+export async function deleteVariant(id) {
+  await adminFetch({
+    path: `/rest/v1/product_variants?id=eq.${id}`,
+    method: 'DELETE',
+  });
+}

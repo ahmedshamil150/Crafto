@@ -32,6 +32,7 @@ function render() {
       </div>
       <div class="flex-1 min-w-0">
         <h3 class="font-headline-md text-sm md:text-base text-charcoal-text truncate">${item.title}</h3>
+        ${item.variant_label ? '<p class="font-label-caps text-[10px] text-on-surface-variant mt-0.5">' + esc(item.variant_label) + '</p>' : ''}
         <p class="font-body-md text-deep-emerald font-semibold text-sm mt-0.5">PKR ${Number(item.price).toLocaleString()}</p>
       </div>
       <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
@@ -59,7 +60,7 @@ function render() {
         <div class="space-y-2">
           ${cart.map(i => `
             <div class="flex justify-between text-sm text-on-surface-variant">
-              <span class="truncate">${i.title} × ${i.qty}</span>
+              <span class="truncate">${i.title}${i.variant_label ? ' (' + esc(i.variant_label) + ')' : ''} × ${i.qty}</span>
               <span class="font-medium text-charcoal-text whitespace-nowrap ml-2">PKR ${(i.price * i.qty).toLocaleString()}</span>
             </div>
           `).join('')}

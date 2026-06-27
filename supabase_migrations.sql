@@ -423,3 +423,153 @@ CREATE POLICY "Allow service all hero" ON hero_images
   FOR ALL USING (true) WITH CHECK (true);
 
 GRANT SELECT ON hero_images TO anon;
+
+-- =============================================
+-- 15. Product variants (size/color/price/stock)
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS product_variants (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id  UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  size        TEXT,
+  color       TEXT,
+  price       NUMERIC,
+  stock       INTEGER NOT NULL DEFAULT 0,
+  sku         TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS product_variants_product_id_idx ON product_variants(product_id);
+
+ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow anon read variants" ON product_variants
+  FOR SELECT TO anon USING (true);
+
+CREATE POLICY "Allow service all variants" ON product_variants
+  FOR ALL USING (true) WITH CHECK (true);
+
+GRANT SELECT ON product_variants TO anon;
+
+-- =============================================
+-- 16. Update place_order to handle variant stock
+-- =============================================
+
+DROP FUNCTION IF EXISTS place_order();
+
+CREATE OR REPLACE FUNCTION place_order(
+  p_id               uuid,
+  p_customer_name    text,
+  p_customer_phone   text,
+  p_customer_address text,
+  p_items            jsonb,
+  p_total            numeric,
+  p_coupon_code      text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  item          jsonb;
+  prod_id       uuid;
+  var_id        uuid;
+  prod_qty      int;
+  prod_rec      RECORD;
+  var_rec       RECORD;
+  coup_rec      coupons%ROWTYPE;
+  ord_num       text;
+  done          bool;
+  rnd_str       text;
+  chars         text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+BEGIN
+  -- Generate unique order_number (CRAFTOID-XXXXXX)
+  done := false;
+  WHILE NOT done LOOP
+    rnd_str := '';
+    FOR i IN 1..6 LOOP
+      rnd_str := rnd_str || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+    END LOOP;
+    ord_num := 'CRAFTOID-' || rnd_str;
+    BEGIN
+      INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code, order_number)
+      VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
+              CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END,
+              ord_num);
+      done := true;
+    EXCEPTION WHEN unique_violation THEN
+    END;
+  END LOOP;
+
+  FOR item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    prod_id  := (item->>'id')::uuid;
+    prod_qty := (item->>'qty')::int;
+    var_id   := (item->>'variant_id')::uuid;
+
+    IF var_id IS NOT NULL THEN
+      -- Variant-based stock check
+      SELECT * INTO var_rec
+      FROM product_variants
+      WHERE id = var_id AND product_id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Variant not found for product "%"', item->>'title';
+      END IF;
+
+      IF var_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          item->>'title', var_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE product_variants
+      SET stock = stock - prod_qty
+      WHERE id = var_id;
+    ELSE
+      -- Product-level stock check (backward compatible)
+      SELECT * INTO prod_rec
+      FROM products
+      WHERE id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found: %', item->>'title';
+      END IF;
+
+      IF prod_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          prod_rec.title, prod_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE products
+      SET stock = stock - prod_qty
+      WHERE id = prod_id;
+    END IF;
+  END LOOP;
+
+  -- Apply coupon if provided
+  IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(p_coupon_code) AND coupons.is_active = true FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Invalid coupon code.';
+    END IF;
+
+    IF coup_rec.expires_at IS NOT NULL AND coup_rec.expires_at < now() THEN
+      RAISE EXCEPTION 'Coupon has expired.';
+    END IF;
+
+    IF coup_rec.max_uses > 0 AND coup_rec.used_count >= coup_rec.max_uses THEN
+      RAISE EXCEPTION 'Coupon usage limit reached.';
+    END IF;
+
+    UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
+  END IF;
+
+  RETURN jsonb_build_object('success', true, 'order_id', p_id, 'order_number', ord_num);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text) TO anon;

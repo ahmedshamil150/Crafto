@@ -181,6 +181,7 @@ function renderOrder(order, id, phone) {
                   </div>
                   <div>
                     <p class="font-body-md text-sm text-charcoal-text">${esc(i.title)}</p>
+                    ${i.variant_label ? '<p class="font-label-caps text-[10px] text-on-surface-variant">' + esc(i.variant_label) + '</p>' : ''}
                     <p class="font-label-caps text-[10px] text-on-surface-variant">Qty: ${i.qty}</p>
                   </div>
                 </div>

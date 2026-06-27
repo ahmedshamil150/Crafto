@@ -1,5 +1,5 @@
 // src/js/product.js
-import { getProducts, getProductById, getReviews, createReview } from './api.js';
+import { getProducts, getProductById, getReviews, createReview, getProductVariants } from './api.js';
 import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } from './main.js';
 
 const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
@@ -232,6 +232,12 @@ async function renderDetail() {
 
   const finalPrice = discPrice(p.price, p.discount_percent);
   const onSale = hasDisc(p.discount_percent);
+  const variants = await getProductVariants(p.id);
+
+  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+  const hasVariants = variants.length > 0;
+  const totalStock = hasVariants ? variants.reduce((s, v) => s + (v.stock || 0), 0) : p.stock;
 
   detail.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-12 mb-section-gap">
@@ -258,21 +264,43 @@ async function renderDetail() {
         <p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">${esc(p.description || 'No description available.')}</p>
 
         <div class="mb-4">
-          <span class="font-headline-md text-headline-md text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
+          <span id="detail-price" class="font-headline-md text-headline-md text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
           ${onSale ? '<span class="text-on-surface-variant/60 line-through ml-3 text-lg">PKR ' + Number(p.price).toLocaleString() + '</span>' : ''}
         </div>
         ${onSale ? '<p class="text-red-600 text-sm font-label-caps mb-4">You save ' + p.discount_percent + '%</p>' : ''}
 
+        ${hasVariants ? `
+        <div class="space-y-4 mb-4">
+          ${sizes.length > 1 ? `
+          <div>
+            <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5">Size</label>
+            <select id="variant-size" class="w-full border border-outline/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-deep-emerald/30 focus:border-deep-emerald bg-white">
+              <option value="">Select size</option>
+              ${sizes.map(s => '<option value="' + esc(s) + '">' + esc(s) + '</option>').join('')}
+            </select>
+          </div>` : ''}
+          ${colors.length > 1 ? `
+          <div>
+            <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5">Color</label>
+            <select id="variant-color" class="w-full border border-outline/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-deep-emerald/30 focus:border-deep-emerald bg-white">
+              <option value="">Select color</option>
+              ${colors.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('')}
+            </select>
+          </div>` : ''}
+        </div>
+        ` : ''}
+
         <div class="mb-6">
-          ${p.stock > 0
-            ? '<span class="inline-flex items-center gap-1.5 text-deep-emerald font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-deep-emerald"></span> In stock (' + p.stock + ' available)</span>'
-            : '<span class="inline-flex items-center gap-1.5 text-red-600 font-label-caps text-xs"><span class="w-2 h-2 rounded-full bg-red-600"></span> Out of stock</span>'}
+          <span id="detail-stock" class="inline-flex items-center gap-1.5 font-label-caps text-xs ${totalStock > 0 ? 'text-deep-emerald' : 'text-red-600'}">
+            <span class="w-2 h-2 rounded-full ${totalStock > 0 ? 'bg-deep-emerald' : 'bg-red-600'}"></span>
+            ${hasVariants ? (totalStock > 0 ? 'In stock' : 'Out of stock') : (totalStock > 0 ? 'In stock (' + totalStock + ' available)' : 'Out of stock')}
+          </span>
         </div>
 
         <div class="flex gap-3 items-center">
           <button class="btn-shine flex-1 px-8 py-3 bg-deep-emerald text-white rounded-full font-label-caps text-xs uppercase tracking-widest hover:bg-primary transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed" id="add-to-cart"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
-            ${p.stock === 0 ? 'disabled' : ''}>
+            ${totalStock === 0 ? 'disabled' : ''}>
             <span class="material-symbols-outlined text-base align-middle mr-1.5">shopping_bag</span> Add to Cart
           </button>
           <button id="detail-wishlist" data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${images[0]}"
@@ -339,9 +367,69 @@ async function renderDetail() {
   });
 
   document.getElementById('add-to-cart')?.addEventListener('click', function() {
-    addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price));
+    const varId = this.dataset.variantId || '';
+    const varLabel = this.dataset.variantLabel || '';
+    addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price), 1, varId, varLabel);
     showToast(`${this.dataset.title} added to cart!`);
   });
+
+  // Variant selection logic
+  function findVariant() {
+    const sizeEl = document.getElementById('variant-size');
+    const colorEl = document.getElementById('variant-color');
+    const selSize = sizeEl ? sizeEl.value : '';
+    const selColor = colorEl ? colorEl.value : '';
+    if (sizes.length > 1 && !selSize) return null;
+    if (colors.length > 1 && !selColor) return null;
+    const match = variants.find(v => {
+      if (sizes.length > 1 && v.size !== selSize) return false;
+      if (colors.length > 1 && v.color !== selColor) return false;
+      if (sizes.length <= 1 && colors.length <= 1) return true;
+      if (sizes.length > 1 && colors.length <= 1) return v.size === selSize;
+      if (colors.length > 1 && sizes.length <= 1) return v.color === selColor;
+      return v.size === selSize && v.color === selColor;
+    });
+    return match || null;
+  }
+
+  function updateVariantDisplay() {
+    const btn = document.getElementById('add-to-cart');
+    const stockEl = document.getElementById('detail-stock');
+    const priceEl = document.getElementById('detail-price');
+    const match = findVariant();
+    if (match) {
+      const vPrice = match.price ? discPrice(match.price, p.discount_percent) : finalPrice;
+      const parts = [];
+      if (match.size) parts.push(match.size);
+      if (match.color) parts.push(match.color);
+      priceEl.textContent = 'PKR ' + vPrice.toLocaleString();
+      btn.dataset.price = vPrice;
+      btn.dataset.variantId = match.id;
+      btn.dataset.variantLabel = parts.join(' / ');
+      if (match.stock > 0) {
+        stockEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-deep-emerald"></span> In stock (' + match.stock + ' available)';
+        stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs text-deep-emerald';
+        btn.disabled = false;
+      } else {
+        stockEl.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-600"></span> Out of stock';
+        stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs text-red-600';
+        btn.disabled = true;
+      }
+    } else {
+      btn.dataset.variantId = '';
+      btn.dataset.variantLabel = '';
+      priceEl.textContent = 'PKR ' + finalPrice.toLocaleString();
+      btn.dataset.price = finalPrice;
+      stockEl.innerHTML = '<span class="w-2 h-2 rounded-full ' + (totalStock > 0 ? 'bg-deep-emerald' : 'bg-red-600') + '"></span> ' + (totalStock > 0 ? 'In stock' : 'Out of stock');
+      stockEl.className = 'inline-flex items-center gap-1.5 font-label-caps text-xs ' + (totalStock > 0 ? 'text-deep-emerald' : 'text-red-600');
+      btn.disabled = totalStock === 0;
+    }
+  }
+
+  const sizeEl = document.getElementById('variant-size');
+  const colorEl = document.getElementById('variant-color');
+  if (sizeEl) sizeEl.addEventListener('change', updateVariantDisplay);
+  if (colorEl) colorEl.addEventListener('change', updateVariantDisplay);
   document.getElementById('detail-wishlist')?.addEventListener('click', function() {
     const { id, title, price, image } = this.dataset;
     toggleWishlist(id, title, price, image);

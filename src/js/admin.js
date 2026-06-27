@@ -4,6 +4,7 @@ import {
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
   getActiveHeroImage, getHeroImages, setHeroImage,
+  getProductVariants, createVariant, updateVariant, deleteVariant,
 } from './api.js';
 
 function esc(str) {
@@ -227,7 +228,13 @@ if (productsTable) {
               ${CATEGORIES.map(c => `<option value="${c.toLowerCase()}">${c}</option>`).join('')}
             </select>
           </label>
-          <label>Stock<input id="p-stock" type="number" min="0" value="0" /></label>
+          <label>Stock <small>(total for products without variants)</small><input id="p-stock" type="number" min="0" value="0" /></label>
+          <div class="variants-section" style="border:1px solid #ddd;border-radius:6px;padding:12px;margin-top:8px;">
+            <strong style="display:block;margin-bottom:8px;">Variants <small style="font-weight:400;color:#666;">(size/color with separate stock)</small></strong>
+            <div id="variants-list"></div>
+            <button type="button" id="add-variant-btn" class="button" style="background:#6b7280;font-size:12px;margin-top:8px;">+ Add Variant</button>
+            <div id="variants-empty" style="color:#999;font-size:13px;padding:8px 0;">No variants yet</div>
+          </div>
           <label>Discount (%)<input id="p-discount" type="number" min="0" max="100" value="0" /></label>
           <label class="checkbox-label">
             <input id="p-featured" type="checkbox" />
@@ -341,8 +348,42 @@ if (productsTable) {
         image_url_3: image_url_3 || null,
       };
 
-      if (id) await updateProduct(id, payload);
-      else    await createProduct(payload);
+      const productResult = id ? await updateProduct(id, payload) : await createProduct(payload);
+      const savedId = id || productResult?.id || productResult?.[0]?.id;
+      // Save variants
+      if (savedId) {
+        const existingVariants = await getProductVariants(savedId);
+        const existingIds = new Set(existingVariants.map(v => v.id));
+        const updatedIds = new Set();
+
+        for (const v of currentVariants) {
+          if (v.id) {
+            updatedIds.add(v.id);
+            const data = {};
+            if (v.size !== undefined) data.size = v.size || null;
+            if (v.color !== undefined) data.color = v.color || null;
+            if (v.price !== undefined) data.price = v.price || null;
+            data.stock = v.stock;
+            data.sku = v.sku || null;
+            await updateVariant(v.id, data);
+          } else {
+            const created = await createVariant({
+              product_id: savedId,
+              size: v.size || null,
+              color: v.color || null,
+              price: v.price || null,
+              stock: v.stock,
+              sku: v.sku || null,
+            });
+          }
+        }
+        // Delete variants that were removed
+        for (const existing of existingVariants) {
+          if (!updatedIds.has(existing.id)) {
+            await deleteVariant(existing.id).catch(() => {});
+          }
+        }
+      }
       modal.style.display = 'none';
       productsPage = 1;
       loadProducts();
@@ -352,6 +393,57 @@ if (productsTable) {
     }
     saveBtn.disabled = false; saveBtn.textContent = 'Save';
   });
+
+  // --- Variant Management ---
+  let currentVariants = [];
+
+  function renderVariants() {
+    const list = document.getElementById('variants-list');
+    const empty = document.getElementById('variants-empty');
+    if (!currentVariants.length) {
+      list.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    list.innerHTML = currentVariants.map((v, i) => `
+      <div class="variant-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;" data-index="${i}">
+        <input type="text" placeholder="Size" value="${esc(v.size || '')}" class="v-size" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="text" placeholder="Color" value="${esc(v.color || '')}" class="v-color" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="number" placeholder="Price" value="${v.price || ''}" class="v-price" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="number" placeholder="Stock" value="${v.stock}" class="v-stock" style="width:60px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="text" placeholder="SKU" value="${esc(v.sku || '')}" class="v-sku" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <button type="button" class="remove-variant" style="background:red;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:12px;">✕</button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.remove-variant').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.closest('.variant-row').dataset.index, 10);
+        currentVariants.splice(idx, 1);
+        renderVariants();
+      });
+    });
+  }
+
+  document.getElementById('add-variant-btn')?.addEventListener('click', () => {
+    currentVariants.push({ size: '', color: '', price: '', stock: 0, sku: '' });
+    renderVariants();
+  });
+
+  async function loadVariants(productId) {
+    if (!productId) { currentVariants = []; renderVariants(); return; }
+    const variants = await getProductVariants(productId);
+    currentVariants = variants.map(v => ({ id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock, sku: v.sku }));
+    renderVariants();
+  }
+
+  // Update openModal to also load variants
+  const origOpenModal = openModal;
+  openModal = function(product = null) {
+    origOpenModal(product);
+    loadVariants(product?.id || null);
+  };
 
   const PRODS_PER_PAGE = 10;
   let productsPage = 1;
@@ -442,7 +534,7 @@ if (ordersTable) {
     if (!arr.length) return '<em>No items</em>';
     return arr.map(i => `
       <div style="display:flex;justify-content:space-between;padding:2px 0;">
-        <span>${esc(i.title)} × ${i.qty}</span>
+        <span>${esc(i.title)}${i.variant_label ? ' (' + esc(i.variant_label) + ')' : ''} × ${i.qty}</span>
         <span>PKR ${(Number(i.price) * Number(i.qty)).toLocaleString()}</span>
       </div>
     `).join('');

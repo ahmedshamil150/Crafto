@@ -1,4 +1,4 @@
-import { placeOrder, validateCoupon, getProducts, getProductById } from './api.js';
+import { placeOrder, validateCoupon, getProducts, getProductById, getProductVariants } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const form      = document.getElementById('checkout-form');
@@ -49,6 +49,7 @@ function renderSummary() {
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-body-md text-sm text-charcoal-text truncate">${esc(i.title)}</p>
+                ${i.variant_label ? '<p class="font-label-caps text-[10px] text-on-surface-variant">' + esc(i.variant_label) + '</p>' : ''}
                 <p class="font-body-md text-xs text-on-surface-variant">Qty: ${i.qty}</p>
               </div>
               <p class="font-body-md text-sm text-deep-emerald font-semibold whitespace-nowrap">PKR ${(i.price * i.qty).toLocaleString()}</p>
@@ -157,10 +158,18 @@ form?.addEventListener('submit', async e => {
   try {
     // Validate stock before placing order
     for (const item of cart) {
-      const prod = await getProductById(item.id);
-      if (!prod) continue;
-      if (item.qty > prod.stock) {
-        throw new Error(`"${item.title}" — only ${prod.stock} in stock but you ordered ${item.qty}. Please reduce the quantity.`);
+      if (item.variant_id) {
+        const variants = await getProductVariants(item.id);
+        const match = variants.find(v => v.id === item.variant_id);
+        if (match && item.qty > match.stock) {
+          throw new Error(`"${item.title}" (${item.variant_label || 'selected variant'}) — only ${match.stock} in stock but you ordered ${item.qty}. Please reduce the quantity.`);
+        }
+      } else {
+        const prod = await getProductById(item.id);
+        if (!prod) continue;
+        if (item.qty > prod.stock) {
+          throw new Error(`"${item.title}" — only ${prod.stock} in stock but you ordered ${item.qty}. Please reduce the quantity.`);
+        }
       }
     }
 
