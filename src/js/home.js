@@ -232,16 +232,16 @@ function renderCategoryCards() {
 }
 
 /* =============================================
-   ScrollStack — sticky stacking via Lenis
+   ScrollStack — transform-based stacking via Lenis
    ============================================= */
 function initScrollStack() {
   const cards = Array.from(document.querySelectorAll('.category-section'));
-  const section = document.getElementById('category-cards-section');
-  if (!cards.length || !section) return;
+  if (!cards.length) return;
 
-  // give the section enough height for all sticky cards + release room
-  section.style.minHeight = `${cards.length * 120}vh`;
+  const stackSpacing = 40;
+  const stackTop = 0.15;
 
+  // ensure Lenis is available
   let lenis = null;
   let rafId = null;
 
@@ -253,6 +253,7 @@ function initScrollStack() {
       wheelMultiplier: 1,
       lerp: 0.1,
     });
+    lenis.on('scroll', update);
     function raf(time) {
       lenis.raf(time);
       rafId = requestAnimationFrame(raf);
@@ -261,10 +262,40 @@ function initScrollStack() {
   }
 
   cards.forEach((card, i) => {
-    card.style.position = 'sticky';
-    card.style.top = `${12 + i * 2}%`;
-    card.style.zIndex = 10 - i;
+    card.style.willChange = 'transform';
+    card.style.zIndex = cards.length - i;
   });
+
+  function update() {
+    const scrollTop = window.scrollY;
+    const vh = window.innerHeight;
+    const stackPos = vh * stackTop;
+    const endEl = document.querySelector('.scroll-stack-end');
+    const releasePoint = endEl ? endEl.offsetTop - vh * 0.5 : Infinity;
+
+    cards.forEach((card, i) => {
+      const cardTop = card.offsetTop;
+      const triggerStart = cardTop - stackPos;
+      const stackOffset = i * stackSpacing;
+
+      let translateY = 0;
+
+      if (scrollTop > triggerStart) {
+        const rawTranslate = scrollTop - cardTop + stackPos + stackOffset;
+        translateY = Math.min(rawTranslate, releasePoint - cardTop + stackPos + stackOffset);
+      }
+
+      card.style.transform = `translate3d(0, ${Math.max(0, translateY)}px, 0)`;
+    });
+
+    if (!lenis) requestAnimationFrame(update);
+  }
+
+  update();
+
+  if (!lenis) {
+    window.addEventListener('scroll', update);
+  }
 }
 
 loadHome();
