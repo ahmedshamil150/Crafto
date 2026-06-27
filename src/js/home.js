@@ -238,7 +238,7 @@ function initScrollStack() {
   const cards = Array.from(document.querySelectorAll('.category-section'));
   if (!cards.length) return;
 
-  const stackSpacing = 40;
+  const stackSpacing = 0;
   const stackTop = 0.15;
 
   // ensure Lenis is available
