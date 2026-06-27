@@ -359,71 +359,72 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 .button-location:disabled { opacity: 0.6; }
 
 /* =============================================
-   CARD PRODUCTS — feature grid
+   CARD PRODUCTS — premium showcase
    ============================================= */
 #card-products-section {
   padding: 4rem 0;
 }
 #card-stack-inner {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 @media (min-width: 768px) {
   #card-stack-inner {
     padding: 0 2.5rem;
+    gap: 2.5rem;
   }
 }
 .feature-card {
   position: relative;
-  height: 22rem;
-  border-radius: 20px;
+  height: 20rem;
+  border-radius: 40px;
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 0 30px rgba(0,0,0,0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
 }
 .feature-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%);
   z-index: 1;
 }
 .feature-card-content {
   position: relative;
   z-index: 2;
   color: #fff;
-  padding: 2rem;
+  padding: 3rem;
   width: 100%;
 }
 .feature-card-content h3 {
   font-family: 'Bodoni Moda', serif;
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
   line-height: 1.2;
 }
 .feature-card-content p {
   font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   opacity: 0.9;
   margin-bottom: 0.75rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .feature-card-price {
   font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   display: inline-block;
-  padding: 0.35rem 1.1rem;
+  padding: 0.4rem 1.2rem;
   border-radius: 999px;
 }
 @media (max-width: 767px) {
@@ -432,13 +433,13 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
   }
   .feature-card {
     height: 16rem;
-    border-radius: 16px;
+    border-radius: 24px;
   }
   .feature-card-content {
-    padding: 1.25rem;
+    padding: 1.5rem;
   }
   .feature-card-content h3 {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
   .feature-card-content p {
     font-size: 0.85rem;
