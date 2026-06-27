@@ -9,6 +9,7 @@ const cartCount    = document.getElementById('cart-count');
 
 function getCart() { return JSON.parse(localStorage.getItem('crafto_cart') || '[]'); }
 function saveCart(cart) { localStorage.setItem('crafto_cart', JSON.stringify(cart)); }
+function esc(str) { const el = document.createElement('span'); el.textContent = str ?? ''; return el.innerHTML; }
 
 function render() {
   const cart = getCart();
