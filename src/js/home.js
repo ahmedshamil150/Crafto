@@ -103,6 +103,9 @@ async function loadHome() {
   // Rotating text effect for hero heading
   initRotatingText();
 
+  // Category cards
+  renderCategoryCards(products);
+
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
@@ -170,6 +173,52 @@ function initRotatingText() {
 
   el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
   el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
+}
+
+function renderCategoryCards(products) {
+  const section = document.getElementById('category-cards-section');
+  const grid = document.getElementById('category-cards-grid');
+  if (!section || !grid || !products?.length) return;
+
+  const descriptions = {
+    vase: 'Handcrafted ceramic and glass vessels',
+    'jewelry boxes': 'Elegant keepsake chests and organizers',
+    lamps: 'Artisan-crafted ambient lighting',
+    tables: 'Distinctive center and side tables',
+    'candle stands': 'Sculptural holders for every space',
+    planters: 'Modern and classic plant homes',
+    others: 'Unique handcrafted treasures',
+  };
+
+  const grouped = {};
+  products.forEach(p => {
+    const cat = (p.category || 'others').toLowerCase();
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(p);
+  });
+
+  const entries = Object.entries(grouped)
+    .filter(([, prods]) => prods.length > 0)
+    .slice(0, 5);
+
+  if (!entries.length) return;
+
+  section.style.display = '';
+
+  grid.innerHTML = entries.map(([cat, prods]) => {
+    const img = prods[0].image_url || `https://placehold.co/800/006A4E/fff?text=${encodeURIComponent(cat)}`;
+    const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
+    const desc = descriptions[cat] || 'Handcrafted with care';
+    return `
+      <a href="./shop.html?category=${encodeURIComponent(cat)}" class="category-card" style="background:url('${img}');background-size:cover;background-position:center;">
+        <div class="category-card-content">
+          <h3>${esc(label)}</h3>
+          <p>${esc(desc)}</p>
+          <span class="category-count">${prods.length} item${prods.length !== 1 ? 's' : ''}</span>
+        </div>
+      </a>
+    `;
+  }).join('');
 }
 
 loadHome();

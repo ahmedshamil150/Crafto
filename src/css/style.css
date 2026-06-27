@@ -358,3 +358,78 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 .button-location:hover { background: #3a5a8a; }
 .button-location:disabled { opacity: 0.6; }
 
+/* =============================================
+   CATEGORY CARDS — premium showcase
+   ============================================= */
+.category-card {
+  position: relative;
+  height: 18rem;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+.category-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.35) 100%);
+  z-index: 1;
+  border-radius: 28px;
+}
+.category-card-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  padding: 2rem;
+  width: 100%;
+}
+.category-card-content h3 {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  line-height: 1.2;
+}
+.category-card-content p {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.9rem;
+  opacity: 0.85;
+  line-height: 1.4;
+}
+.category-card-content .category-count {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.25rem 0.9rem;
+  border-radius: 999px;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+}
+@media (max-width: 767px) {
+  .category-card {
+    height: 14rem;
+    border-radius: 20px;
+  }
+  .category-card-content {
+    padding: 1.25rem;
+  }
+  .category-card-content h3 {
+    font-size: 1.3rem;
+  }
+  .category-card-content p {
+    font-size: 0.82rem;
+  }
+}
+
