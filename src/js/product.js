@@ -183,6 +183,17 @@ async function renderShop() {
     grid.innerHTML = isShop ? '<p>No products found.</p>' : '<p class="loading">No featured products yet — check back soon!</p>';
     return;
   }
+
+  // Read URL category parameter to auto-select tab
+  const urlCategory = new URLSearchParams(location.search).get('category');
+  if (urlCategory && isShop) {
+    const normalized = urlCategory.toLowerCase().trim();
+    const validTabs = ['all', ...CATEGORIES.map(c => c.toLowerCase()), 'others'];
+    if (validTabs.includes(normalized)) {
+      activeTab = normalized;
+    }
+  }
+
   if (isShop) renderTabs();
   renderGrid();
 

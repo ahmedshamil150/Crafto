@@ -104,7 +104,7 @@ async function loadHome() {
   initRotatingText();
 
   // Category cards
-  renderCategoryCards(products);
+  renderCategoryCards();
 
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
@@ -175,50 +175,29 @@ function initRotatingText() {
   el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
 }
 
-function renderCategoryCards(products) {
+function renderCategoryCards() {
   const section = document.getElementById('category-cards-section');
   const grid = document.getElementById('category-cards-grid');
-  if (!section || !grid || !products?.length) return;
+  if (!section || !grid) return;
 
-  const descriptions = {
-    vase: 'Handcrafted ceramic and glass vessels',
-    'jewelry boxes': 'Elegant keepsake chests and organizers',
-    lamps: 'Artisan-crafted ambient lighting',
-    tables: 'Distinctive center and side tables',
-    'candle stands': 'Sculptural holders for every space',
-    planters: 'Modern and classic plant homes',
-    others: 'Unique handcrafted treasures',
-  };
-
-  const grouped = {};
-  products.forEach(p => {
-    const cat = (p.category || 'others').toLowerCase();
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(p);
-  });
-
-  const entries = Object.entries(grouped)
-    .filter(([, prods]) => prods.length > 0)
-    .slice(0, 5);
-
-  if (!entries.length) return;
+  const categories = [
+    { id: 'vase', label: 'Vases', desc: 'Handcrafted ceramic and glass vessels', img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=800&q=80' },
+    { id: 'jewelry boxes', label: 'Jewelry Boxes', desc: 'Elegant keepsake chests and organizers', img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80' },
+    { id: 'lamps', label: 'Lamps', desc: 'Artisan-crafted ambient lighting', img: 'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=800&q=80' },
+    { id: 'tables', label: 'Tables', desc: 'Distinctive center and side tables', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=800' },
+    { id: 'candle stands', label: 'Candle Stands', desc: 'Sculptural holders for every space', img: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800' },
+  ];
 
   section.style.display = '';
 
-  grid.innerHTML = entries.map(([cat, prods]) => {
-    const img = prods[0].image_url || `https://placehold.co/800/006A4E/fff?text=${encodeURIComponent(cat)}`;
-    const label = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ');
-    const desc = descriptions[cat] || 'Handcrafted with care';
-    return `
-      <a href="./shop.html?category=${encodeURIComponent(cat)}" class="category-card" style="background:url('${img}');background-size:cover;background-position:center;">
-        <div class="category-card-content">
-          <h3>${esc(label)}</h3>
-          <p>${esc(desc)}</p>
-          <span class="category-count">${prods.length} item${prods.length !== 1 ? 's' : ''}</span>
-        </div>
-      </a>
-    `;
-  }).join('');
+  grid.innerHTML = categories.map(c => `
+    <a href="./shop.html?category=${encodeURIComponent(c.id)}" class="category-card" style="background:url('${c.img}');background-size:cover;background-position:center;">
+      <div class="category-card-content">
+        <h3>${c.label}</h3>
+        <p>${c.desc}</p>
+      </div>
+    </a>
+  `).join('');
 }
 
 loadHome();
