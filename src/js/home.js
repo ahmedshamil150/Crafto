@@ -1,4 +1,4 @@
-import { getProducts, getActiveHeroImage, getCardProducts } from './api.js';
+import { getProducts, getActiveHeroImage } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const grid = document.getElementById('home-product-grid');
@@ -103,9 +103,6 @@ async function loadHome() {
   // Rotating text effect for hero heading
   initRotatingText();
 
-  // Card products — scroll stack
-  await renderCardProducts();
-
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
@@ -173,32 +170,6 @@ function initRotatingText() {
 
   el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
   el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
-}
-
-async function renderCardProducts() {
-  const section = document.getElementById('card-products-section');
-  const inner = document.getElementById('card-stack-inner');
-  if (!section || !inner) return;
-
-  const cards = await getCardProducts();
-  if (!cards.length) return;
-
-  section.style.display = '';
-
-  inner.innerHTML = cards.map(c => {
-    const bg = c.image_url ? `url('${esc(c.image_url)}')` : (c.card_color || '#006A4E');
-    const color = c.card_color || '#006A4E';
-    return `
-      <div class="feature-card" style="background:${bg};background-size:cover;background-position:center;">
-        <div class="feature-card-overlay"></div>
-        <div class="feature-card-content">
-          <h3>${esc(c.title)}</h3>
-          ${c.subtitle ? '<p>' + esc(c.subtitle) + '</p>' : ''}
-          ${c.price ? '<span class="feature-card-price" style="background:' + color + ';">PKR ' + Number(c.price).toLocaleString() + '</span>' : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 loadHome();

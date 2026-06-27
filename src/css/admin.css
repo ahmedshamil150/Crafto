@@ -664,7 +664,6 @@
 #orders-table > p,
 #reviews-table > p,
 #revenue-content > p,
-#card-products-list > p,
 #coupons-table > p {
   color: var(--admin-muted);
   padding: 1rem 0;

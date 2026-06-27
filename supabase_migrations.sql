@@ -574,25 +574,4 @@ $$;
 
 GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text) TO anon;
 
--- 16. Card products (premium scroll-stack cards for homepage)
-CREATE TABLE IF NOT EXISTS card_products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL DEFAULT 'Preserving Centuries of Skill',
-  subtitle TEXT DEFAULT '',
-  price DECIMAL(10,2) DEFAULT 0,
-  image_url TEXT DEFAULT '',
-  image_url_2 TEXT DEFAULT '',
-  image_url_3 TEXT DEFAULT '',
-  card_color TEXT DEFAULT '#006A4E',
-  sort_order INTEGER DEFAULT 0,
-  active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE card_products ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read card_products"
-  ON card_products FOR SELECT USING (true);
-
-CREATE POLICY "Admin full access to card_products"
-  ON card_products USING (true) WITH CHECK (true);
+-- 16. (reserved)
