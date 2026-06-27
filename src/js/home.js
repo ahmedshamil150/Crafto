@@ -49,30 +49,35 @@ async function loadHome() {
   const products = await getProducts({ featured: true, limit: 6 });
   if (!products.length) {
     grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-12">No featured products yet.</p>';
-    return;
+  } else {
+    grid.innerHTML = products.map(p => productCard(p)).join('');
+
+    grid.querySelectorAll('.home-add-cart').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price));
+        showToast(`${btn.dataset.title} added to cart!`);
+      });
+    });
+
+    grid.querySelectorAll('.home-wishlist').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const { id, title, price, image } = btn.dataset;
+        toggleWishlist(id, title, price, image);
+        const icon = btn.querySelector('.material-symbols-outlined');
+        const isNow = isInWishlist(id);
+        btn.classList.toggle('text-red-500', isNow);
+        btn.classList.toggle('text-on-surface-variant', !isNow);
+        icon.textContent = isNow ? 'favorite' : 'favorite_border';
+        icon.dataset.icon = isNow ? 'favorite' : 'favorite_border';
+      });
+    });
+
+    // Show "Authentic" badge only for the first card
+    if (products[0]) {
+      const badge = document.getElementById(`badge-${products[0].id}`);
+      if (badge) badge.style.display = '';
+    }
   }
-
-  grid.innerHTML = products.map(p => productCard(p)).join('');
-
-  grid.querySelectorAll('.home-add-cart').forEach(btn => {
-    btn.addEventListener('click', () => {
-      addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price));
-      showToast(`${btn.dataset.title} added to cart!`);
-    });
-  });
-
-  grid.querySelectorAll('.home-wishlist').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const { id, title, price, image } = btn.dataset;
-      toggleWishlist(id, title, price, image);
-      const icon = btn.querySelector('.material-symbols-outlined');
-      const isNow = isInWishlist(id);
-      btn.classList.toggle('text-red-500', isNow);
-      btn.classList.toggle('text-on-surface-variant', !isNow);
-      icon.textContent = isNow ? 'favorite' : 'favorite_border';
-      icon.dataset.icon = isNow ? 'favorite' : 'favorite_border';
-    });
-  });
 
   // Load hero image from DB
   try {
@@ -81,7 +86,6 @@ async function loadHome() {
       const bgEl = document.getElementById('hero-bg');
       if (bgEl) {
         bgEl.style.backgroundImage = `url('${hero.image_url}')`;
-        // Switch to mobile image on small screens if available
         if (hero.mobile_image_url) {
           const mq = window.matchMedia('(max-width: 767px)');
           function updateHeroBg(e) {
@@ -94,16 +98,10 @@ async function loadHome() {
     }
   } catch (e) { /* fall back to default hero */ }
 
-  // Show "Authentic" badge only for the first card
-  if (products[0]) {
-    const badge = document.getElementById(`badge-${products[0].id}`);
-    if (badge) badge.style.display = '';
-  }
-
   // Rotating text effect for hero heading
   initRotatingText();
 
-  // Category cards
+  // Category sections
   renderCategoryCards();
 
   document.dispatchEvent(new CustomEvent('page-ready'));
