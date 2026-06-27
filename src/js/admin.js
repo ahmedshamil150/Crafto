@@ -480,7 +480,7 @@ if (productsTable) {
       <table>
         <thead>
           <tr>
-            <th>Image</th><th>Title</th><th>Price (PKR)</th><th>Discount</th><th>Stock</th><th>Featured</th><th>Actions</th>
+            <th>Image</th><th>Title</th><th>Category</th><th>Price (PKR)</th><th>Discount</th><th>Stock</th><th>Featured</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -488,6 +488,7 @@ if (productsTable) {
             <tr data-id="${p.id}">
               <td><img src="${p.image_url || 'https://placehold.co/60x45?text=?'}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;" /></td>
               <td>${p.title}</td>
+              <td>${p.category || '–'}</td>
               <td>${Number(p.price).toLocaleString()}</td>
               <td>${p.discount_percent ? `${p.discount_percent}%` : '–'}</td>
               <td>${p.stock ?? 0}</td>
@@ -697,10 +698,11 @@ if (revenueContent) {
         const qty = Number(item.qty) || 1;
         const lineTotal = price * qty;
         const title = item.title || 'Unknown product';
+        const variantLabel = item.variant_label || '';
 
-        lines.push({ date, orderShort, title, price, qty, lineTotal });
+        lines.push({ date, orderShort, title, variantLabel, price, qty, lineTotal });
 
-        const key = `${title}::${price}`;
+        const key = `${title}::${variantLabel}::${price}`;
         const row = summary.get(key) || { title, price, qty: 0, revenue: 0 };
         row.qty += qty;
         row.revenue += lineTotal;
@@ -735,7 +737,7 @@ if (revenueContent) {
             <tr>
               <td>${l.date}</td>
               <td><code>${l.orderShort}</code></td>
-              <td>${esc(l.title)}</td>
+              <td>${esc(l.title)}${l.variantLabel ? ' <span style="color:#6b7280;font-size:0.8rem;">(' + esc(l.variantLabel) + ')</span>' : ''}</td>
               <td>PKR ${l.price.toLocaleString()}</td>
               <td>${l.qty}</td>
               <td><strong>PKR ${l.lineTotal.toLocaleString()}</strong></td>

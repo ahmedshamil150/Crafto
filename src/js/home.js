@@ -110,7 +110,7 @@ function initRotatingText() {
   const el = document.getElementById('hero-rotating');
   if (!el) return;
 
-  const texts = ['Passion', 'Heritage', 'Tradition', 'Love'];
+  const texts = ['Love', 'Passion', 'Heritage', 'Tradition'];
   let currentIndex = 0;
   let intervalId = null;
 
@@ -119,6 +119,7 @@ function initRotatingText() {
     el.innerHTML = '';
     el.style.display = 'inline-flex';
     el.style.gap = '0';
+    el.style.willChange = 'transform';
 
     const spans = chars.map((char, i) => {
       const span = document.createElement('span');
@@ -126,8 +127,9 @@ function initRotatingText() {
       span.style.display = 'inline-block';
       span.style.transform = 'translateY(100%)';
       span.style.opacity = '0';
-      span.style.transition = `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease`;
-      span.style.transitionDelay = `${i * 0.04}s`;
+      span.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-out';
+      span.style.transitionDelay = `${i * 0.025}s`;
+      span.style.willChange = 'transform, opacity';
       el.appendChild(span);
       requestAnimationFrame(() => {
         span.style.transform = 'translateY(0)';
@@ -141,9 +143,10 @@ function initRotatingText() {
 
   function animateOut(spans) {
     spans.forEach((span, i) => {
-      span.style.transform = 'translateY(-120%)';
+      span.style.transform = 'translateY(-30%)';
       span.style.opacity = '0';
-      span.style.transitionDelay = `${i * 0.03}s`;
+      span.style.transition = 'transform 0.25s ease-in, opacity 0.2s ease-in';
+      span.style.transitionDelay = `${i * 0.02}s`;
     });
   }
 
@@ -151,7 +154,7 @@ function initRotatingText() {
     const prevSpans = el.querySelectorAll('span');
     const prevCount = prevSpans.length;
 
-    const totalDelay = prevCount * 0.03 + 300;
+    const totalDelay = prevCount * 0.02 + 200;
     if (prevSpans.length) {
       animateOut(prevSpans);
     }
@@ -163,11 +166,10 @@ function initRotatingText() {
   }
 
   animateTo(texts[0]);
-  intervalId = setInterval(next, 2500);
+  intervalId = setInterval(next, 2800);
 
-  // Pause/resume on hover
   el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
-  el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2500); });
+  el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
 }
 
 loadHome();

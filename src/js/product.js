@@ -516,6 +516,7 @@ async function loadRecommended(category, currentId) {
                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
               </div>
               <div class="p-2 md:p-4 text-center">
+                <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc(p.category) : 'Heritage'}</span>
                 <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text hover:text-deep-emerald transition-colors leading-tight">${esc(p.title)}</h3>
                 <p class="text-xs md:text-sm font-semibold mt-0.5 md:mt-1">
                   ${os ? `<span class="text-on-surface-variant/50 line-through text-[10px] md:text-sm mr-1">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
