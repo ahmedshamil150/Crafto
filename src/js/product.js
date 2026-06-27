@@ -239,6 +239,11 @@ async function renderDetail() {
   const hasVariants = variants.length > 0;
   const totalStock = hasVariants ? variants.reduce((s, v) => s + (v.stock || 0), 0) : p.stock;
 
+  function colorHex(name) {
+    const map = { white:'#ffffff', black:'#000000', red:'#dc2626', blue:'#2563eb', green:'#16a34a', yellow:'#eab308', gold:'#d4af37', silver:'#c0c0c0', brown:'#92400e', gray:'#6b7280', grey:'#6b7280', beige:'#f5f5dc', cream:'#fffdd0', navy:'#1e3a5f', teal:'#0d9488', pink:'#ec4899', purple:'#9333ea', orange:'#ea580c', maroon:'#be123c', turquoise:'#14b8a6', tan:'#d2b48c', khaki:'#c3b091', burgundy:'#800020', coral:'#ff7f50', ivory:'#fffff0', charcoal:'#36454f', bronze:'#cd7f32', rose:'#f43f5e', mint:'#a8e6cf' };
+    return map[name.toLowerCase().trim()] || '#' + (() => { let h = 0; for (let c of name) { h = ((h << 5) - h) + c.charCodeAt(0); h |= 0; } return Math.abs(h % 0xFFFFFF).toString(16).padStart(6,'0'); })();
+  }
+
   detail.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-12 mb-section-gap">
       <div class="fade-in-up">
@@ -282,10 +287,9 @@ async function renderDetail() {
           ${colors.length > 1 ? `
           <div>
             <label class="font-label-caps text-xs text-on-surface-variant block mb-1.5">Color</label>
-            <select id="variant-color" class="w-full border border-outline/30 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-deep-emerald/30 focus:border-deep-emerald bg-white">
-              <option value="">Select color</option>
-              ${colors.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('')}
-            </select>
+            <div id="variant-colors" class="flex gap-2 flex-wrap">
+              ${colors.map(c => '<button type="button" class="color-swatch w-8 h-8 rounded-full border-2 border-outline-variant/50 hover:scale-110 transition-transform active:scale-95" data-color="' + esc(c) + '" style="background:' + colorHex(c) + ';" title="' + esc(c) + '"></button>').join('')}
+            </div>
           </div>` : ''}
         </div>
         ` : ''}
@@ -374,11 +378,13 @@ async function renderDetail() {
   });
 
   // Variant selection logic
+  let selectedColor = '';
+  let selectedSize = '';
+
   function findVariant() {
     const sizeEl = document.getElementById('variant-size');
-    const colorEl = document.getElementById('variant-color');
     const selSize = sizeEl ? sizeEl.value : '';
-    const selColor = colorEl ? colorEl.value : '';
+    const selColor = selectedColor;
     if (sizes.length > 1 && !selSize) return null;
     if (colors.length > 1 && !selColor) return null;
     const match = variants.find(v => {
@@ -390,6 +396,11 @@ async function renderDetail() {
       return v.size === selSize && v.color === selColor;
     });
     return match || null;
+  }
+
+  function setActiveSwatch(el) {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('ring-2', 'ring-deep-emerald', 'scale-110'));
+    if (el) { el.classList.add('ring-2', 'ring-deep-emerald', 'scale-110'); }
   }
 
   function updateVariantDisplay() {
@@ -427,9 +438,14 @@ async function renderDetail() {
   }
 
   const sizeEl = document.getElementById('variant-size');
-  const colorEl = document.getElementById('variant-color');
-  if (sizeEl) sizeEl.addEventListener('change', updateVariantDisplay);
-  if (colorEl) colorEl.addEventListener('change', updateVariantDisplay);
+  if (sizeEl) sizeEl.addEventListener('change', () => { selectedSize = sizeEl.value; updateVariantDisplay(); });
+  document.querySelectorAll('.color-swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedColor = btn.dataset.color;
+      setActiveSwatch(btn);
+      updateVariantDisplay();
+    });
+  });
   document.getElementById('detail-wishlist')?.addEventListener('click', function() {
     const { id, title, price, image } = this.dataset;
     toggleWishlist(id, title, price, image);

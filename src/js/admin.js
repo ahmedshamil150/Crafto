@@ -350,7 +350,8 @@ if (productsTable) {
 
       const productResult = id ? await updateProduct(id, payload) : await createProduct(payload);
       const savedId = id || productResult?.id || productResult?.[0]?.id;
-      // Save variants
+      // Save variants — sync from DOM first
+      syncVariantsFromDom();
       if (savedId) {
         const existingVariants = await getProductVariants(savedId);
         const existingIds = new Set(existingVariants.map(v => v.id));
@@ -364,7 +365,6 @@ if (productsTable) {
             if (v.color !== undefined) data.color = v.color || null;
             if (v.price !== undefined) data.price = v.price || null;
             data.stock = v.stock;
-            data.sku = v.sku || null;
             await updateVariant(v.id, data);
           } else {
             const created = await createVariant({
@@ -373,7 +373,6 @@ if (productsTable) {
               color: v.color || null,
               price: v.price || null,
               stock: v.stock,
-              sku: v.sku || null,
             });
           }
         }
@@ -408,11 +407,10 @@ if (productsTable) {
     empty.style.display = 'none';
     list.innerHTML = currentVariants.map((v, i) => `
       <div class="variant-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;" data-index="${i}">
-        <input type="text" placeholder="Size" value="${esc(v.size || '')}" class="v-size" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
-        <input type="text" placeholder="Color" value="${esc(v.color || '')}" class="v-color" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="text" placeholder="Size (e.g. Small)" value="${esc(v.size || '')}" class="v-size" style="width:90px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
+        <input type="text" placeholder="Color (e.g. White)" value="${esc(v.color || '')}" class="v-color" style="width:90px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
         <input type="number" placeholder="Price" value="${v.price || ''}" class="v-price" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
         <input type="number" placeholder="Stock" value="${v.stock}" class="v-stock" style="width:60px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
-        <input type="text" placeholder="SKU" value="${esc(v.sku || '')}" class="v-sku" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:13px;" />
         <button type="button" class="remove-variant" style="background:red;color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:12px;">✕</button>
       </div>
     `).join('');
@@ -427,14 +425,25 @@ if (productsTable) {
   }
 
   document.getElementById('add-variant-btn')?.addEventListener('click', () => {
-    currentVariants.push({ size: '', color: '', price: '', stock: 0, sku: '' });
+    currentVariants.push({ size: '', color: '', price: '', stock: 0 });
     renderVariants();
   });
+
+  function syncVariantsFromDom() {
+    document.querySelectorAll('#variants-list .variant-row').forEach(row => {
+      const idx = parseInt(row.dataset.index, 10);
+      if (idx < 0 || idx >= currentVariants.length) return;
+      currentVariants[idx].size = row.querySelector('.v-size').value;
+      currentVariants[idx].color = row.querySelector('.v-color').value;
+      currentVariants[idx].price = row.querySelector('.v-price').value;
+      currentVariants[idx].stock = parseInt(row.querySelector('.v-stock').value) || 0;
+    });
+  }
 
   async function loadVariants(productId) {
     if (!productId) { currentVariants = []; renderVariants(); return; }
     const variants = await getProductVariants(productId);
-    currentVariants = variants.map(v => ({ id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock, sku: v.sku }));
+    currentVariants = variants.map(v => ({ id: v.id, size: v.size, color: v.color, price: v.price, stock: v.stock }));
     renderVariants();
   }
 
@@ -444,6 +453,9 @@ if (productsTable) {
     origOpenModal(product);
     loadVariants(product?.id || null);
   };
+
+  // Update form submit to save variants: sync DOM values first
+  const origHandler = modalForm._submitHandler;
 
   const PRODS_PER_PAGE = 10;
   let productsPage = 1;

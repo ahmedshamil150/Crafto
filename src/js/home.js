@@ -100,7 +100,77 @@ async function loadHome() {
     if (badge) badge.style.display = '';
   }
 
+  // Text pressure effect on hero heading (desktop only)
+  const pressureEl = document.getElementById('hero-pressure');
+  if (pressureEl && window.innerWidth >= 768) {
+    initTextPressure(pressureEl);
+  }
+
   document.dispatchEvent(new CustomEvent('page-ready'));
+}
+
+function initTextPressure(el) {
+  const text = el.textContent;
+  el.innerHTML = '';
+  el.style.display = 'flex';
+  el.style.justifyContent = 'center';
+  el.style.flexWrap = 'wrap';
+  el.style.fontFamily = "'Roboto Flex', sans-serif";
+  el.style.fontWeight = '100';
+  el.style.whiteSpace = 'nowrap';
+  el.style.userSelect = 'none';
+
+  const spans = text.split('').map(char => {
+    const span = document.createElement('span');
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    span.style.display = 'inline-block';
+    el.appendChild(span);
+    return span;
+  });
+
+  const mouse = { x: 0, y: 0 };
+  const cursor = { x: 0, y: 0 };
+
+  const rect = el.getBoundingClientRect();
+  mouse.x = rect.left + rect.width / 2;
+  mouse.y = rect.top + rect.height / 2;
+  cursor.x = mouse.x;
+  cursor.y = mouse.y;
+
+  const onMove = e => { cursor.x = e.clientX; cursor.y = e.clientY; };
+  const onResize = () => {
+    const r = el.getBoundingClientRect();
+    mouse.x = r.left + r.width / 2;
+    mouse.y = r.top + r.height / 2;
+    cursor.x = mouse.x;
+    cursor.y = mouse.y;
+  };
+
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('resize', onResize);
+
+  function animate() {
+    mouse.x += (cursor.x - mouse.x) / 15;
+    mouse.y += (cursor.y - mouse.y) / 15;
+
+    const elRect = el.getBoundingClientRect();
+    const maxDist = elRect.width / 2;
+
+    spans.forEach(span => {
+      const spanRect = span.getBoundingClientRect();
+      const cx = spanRect.left + spanRect.width / 2;
+      const cy = spanRect.top + spanRect.height / 2;
+      const d = Math.sqrt((mouse.x - cx) ** 2 + (mouse.y - cy) ** 2);
+      const wdth = Math.round(Math.max(25, 151 - (151 * d) / maxDist));
+      const wght = Math.round(Math.max(100, 900 - (900 * d) / maxDist));
+      const ital = Math.max(0, Math.min(1, 1 - d / maxDist)).toFixed(2);
+      span.style.fontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'ital' ${ital}`;
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
 }
 
 loadHome();
