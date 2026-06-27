@@ -38,6 +38,18 @@
       <h2>Products</h2>
       <button class="button" id="add-product-btn">+ Add Product</button>
     </div>
+    <div id="product-filters" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;">
+      <select id="filter-category" style="padding:0.4rem 0.6rem;border:1px solid #ddd;border-radius:6px;font-size:0.8rem;">
+        <option value="">All Categories</option>
+      </select>
+      <select id="filter-stock" style="padding:0.4rem 0.6rem;border:1px solid #ddd;border-radius:6px;font-size:0.8rem;">
+        <option value="">All Stock</option>
+        <option value="in-stock">In Stock</option>
+        <option value="out-of-stock">Out of Stock</option>
+      </select>
+      <button class="product-filter-btn" id="filter-discount" data-active="false">Discounted</button>
+      <button class="product-filter-btn" id="filter-variants" data-active="false">Has Variants</button>
+    </div>
     <div id="products-table"></div>
   </main>
   <script type="module" src="../js/admin.js"></script>

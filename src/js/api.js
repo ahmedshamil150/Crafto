@@ -110,21 +110,24 @@ export async function deleteProduct(id) {
   });
 }
 
-export async function getOrders({ limit, offset } = {}) {
+export async function getOrders({ limit, offset, status } = {}) {
   if (!SUPABASE_URL) return [];
   const params = new URLSearchParams({ order: 'created_at.desc' });
   if (limit) params.set('limit', limit);
   if (offset != null) params.set('offset', offset);
+  if (status) params.set('status', `eq.${status}`);
   const result = await adminFetch({
     path: `/rest/v1/orders?${params}`,
   });
   return result.data || [];
 }
 
-export async function getOrdersCount() {
+export async function getOrdersCount({ status } = {}) {
   if (!SUPABASE_URL) return 0;
+  let path = '/rest/v1/orders?select=id&limit=0';
+  if (status) path += `&status=eq.${status}`;
   const result = await adminFetch({
-    path: '/rest/v1/orders?select=id&limit=0',
+    path,
     prefer: 'count=exact',
   });
   return result.count ? parseInt(result.count, 10) : 0;

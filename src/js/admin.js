@@ -459,20 +459,89 @@ if (productsTable) {
 
   const PRODS_PER_PAGE = 10;
   let productsPage = 1;
-  let productsTotal = 0;
+  let allProducts = [];
+
+  function getProductFilterState() {
+    return {
+      category: document.getElementById('filter-category')?.value || '',
+      stock: document.getElementById('filter-stock')?.value || '',
+      discounted: document.getElementById('filter-discount')?.dataset.active === 'true',
+      hasVariants: document.getElementById('filter-variants')?.dataset.active === 'true',
+    };
+  }
+
+  function applyProductFilters(products) {
+    const f = getProductFilterState();
+    let result = [...products];
+    if (f.category) result = result.filter(p => (p.category || '').toLowerCase() === f.category.toLowerCase());
+    if (f.stock === 'in-stock') result = result.filter(p => (p.stock ?? 0) > 0);
+    if (f.stock === 'out-of-stock') result = result.filter(p => (p.stock ?? 0) <= 0);
+    if (f.discounted) result = result.filter(p => (p.discount_percent || 0) > 0);
+    if (f.hasVariants) {
+      const withVariants = new Set();
+      // We'll check via getProductVariants in loadProducts instead
+      // For now this is a hint; actual filtering happens after variant fetch
+    }
+    return result;
+  }
 
   async function loadProducts() {
+    const filterState = getProductFilterState();
     productsTable.innerHTML = '<p>Loading…</p>';
-    const [products, count] = await Promise.all([
-      getProducts({ limit: PRODS_PER_PAGE, offset: (productsPage - 1) * PRODS_PER_PAGE }),
-      getProductsCount(),
-    ]);
-    productsTotal = count;
-    const totalPages = Math.ceil(productsTotal / PRODS_PER_PAGE) || 1;
 
-    if (!products.length) {
-      productsTable.innerHTML = '<p>No products yet. Click "+ Add Product" to create one.</p>';
+    // Fetch products (cache all on first load or when filters change)
+    if (!allProducts.length) {
+      allProducts = await getProducts({ limit: 1000 });
+    }
+
+    let filtered = [...allProducts];
+    if (filterState.category) filtered = filtered.filter(p => (p.category || '').toLowerCase() === filterState.category.toLowerCase());
+    if (filterState.stock === 'in-stock') filtered = filtered.filter(p => (p.stock ?? 0) > 0);
+    if (filterState.stock === 'out-of-stock') filtered = filtered.filter(p => (p.stock ?? 0) <= 0);
+    if (filterState.discounted) filtered = filtered.filter(p => (p.discount_percent || 0) > 0);
+    if (filterState.hasVariants) {
+      // Fetch variants for all products to determine which have variants
+      const variantPromises = filtered.map(async p => {
+        try { const v = await getProductVariants(p.id); return { id: p.id, has: v.length > 0, variants: v }; }
+        catch { return { id: p.id, has: false, variants: [] }; }
+      });
+      const results = await Promise.all(variantPromises);
+      const variantMap = {};
+      results.forEach(r => { variantMap[r.id] = r.variants; });
+      filtered = filtered.filter(p => variantMap[p.id]?.length > 0);
+      // Store variants for display
+      window._prodVariants = variantMap;
+    } else {
+      window._prodVariants = {};
+    }
+
+    const totalFiltered = filtered.length;
+    const totalPages = Math.ceil(totalFiltered / PRODS_PER_PAGE) || 1;
+    if (productsPage > totalPages) productsPage = 1;
+
+    const pageProducts = filtered.slice((productsPage - 1) * PRODS_PER_PAGE, productsPage * PRODS_PER_PAGE);
+
+    if (!pageProducts.length) {
+      productsTable.innerHTML = '<p>No products match the current filters.</p>';
+      // Still render pagination if there are filtered results
+      if (totalFiltered > 0) {
+        productsTable.innerHTML += `<div class="pagination"><span class="page-info">Page ${productsPage} of ${totalPages}</span></div>`;
+      }
       return;
+    }
+
+    // Fetch variants for the current page products (if not already fetched from hasVariants filter)
+    let variantCache = window._prodVariants || {};
+    if (!filterState.hasVariants) {
+      const needFetch = pageProducts.filter(p => !variantCache[p.id]);
+      if (needFetch.length) {
+        const fetches = await Promise.all(needFetch.map(async p => {
+          try { return { id: p.id, v: await getProductVariants(p.id) }; }
+          catch { return { id: p.id, v: [] }; }
+        }));
+        fetches.forEach(r => { variantCache[r.id] = r.v; });
+        window._prodVariants = variantCache;
+      }
     }
 
     productsTable.innerHTML = `
@@ -484,35 +553,44 @@ if (productsTable) {
           </tr>
         </thead>
         <tbody>
-          ${products.map(p => `
+          ${pageProducts.map(p => {
+            const variants = variantCache[p.id] || [];
+            const hasVar = variants.length > 0;
+            let stockDisplay = (p.stock ?? 0).toString();
+            if (hasVar) {
+              const totalVarStock = variants.reduce((s, v) => s + (v.stock || 0), 0);
+              const details = variants.map(v => `${v.size || ''}${v.size && v.color ? ' ' : ''}${v.color || ''}: ${v.stock || 0}`).join(', ');
+              stockDisplay = `${totalVarStock} <span style="font-size:0.75rem;color:#666;">[${esc(details)}]</span>`;
+            }
+            return `
             <tr data-id="${p.id}">
               <td><img src="${p.image_url || 'https://placehold.co/60x45?text=?'}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;" /></td>
               <td>${p.title}</td>
               <td>${p.category || '–'}</td>
               <td>${Number(p.price).toLocaleString()}</td>
               <td>${p.discount_percent ? `${p.discount_percent}%` : '–'}</td>
-              <td>${p.stock ?? 0}</td>
+              <td>${stockDisplay}</td>
               <td style="text-align:center;font-size:1.1rem;">${p.featured ? '⭐' : '–'}</td>
               <td class="action-cell">
                 <button class="button edit-btn" data-id="${p.id}">Edit</button>
                 <button class="button delete-btn" data-id="${p.id}" style="background:#c62828;">Delete</button>
               </td>
-            </tr>
-          `).join('')}
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
       </div>
       <div class="pagination">
         <button class="button page-btn" id="prods-prev" ${productsPage <= 1 ? 'disabled' : ''}>← Prev</button>
-        <span class="page-info">Page ${productsPage} of ${totalPages}</span>
+        <span class="page-info">Page ${productsPage} of ${totalPages} (${totalFiltered} total)</span>
         <button class="button page-btn" id="prods-next" ${productsPage >= totalPages ? 'disabled' : ''}>Next →</button>
       </div>
     `;
 
     productsTable.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const p = products.find(x => x.id === btn.dataset.id);
-        openModal(p);
+        const p = allProducts.find(x => x.id === btn.dataset.id);
+        if (p) openModal(p);
       });
     });
 
@@ -520,6 +598,7 @@ if (productsTable) {
       btn.addEventListener('click', async () => {
         if (!confirm('Delete this product?')) return;
         await deleteProduct(btn.dataset.id);
+        allProducts = [];
         productsPage = 1;
         loadProducts();
       });
@@ -533,6 +612,39 @@ if (productsTable) {
     });
   }
 
+  // Setup filter change listeners
+  document.getElementById('filter-category')?.addEventListener('change', () => { productsPage = 1; loadProducts(); });
+  document.getElementById('filter-stock')?.addEventListener('change', () => { productsPage = 1; loadProducts(); });
+  document.getElementById('filter-discount')?.addEventListener('click', function() {
+    const active = this.dataset.active === 'true';
+    this.dataset.active = active ? 'false' : 'true';
+    this.classList.toggle('active', !active);
+    productsPage = 1;
+    loadProducts();
+  });
+  document.getElementById('filter-variants')?.addEventListener('click', function() {
+    const active = this.dataset.active === 'true';
+    this.dataset.active = active ? 'false' : 'true';
+    this.classList.toggle('active', !active);
+    productsPage = 1;
+    loadProducts();
+  });
+
+  // Populate category filter dropdown
+  (async function initCategoryFilter() {
+    const cats = await getProducts({ limit: 1000 });
+    const unique = [...new Set(cats.map(p => p.category).filter(Boolean))];
+    const sel = document.getElementById('filter-category');
+    if (sel) {
+      unique.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+    }
+  })();
+
   loadProducts();
 }
 
@@ -541,6 +653,9 @@ const ordersTable = document.getElementById('orders-table');
 if (ordersTable) {
   const ORDERS_PER_PAGE = 10;
   let ordersPage = 1;
+  let ordersStatusFilter = '';
+
+  const FILTER_ORDER_STATUSES = ['', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'return_requested', 'returned'];
 
   function renderItems(items) {
     const arr = Array.isArray(items) ? items : [];
@@ -553,11 +668,31 @@ if (ordersTable) {
     `).join('');
   }
 
+  function renderOrderFilters() {
+    const filterBar = document.getElementById('order-filters');
+    if (!filterBar) return;
+    filterBar.innerHTML = FILTER_ORDER_STATUSES.map(s => `
+      <button class="order-filter-btn button ${ordersStatusFilter === s ? 'active' : ''}"
+        data-status="${s}" style="text-transform:capitalize;${s === '' ? 'min-width:auto;' : ''}">
+        ${s || 'All'}
+      </button>
+    `).join('');
+    filterBar.querySelectorAll('.order-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        ordersStatusFilter = btn.dataset.status;
+        ordersPage = 1;
+        loadOrders();
+      });
+    });
+  }
+
   async function loadOrders() {
     ordersTable.innerHTML = '<p>Loading…</p>';
+    renderOrderFilters();
+    const filterOpts = ordersStatusFilter ? { status: ordersStatusFilter } : {};
     const [orders, count] = await Promise.all([
-      getOrders({ limit: ORDERS_PER_PAGE, offset: (ordersPage - 1) * ORDERS_PER_PAGE }),
-      getOrdersCount(),
+      getOrders({ limit: ORDERS_PER_PAGE, offset: (ordersPage - 1) * ORDERS_PER_PAGE, ...filterOpts }),
+      getOrdersCount(filterOpts),
     ]);
     const totalPages = Math.ceil(count / ORDERS_PER_PAGE) || 1;
 
