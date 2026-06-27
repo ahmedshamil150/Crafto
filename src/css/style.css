@@ -357,5 +357,3 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 }
 .button-location:hover { background: #3a5a8a; }
 .button-location:disabled { opacity: 0.6; }
-
-@media (max-width: 767px) {
