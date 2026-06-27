@@ -232,19 +232,20 @@ function renderCategoryCards() {
 }
 
 /* =============================================
-   ScrollStack — stacking card effect via Lenis
+   ScrollStack — sticky stacking via Lenis
    ============================================= */
 function initScrollStack() {
   const cards = Array.from(document.querySelectorAll('.category-section'));
-  if (!cards.length) return;
+  const section = document.getElementById('category-cards-section');
+  if (!cards.length || !section) return;
+
+  // give the section enough height for all sticky cards + release room
+  section.style.minHeight = `${cards.length * 120}vh`;
 
   let lenis = null;
   let rafId = null;
 
-  // ensure Lenis is available
-  if (typeof Lenis === 'undefined') {
-    // fallback: no smooth scroll but stacking still works
-  } else {
+  if (typeof Lenis !== 'undefined') {
     lenis = new Lenis({
       duration: 1.2,
       easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -252,7 +253,6 @@ function initScrollStack() {
       wheelMultiplier: 1,
       lerp: 0.1,
     });
-    lenis.on('scroll', update);
     function raf(time) {
       lenis.raf(time);
       rafId = requestAnimationFrame(raf);
@@ -260,41 +260,11 @@ function initScrollStack() {
     rafId = requestAnimationFrame(raf);
   }
 
-  function update() {
-    const scrollTop = window.scrollY;
-    const vh = window.innerHeight;
-    const stackPos = vh * 0.2;
-    const endEl = document.querySelector('.scroll-stack-end');
-    const pinEnd = endEl ? endEl.offsetTop - vh * 0.5 : document.documentElement.scrollHeight;
-
-    cards.forEach((card, i) => {
-      const cardTop = card.offsetTop;
-      const triggerStart = cardTop - stackPos - 30 * i;
-      const scaleEnd = cardTop - vh * 0.1;
-
-      const scaleProgress = Math.max(0, Math.min(1, (scrollTop - triggerStart) / (scaleEnd - triggerStart || 1)));
-      const targetScale = 0.85 + i * 0.03;
-      const scale = 1 - scaleProgress * (1 - targetScale);
-
-      let translateY = 0;
-      if (scrollTop >= triggerStart && scrollTop <= pinEnd) {
-        translateY = scrollTop - cardTop + stackPos + 30 * i;
-      } else if (scrollTop > pinEnd) {
-        translateY = pinEnd - cardTop + stackPos + 30 * i;
-      }
-
-      card.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
-      card.style.transformOrigin = 'top center';
-    });
-
-    if (!lenis) requestAnimationFrame(update);
-  }
-
-  update();
-
-  if (!lenis) {
-    window.addEventListener('scroll', update);
-  }
+  cards.forEach((card, i) => {
+    card.style.position = 'sticky';
+    card.style.top = `${12 + i * 2}%`;
+    card.style.zIndex = 10 - i;
+  });
 }
 
 loadHome();
