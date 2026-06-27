@@ -1,15 +1,25 @@
-// src/js/api.js
 const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_SVC_KEY  = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 
-function headers(useService = false) {
-  const key = useService && SUPABASE_SVC_KEY ? SUPABASE_SVC_KEY : SUPABASE_ANON_KEY;
+function headers() {
   return {
     'Content-Type': 'application/json',
-    'apikey': key,
-    'Authorization': `Bearer ${key}`,
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
   };
+}
+
+async function adminFetch({ path, method, body, prefer, upload }) {
+  const res = await fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, method, body, prefer, upload }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
 }
 
 export async function getProducts({ limit, offset, featured, category } = {}) {
@@ -43,60 +53,60 @@ export async function getProductById(id) {
 }
 
 const STORAGE_URL = `${SUPABASE_URL}/storage/v1`;
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
 export async function uploadImage(file, folder) {
   const ext = file.name.split('.').pop().toLowerCase();
   const path = `${folder}/${Date.now()}.${ext}`;
-  const res = await fetch(`${STORAGE_URL}/object/product-images/${path}`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_SVC_KEY,
-      'Authorization': `Bearer ${SUPABASE_SVC_KEY}`,
-      'Content-Type': file.type,
-      'x-upsert': 'true',
-    },
-    body: file,
+
+  const buffer = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Upload failed (HTTP ${res.status})`);
-  }
+
+  const result = await adminFetch({
+    path: `/storage/v1/object/product-images/${path}`,
+    method: 'POST',
+    upload: { buffer, fileType: file.type },
+  });
+
   return `${SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
 }
 
 export async function createProduct(product) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+  const result = await adminFetch({
+    path: '/rest/v1/products',
     method: 'POST',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify(product),
+    body: product,
+    prefer: 'return=representation',
   });
-  return res.json();
+  return result.data;
 }
 
 export async function updateProduct(id, product) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+  const result = await adminFetch({
+    path: `/rest/v1/products?id=eq.${id}`,
     method: 'PATCH',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify(product),
+    body: product,
+    prefer: 'return=representation',
   });
-  return res.json();
+  return result.data;
 }
 
 export async function updateOrderStatus(id, status) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, {
+  await adminFetch({
+    path: `/rest/v1/orders?id=eq.${id}`,
     method: 'PATCH',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify({ status }),
+    body: { status },
+    prefer: 'return=representation',
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
 }
 
 export async function deleteProduct(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+  await adminFetch({
+    path: `/rest/v1/products?id=eq.${id}`,
     method: 'DELETE',
-    headers: headers(true),
   });
 }
 
@@ -105,19 +115,19 @@ export async function getOrders({ limit, offset } = {}) {
   const params = new URLSearchParams({ order: 'created_at.desc' });
   if (limit) params.set('limit', limit);
   if (offset != null) params.set('offset', offset);
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?${params}`, { headers: headers(true) });
-  if (!res.ok) return [];
-  return res.json();
+  const result = await adminFetch({
+    path: `/rest/v1/orders?${params}`,
+  });
+  return result.data || [];
 }
 
 export async function getOrdersCount() {
   if (!SUPABASE_URL) return 0;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=id&limit=0`, {
-    headers: { ...headers(true), 'Prefer': 'count=exact' },
+  const result = await adminFetch({
+    path: '/rest/v1/orders?select=id&limit=0',
+    prefer: 'count=exact',
   });
-  if (!res.ok) return 0;
-  const range = res.headers.get('content-range');
-  return range ? parseInt(range.split('/')[1], 10) : 0;
+  return result.count ? parseInt(result.count, 10) : 0;
 }
 
 export async function createOrder(order) {
@@ -205,12 +215,10 @@ export async function getReviews(productId) {
 
 export async function getAllReviews() {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/reviews?select=*,products(title)&order=pinned.desc,created_at.desc`,
-    { headers: headers(true) }
-  );
-  if (!res.ok) return [];
-  return res.json();
+  const result = await adminFetch({
+    path: '/rest/v1/reviews?select=*,products(title)&order=pinned.desc,created_at.desc',
+  });
+  return result.data || [];
 }
 
 export async function createReview(review) {
@@ -226,37 +234,34 @@ export async function createReview(review) {
 }
 
 export async function deleteReview(id) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+  await adminFetch({
+    path: `/rest/v1/reviews?id=eq.${id}`,
     method: 'DELETE',
-    headers: headers(true),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
 export async function getCoupons() {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/coupons?order=created_at.desc`, { headers: headers(true) });
-  if (!res.ok) return [];
-  return res.json();
+  const result = await adminFetch({
+    path: '/rest/v1/coupons?order=created_at.desc',
+  });
+  return result.data || [];
 }
 
 export async function createCoupon(data) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/coupons`, {
+  const result = await adminFetch({
+    path: '/rest/v1/coupons',
     method: 'POST',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify(data),
+    body: data,
+    prefer: 'return=representation',
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
-  }
-  return res.json();
+  return result.data;
 }
 
 export async function deleteCoupon(id) {
-  await fetch(`${SUPABASE_URL}/rest/v1/coupons?id=eq.${id}`, {
+  await adminFetch({
+    path: `/rest/v1/coupons?id=eq.${id}`,
     method: 'DELETE',
-    headers: headers(true),
   });
 }
 
@@ -274,13 +279,13 @@ export async function validateCoupon(code) {
 }
 
 export async function setReviewPinned(id, pinned) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+  const result = await adminFetch({
+    path: `/rest/v1/reviews?id=eq.${id}`,
     method: 'PATCH',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify({ pinned }),
+    body: { pinned },
+    prefer: 'return=representation',
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return result.data;
 }
 
 export async function getActiveHeroImage() {
@@ -293,29 +298,26 @@ export async function getActiveHeroImage() {
 
 export async function getHeroImages() {
   if (!SUPABASE_URL) return [];
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/hero_images?order=created_at.desc`, { headers: headers(true) });
-  if (!res.ok) return [];
-  return res.json();
+  const result = await adminFetch({
+    path: '/rest/v1/hero_images?order=created_at.desc',
+  });
+  return result.data || [];
 }
 
 export async function setHeroImage(image_url, mobile_image_url) {
-  // Deactivate all existing rows, then insert the new one
   const existing = await getHeroImages();
   for (const h of existing) {
-    await fetch(`${SUPABASE_URL}/rest/v1/hero_images?id=eq.${h.id}`, {
+    await adminFetch({
+      path: `/rest/v1/hero_images?id=eq.${h.id}`,
       method: 'PATCH',
-      headers: headers(true),
-      body: JSON.stringify({ is_active: false }),
+      body: { is_active: false },
     });
   }
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/hero_images`, {
+  const result = await adminFetch({
+    path: '/rest/v1/hero_images',
     method: 'POST',
-    headers: { ...headers(true), 'Prefer': 'return=representation' },
-    body: JSON.stringify({ image_url, mobile_image_url: mobile_image_url || null, is_active: true }),
+    body: { image_url, mobile_image_url: mobile_image_url || null, is_active: true },
+    prefer: 'return=representation',
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
-  }
-  return res.json();
+  return result.data;
 }
