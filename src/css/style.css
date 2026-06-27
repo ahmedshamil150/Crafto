@@ -359,100 +359,88 @@ form input:focus, form textarea:focus { outline: none; border-color: var(--color
 .button-location:disabled { opacity: 0.6; }
 
 /* =============================================
-   CARD PRODUCTS — Scroll Stack
+   CARD PRODUCTS — feature grid
    ============================================= */
 #card-products-section {
-  overflow: hidden;
+  padding: 4rem 0;
 }
-.scroll-stack-scroller {
-  position: relative;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-.scroll-stack-inner {
-  padding: 20vh 5rem 50rem;
-  min-height: 100vh;
-  max-width: 900px;
+#card-stack-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1.25rem;
 }
-@media (max-width: 767px) {
-  .scroll-stack-inner {
-    padding: 15vh 1.25rem 30rem;
+@media (min-width: 768px) {
+  #card-stack-inner {
+    padding: 0 2.5rem;
   }
 }
-.scroll-stack-card {
-  transform-origin: top center;
-  will-change: transform, filter;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
-  height: 20rem;
-  width: 100%;
-  margin: 30px 0;
-  padding: 3rem;
-  border-radius: 40px;
-  box-sizing: border-box;
+.feature-card {
   position: relative;
+  height: 22rem;
+  border-radius: 20px;
+  overflow: hidden;
   display: flex;
   align-items: flex-end;
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.scroll-stack-card::before {
-  content: '';
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+}
+.feature-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%);
   z-index: 1;
-  border-radius: 40px;
 }
-.scroll-stack-card-content {
+.feature-card-content {
   position: relative;
   z-index: 2;
   color: #fff;
+  padding: 2rem;
   width: 100%;
 }
-.scroll-stack-card-content h3 {
+.feature-card-content h3 {
   font-family: 'Bodoni Moda', serif;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   line-height: 1.2;
 }
-.scroll-stack-card-content p {
+.feature-card-content p {
   font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 1rem;
+  font-size: 0.95rem;
   opacity: 0.9;
   margin-bottom: 0.75rem;
-  line-height: 1.5;
+  line-height: 1.4;
 }
-.scroll-stack-card-content .card-price {
+.feature-card-price {
   font-family: 'Hanken Grotesk', sans-serif;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   display: inline-block;
-  padding: 0.4rem 1.2rem;
+  padding: 0.35rem 1.1rem;
   border-radius: 999px;
 }
-.scroll-stack-end {
-  width: 100%;
-  height: 1px;
-}
 @media (max-width: 767px) {
-  .scroll-stack-card {
+  #card-products-section {
+    padding: 2rem 0;
+  }
+  .feature-card {
     height: 16rem;
-    padding: 1.5rem;
-    border-radius: 24px;
-    margin: 20px 0;
+    border-radius: 16px;
   }
-  .scroll-stack-card-content h3 {
-    font-size: 1.4rem;
+  .feature-card-content {
+    padding: 1.25rem;
   }
-  .scroll-stack-card-content p {
+  .feature-card-content h3 {
+    font-size: 1.2rem;
+  }
+  .feature-card-content p {
     font-size: 0.85rem;
   }
 }
