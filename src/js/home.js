@@ -1,4 +1,4 @@
-import { getProducts, getActiveHeroImage, getCardProducts } from './api.js';
+import { getProducts, getActiveHeroImage } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const grid = document.getElementById('home-product-grid');
@@ -103,9 +103,6 @@ async function loadHome() {
   // Rotating text effect for hero heading
   initRotatingText();
 
-  // Card products — scroll stack
-  await renderCardProducts();
-
   document.dispatchEvent(new CustomEvent('page-ready'));
 }
 
@@ -173,124 +170,6 @@ function initRotatingText() {
 
   el.addEventListener('mouseenter', () => { if (intervalId) clearInterval(intervalId); intervalId = null; });
   el.addEventListener('mouseleave', () => { if (!intervalId) intervalId = setInterval(next, 2800); });
-}
-
-async function renderCardProducts() {
-  const section = document.getElementById('card-products-section');
-  const inner = document.getElementById('card-stack-inner');
-  if (!section || !inner) return;
-
-  const cards = await getCardProducts();
-  if (!cards.length) return;
-
-  section.style.display = '';
-  // Set a fixed height so the scroller works
-  const scroller = document.getElementById('card-stack-scroller');
-  scroller.style.height = '80vh';
-
-  inner.innerHTML = cards.map(c => {
-    const bg = c.image_url ? `url('${esc(c.image_url)}')` : (c.card_color || '#006A4E');
-    const color = c.card_color || '#006A4E';
-    return `
-      <div class="scroll-stack-card" style="background:${bg};background-size:cover;background-position:center;">
-        <div class="scroll-stack-card-content">
-          <h3>${esc(c.title)}</h3>
-          ${c.subtitle ? '<p>' + esc(c.subtitle) + '</p>' : ''}
-          ${c.price ? '<span class="card-price" style="background:' + color + ';">PKR ' + Number(c.price).toLocaleString() + '</span>' : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-  // Append end marker
-  inner.insertAdjacentHTML('beforeend', '<div class="scroll-stack-end"></div>');
-
-  // --- Scroll-stack transforms + Lenis (exact React component port) ---
-  const itemDistance = 100;
-  const stackPosition = 0.2;
-  const scaleEndPosition = 0.1;
-  const baseScale = 0.85;
-  const itemScale = 0.03;
-
-  function calculateProgress(value, start, end) {
-    if (start >= end) return 1;
-    return Math.max(0, Math.min(1, (value - start) / (end - start)));
-  }
-
-  const lastTransforms = new Map();
-  const cardEls = Array.from(inner.querySelectorAll('.scroll-stack-card'));
-  const endEl = inner.querySelector('.scroll-stack-end');
-
-  cardEls.forEach((card, i) => {
-    card.style.willChange = 'transform, filter';
-    card.style.backfaceVisibility = 'hidden';
-    card.style.transformStyle = 'preserve-3d';
-    card.style.perspective = '1000px';
-    card.style.transformOrigin = 'top center';
-    card.style.marginBottom = i < cardEls.length - 1 ? `${itemDistance}px` : '0px';
-  });
-
-  const lenis = new Lenis({
-    wrapper: scroller,
-    content: inner,
-    duration: 1.2,
-    easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    orientation: 'vertical',
-    gestureOrientation: 'vertical',
-    smoothWheel: true,
-    wheelMultiplier: 1,
-    touchMultiplier: 2,
-    infinite: false,
-  });
-
-  (function lenisRaf(time) { lenis.raf(time); requestAnimationFrame(lenisRaf); })(0);
-
-  function onScroll() {
-    if (lastTransforms._raf) return;
-    lastTransforms._raf = requestAnimationFrame(() => {
-      const scrollTop = scroller.scrollTop;
-      const containerH = scroller.clientHeight;
-      const endTop = endEl ? endEl.offsetTop : 0;
-      const stackPosPx = containerH * stackPosition;
-      const scaleEndPx = containerH * scaleEndPosition;
-
-      cardEls.forEach((card, i) => {
-        const cardTop = card.offsetTop;
-        const triggerStart = cardTop - stackPosPx - itemDistance * i;
-        const triggerEnd = cardTop - scaleEndPx;
-
-        const scaleProgress = calculateProgress(scrollTop, triggerStart, triggerEnd);
-        const targetScale = baseScale + i * itemScale;
-        const scale = 1 - scaleProgress * (1 - targetScale);
-
-        const pinStart = cardTop - stackPosPx - itemDistance * i;
-        const pinEnd = endTop - containerH / 2;
-        let translateY = 0;
-        if (scrollTop >= pinStart && scrollTop <= pinEnd) {
-          translateY = scrollTop - cardTop + stackPosPx + itemDistance * i;
-        } else if (scrollTop > pinEnd) {
-          translateY = pinEnd - cardTop + stackPosPx + itemDistance * i;
-        }
-
-        const key = `t_${i}`;
-        const curr = lastTransforms.get(key);
-        const tY = Math.round(translateY * 100) / 100;
-        const s = Math.round(scale * 1000) / 1000;
-        const newVal = `0_${tY}_${s}`;
-        if (curr !== newVal) {
-          lastTransforms.set(key, newVal);
-          card.style.transform = `translate3d(0, ${tY}px, 0) scale(${s})`;
-        }
-      });
-      lastTransforms._raf = null;
-    });
-  }
-
-  lenis.on('scroll', onScroll);
-
-  window.addEventListener('beforeunload', () => {
-    lenis.destroy();
-    if (lastTransforms._raf) cancelAnimationFrame(lastTransforms._raf);
-  }, { once: true });
 }
 
 loadHome();
