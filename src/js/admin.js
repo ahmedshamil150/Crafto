@@ -726,7 +726,7 @@ if (ordersTable) {
         <thead>
           <tr>
             <th style="width:32px;"></th>
-            <th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th><th>Actions</th>
+            <th>Order ID</th><th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -735,6 +735,7 @@ if (ordersTable) {
               <td style="text-align:center;">
                 <button class="toggle-items-btn" data-id="${o.id}" style="background:none;border:1px solid #aaa;border-radius:3px;cursor:pointer;padding:1px 6px;font-size:0.85rem;line-height:1.4;" title="Show items">+</button>
               </td>
+              <td><code style="font-size:0.8rem;">${o.order_number || String(o.id).slice(0, 8)}</code></td>
               <td>${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
               <td>${o.customer_name || '–'}</td>
               <td>${o.customer_phone || '–'}</td>
@@ -759,7 +760,7 @@ if (ordersTable) {
               </td>
             </tr>
             <tr class="items-detail-row" id="items-${o.id}" style="display:none;">
-              <td colspan="8" style="padding:0.75rem 1rem;background:#f9f9f9;">
+              <td colspan="9" style="padding:0.75rem 1rem;background:#f9f9f9;">
                 <div style="font-weight:600;margin-bottom:0.5rem;">Order Items</div>
                 ${renderItems(o.items)}
               </td>

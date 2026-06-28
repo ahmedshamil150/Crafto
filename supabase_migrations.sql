@@ -574,4 +574,48 @@ $$;
 
 GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text) TO anon;
 
--- 16. (reserved)
+-- =============================================
+-- 17. Performance indexes for faster queries
+-- =============================================
+
+-- Products: listing & sorting
+CREATE INDEX IF NOT EXISTS products_created_at_idx ON products (created_at DESC);
+CREATE INDEX IF NOT EXISTS products_featured_idx ON products (featured DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS products_category_gin_idx ON products USING GIN (category);
+
+-- Orders: admin listing & RPC lookups
+CREATE INDEX IF NOT EXISTS orders_created_at_idx ON orders (created_at DESC);
+CREATE INDEX IF NOT EXISTS orders_status_created_at_idx ON orders (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS orders_phone_idx ON orders (customer_phone);
+
+-- Coupons: validation & listing
+CREATE INDEX IF NOT EXISTS coupons_code_lower_idx ON coupons (LOWER(code));
+CREATE INDEX IF NOT EXISTS coupons_created_at_idx ON coupons (created_at DESC);
+
+-- Hero images: active lookup
+CREATE INDEX IF NOT EXISTS hero_images_is_active_idx ON hero_images (is_active) WHERE is_active = true;
+
+-- =============================================
+-- 18. Migration: TEXT → TEXT[] for multi-category (safe to re-run)
+-- =============================================
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'products'
+      AND column_name = 'category'
+      AND data_type = 'text'
+      AND udt_name = 'text'
+  ) THEN
+    ALTER TABLE products ALTER COLUMN category TYPE TEXT[]
+    USING CASE
+      WHEN category IS NULL OR category = '' THEN ARRAY[]::TEXT[]
+      ELSE string_to_array(category, ', ')
+    END;
+  END IF;
+END $$;
+
+-- =============================================
+-- 19. (end)
+-- =============================================
