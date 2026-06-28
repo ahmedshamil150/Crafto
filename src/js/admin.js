@@ -7,8 +7,9 @@ import {
   getProductVariants, createVariant, updateVariant, deleteVariant,
 } from './api.js';
 
-function parseCats(catStr) {
-  return (catStr || '').split(',').map(c => c.trim()).filter(Boolean);
+function parseCats(cat) {
+  if (Array.isArray(cat)) return cat.map(c => String(c).trim()).filter(Boolean);
+  return (cat || '').split(',').map(c => c.trim()).filter(Boolean);
 }
 
 function displayCats(catStr) {
@@ -837,10 +838,17 @@ if (ordersTable) {
 // --- Revenue ---
 const revenueContent = document.getElementById('revenue-content');
 if (revenueContent) {
+  const REVENUE_PER_PAGE = 20;
+  let revenuePage = 1;
+  let allLines = [];
+  let allSummaryRows = [];
+  let grandTotal = 0;
+  let activeCount = 0;
+
   (async () => {
     const orders = await getOrders();
     const active = orders.filter(o => !REVENUE_STATUSES.has(o.status));
-
+    activeCount = active.length;
     const lines = [];
     const summary = new Map();
 
@@ -866,18 +874,30 @@ if (revenueContent) {
       }
     }
 
-    const grandTotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-    const summaryRows = [...summary.values()].sort((a, b) => b.revenue - a.revenue);
+    grandTotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+    allLines = lines;
+    allSummaryRows = [...summary.values()].sort((a, b) => b.revenue - a.revenue);
 
-    if (!lines.length) {
+    renderRevenue();
+    setupRevenueChart(active);
+  })();
+
+  function renderRevenue() {
+    if (!allLines.length) {
       revenueContent.innerHTML = '<p>No sales yet. Revenue appears when orders are placed.</p>';
       return;
     }
 
+    const totalItems = allLines.length;
+    const totalPages = Math.ceil(totalItems / REVENUE_PER_PAGE) || 1;
+    if (revenuePage > totalPages) revenuePage = totalPages;
+
+    const pageLines = allLines.slice((revenuePage - 1) * REVENUE_PER_PAGE, revenuePage * REVENUE_PER_PAGE);
+
     revenueContent.innerHTML = `
       <div class="revenue-total-card">
         <h3>PKR ${grandTotal.toLocaleString()}</h3>
-        <p>Total revenue (${active.length} order${active.length === 1 ? '' : 's'}, cancelled &amp; returns excluded)</p>
+        <p>Total revenue (${activeCount} order${activeCount === 1 ? '' : 's'}, cancelled &amp; returns excluded)</p>
       </div>
 
       <h3 class="admin-subtitle">Sales Detail</h3>
@@ -889,7 +909,7 @@ if (revenueContent) {
           </tr>
         </thead>
         <tbody>
-          ${lines.map(l => `
+          ${pageLines.map(l => `
             <tr>
               <td>${l.date}</td>
               <td><code>${l.orderShort}</code></td>
@@ -908,6 +928,11 @@ if (revenueContent) {
         </tfoot>
       </table>
       </div>
+      <div class="pagination">
+        <button class="button page-btn" id="revenue-prev" ${revenuePage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${revenuePage} of ${totalPages} (${totalItems} total)</span>
+        <button class="button page-btn" id="revenue-next" ${revenuePage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
 
       <h3 class="admin-subtitle">By Product &amp; Price</h3>
       <div class="admin-table-wrap">
@@ -918,7 +943,7 @@ if (revenueContent) {
           </tr>
         </thead>
         <tbody>
-          ${summaryRows.map(r => `
+          ${allSummaryRows.map(r => `
             <tr>
               <td>${esc(r.title)}</td>
               <td>PKR ${r.price.toLocaleString()}</td>
@@ -930,85 +955,108 @@ if (revenueContent) {
       </table>
       </div>
     `;
+  }
 
-    // --- Revenue page chart ---
+  function setupRevenueChart(activeOrders) {
     const chartCanvas = document.getElementById('revenue-chart-canvas');
-    if (chartCanvas) {
-      let chartInstance = null;
+    if (!chartCanvas) return;
 
-      function buildChartData(days) {
-        const labels = [];
-        const values = [];
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        for (let i = days - 1; i >= 0; i--) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
-          const dayOrders = active.filter(o => {
-            const t = new Date(o.created_at).getTime();
-            return t >= d.getTime() && t < d.getTime() + 86400000;
-          });
-          values.push(dayOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
-        }
-        return { labels, values };
-      }
+    let chartInstance = null;
 
-      function renderChart(days) {
-        const { labels, values } = buildChartData(days);
-        if (chartInstance) chartInstance.destroy();
-        chartInstance = new Chart(chartCanvas, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [{
-              label: 'Revenue (PKR)',
-              data: values,
-              backgroundColor: 'rgba(0, 96, 100, 0.6)',
-              borderColor: '#006064',
-              borderWidth: 1,
-              borderRadius: 4,
-            }],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { beginAtZero: true, ticks: { callback: v => `PKR ${v.toLocaleString()}` } },
-              x: { grid: { display: false } },
-            },
-          },
+    function buildChartData(days) {
+      const labels = [];
+      const values = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
+        const dayOrders = activeOrders.filter(o => {
+          const t = new Date(o.created_at).getTime();
+          return t >= d.getTime() && t < d.getTime() + 86400000;
         });
+        values.push(dayOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
       }
+      return { labels, values };
+    }
 
-      renderChart(7);
-
-      document.getElementById('revenue-chart-7d')?.addEventListener('click', () => {
-        document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
-        document.getElementById('revenue-chart-7d').classList.add('active');
-        renderChart(7);
-      });
-      document.getElementById('revenue-chart-30d')?.addEventListener('click', () => {
-        document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
-        document.getElementById('revenue-chart-30d').classList.add('active');
-        renderChart(30);
+    function renderChart(days) {
+      const { labels, values } = buildChartData(days);
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(chartCanvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Revenue (PKR)',
+            data: values,
+            backgroundColor: 'rgba(0, 96, 100, 0.6)',
+            borderColor: '#006064',
+            borderWidth: 1,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { callback: v => `PKR ${v.toLocaleString()}` } },
+            x: { grid: { display: false } },
+          },
+        },
       });
     }
-  })();
+
+    renderChart(7);
+
+    document.getElementById('revenue-chart-7d')?.addEventListener('click', () => {
+      document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
+      document.getElementById('revenue-chart-7d').classList.add('active');
+      renderChart(7);
+    });
+    document.getElementById('revenue-chart-30d')?.addEventListener('click', () => {
+      document.querySelectorAll('#revenue-chart-7d, #revenue-chart-30d').forEach(b => b.classList.remove('active'));
+      document.getElementById('revenue-chart-30d').classList.add('active');
+      renderChart(30);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'revenue-prev') {
+      if (revenuePage > 1) { revenuePage--; renderRevenue(); }
+    }
+    if (e.target.id === 'revenue-next') {
+      const totalPages = Math.ceil(allLines.length / REVENUE_PER_PAGE) || 1;
+      if (revenuePage < totalPages) { revenuePage++; renderRevenue(); }
+    }
+  });
 }
 
 // --- Reviews management ---
 const reviewsTable = document.getElementById('reviews-table');
 if (reviewsTable) {
+  const REVIEWS_PER_PAGE = 10;
+  let reviewsPage = 1;
+  let allReviews = [];
+
   async function loadReviews() {
     reviewsTable.innerHTML = '<p>Loading…</p>';
-    const reviews = await getAllReviews();
+    if (!allReviews.length) {
+      allReviews = await getAllReviews();
+    }
 
-    if (!reviews.length) {
+    if (!allReviews.length) {
       reviewsTable.innerHTML = '<p>No reviews yet.</p>';
       return;
     }
+
+    const totalItems = allReviews.length;
+    const totalPages = Math.ceil(totalItems / REVIEWS_PER_PAGE) || 1;
+    if (reviewsPage > totalPages) reviewsPage = totalPages;
+
+    const pageReviews = allReviews.slice((reviewsPage - 1) * REVIEWS_PER_PAGE, reviewsPage * REVIEWS_PER_PAGE);
 
     reviewsTable.innerHTML = `
       <div class="admin-table-wrap">
@@ -1019,7 +1067,7 @@ if (reviewsTable) {
           </tr>
         </thead>
         <tbody>
-          ${reviews.map(r => `
+          ${pageReviews.map(r => `
             <tr data-id="${r.id}">
               <td>
                 ${r.pinned ? '<span class="pin-badge">Pinned</span><br/>' : ''}
@@ -1040,6 +1088,11 @@ if (reviewsTable) {
         </tbody>
       </table>
       </div>
+      <div class="pagination">
+        <button class="button page-btn" id="reviews-prev" ${reviewsPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${reviewsPage} of ${totalPages} (${totalItems} total)</span>
+        <button class="button page-btn" id="reviews-next" ${reviewsPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
     `;
 
     reviewsTable.querySelectorAll('.pin-btn').forEach(btn => {
@@ -1047,6 +1100,8 @@ if (reviewsTable) {
         btn.disabled = true;
         try {
           await setReviewPinned(btn.dataset.id, btn.dataset.pinned !== 'true');
+          allReviews = [];
+          reviewsPage = 1;
           loadReviews();
         } catch {
           alert('Failed to update pin status.');
@@ -1061,6 +1116,8 @@ if (reviewsTable) {
         btn.disabled = true;
         try {
           await deleteReview(btn.dataset.id);
+          allReviews = [];
+          reviewsPage = 1;
           loadReviews();
         } catch {
           alert('Failed to delete review.');
@@ -1071,18 +1128,42 @@ if (reviewsTable) {
   }
 
   loadReviews();
+
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'reviews-prev') {
+      if (reviewsPage > 1) { reviewsPage--; loadReviews(); }
+    }
+    if (e.target.id === 'reviews-next') {
+      const totalPages = Math.ceil(allReviews.length / REVIEWS_PER_PAGE) || 1;
+      if (reviewsPage < totalPages) { reviewsPage++; loadReviews(); }
+    }
+  });
 }
 
 // --- Coupons ---
 const couponsTable = document.getElementById('coupons-table');
 if (couponsTable) {
+  const COUPONS_PER_PAGE = 10;
+  let couponsPage = 1;
+  let allCoupons = [];
+
   async function loadCoupons() {
     couponsTable.innerHTML = '<p>Loading…</p>';
-    const coupons = await getCoupons();
-    if (!coupons.length) {
+    if (!allCoupons.length) {
+      allCoupons = await getCoupons();
+    }
+
+    if (!allCoupons.length) {
       couponsTable.innerHTML = '<p>No coupons yet. Create one above.</p>';
       return;
     }
+
+    const totalItems = allCoupons.length;
+    const totalPages = Math.ceil(totalItems / COUPONS_PER_PAGE) || 1;
+    if (couponsPage > totalPages) couponsPage = totalPages;
+
+    const pageCoupons = allCoupons.slice((couponsPage - 1) * COUPONS_PER_PAGE, couponsPage * COUPONS_PER_PAGE);
+
     couponsTable.innerHTML = `
       <div class="admin-table-wrap">
       <table>
@@ -1092,7 +1173,7 @@ if (couponsTable) {
           </tr>
         </thead>
         <tbody>
-          ${coupons.map(c => `
+          ${pageCoupons.map(c => `
             <tr>
               <td><strong>${esc(c.code)}</strong></td>
               <td>${c.discount_percent}%</td>
@@ -1107,13 +1188,21 @@ if (couponsTable) {
         </tbody>
       </table>
       </div>
+      <div class="pagination">
+        <button class="button page-btn" id="coupons-prev" ${couponsPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${couponsPage} of ${totalPages} (${totalItems} total)</span>
+        <button class="button page-btn" id="coupons-next" ${couponsPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
     `;
+
     couponsTable.querySelectorAll('.delete-coupon-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!confirm('Delete this coupon?')) return;
         btn.disabled = true;
         try {
           await deleteCoupon(btn.dataset.id);
+          allCoupons = [];
+          couponsPage = 1;
           loadCoupons();
         } catch { btn.disabled = false; }
       });
@@ -1121,6 +1210,16 @@ if (couponsTable) {
   }
 
   loadCoupons();
+
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'coupons-prev') {
+      if (couponsPage > 1) { couponsPage--; loadCoupons(); }
+    }
+    if (e.target.id === 'coupons-next') {
+      const totalPages = Math.ceil(allCoupons.length / COUPONS_PER_PAGE) || 1;
+      if (couponsPage < totalPages) { couponsPage++; loadCoupons(); }
+    }
+  });
 
   document.getElementById('coupon-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1137,6 +1236,8 @@ if (couponsTable) {
       if (expires) data.expires_at = new Date(expires).toISOString();
       await createCoupon(data);
       e.target.reset();
+      allCoupons = [];
+      couponsPage = 1;
       loadCoupons();
     } catch (err) {
       msg.textContent = err.message || 'Failed to create coupon.';

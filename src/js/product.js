@@ -4,8 +4,9 @@ import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } f
 
 const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
 
-function parseCats(catStr) {
-  return (catStr || '').split(',').map(c => c.trim()).filter(Boolean);
+function parseCats(cat) {
+  if (Array.isArray(cat)) return cat.map(c => String(c).trim()).filter(Boolean);
+  return (cat || '').split(',').map(c => c.trim()).filter(Boolean);
 }
 
 function displayCats(catStr) {

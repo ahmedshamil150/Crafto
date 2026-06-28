@@ -28,7 +28,7 @@ export async function getProducts({ limit, offset, featured, category } = {}) {
   if (limit) params.set('limit', limit);
   if (offset != null) params.set('offset', offset);
   if (featured != null) params.set('featured', `eq.${featured}`);
-  if (category) params.set('category', `eq.${category}`);
+  if (category) params.set('category', `cs.{${category}}`);
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${params}`, { headers: headers() });
   if (!res.ok) return [];
   return res.json();
