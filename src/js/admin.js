@@ -508,7 +508,7 @@ if (productsTable) {
 
   async function loadProducts() {
     const filterState = getProductFilterState();
-    productsTable.innerHTML = '<p>Loading…</p>';
+    productsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
 
     // Fetch products (cache all on first load or when filters change)
     if (!allProducts.length) {
@@ -574,7 +574,7 @@ if (productsTable) {
           </tr>
         </thead>
         <tbody>
-          ${pageProducts.map(p => {
+          ${pageProducts.map((p, i) => {
             const variants = variantCache[p.id] || [];
             const hasVar = variants.length > 0;
             let stockDisplay = (p.stock ?? 0).toString();
@@ -584,7 +584,7 @@ if (productsTable) {
               stockDisplay = `${totalVarStock} <span style="font-size:0.75rem;color:#666;">[${esc(details)}]</span>`;
             }
             return `
-            <tr data-id="${p.id}">
+            <tr data-id="${p.id}" style="--i:${i}">
               <td><img src="${p.image_url || 'https://placehold.co/60x45?text=?'}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;" /></td>
               <td>${p.title}</td>
               <td>${p.category ? displayCats(p.category) : '–'}</td>
@@ -709,7 +709,7 @@ if (ordersTable) {
   }
 
   async function loadOrders() {
-    ordersTable.innerHTML = '<p>Loading…</p>';
+    ordersTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     renderOrderFilters();
     const filterOpts = ordersStatusFilter ? { status: ordersStatusFilter } : {};
     const [orders, count] = await Promise.all([
@@ -730,8 +730,8 @@ if (ordersTable) {
           </tr>
         </thead>
         <tbody>
-          ${orders.map(o => `
-            <tr class="order-main-row" data-order-id="${o.id}">
+          ${orders.map((o, i) => `
+            <tr class="order-main-row" data-order-id="${o.id}" style="--i:${i}">
               <td style="text-align:center;">
                 <button class="toggle-items-btn" data-id="${o.id}" style="background:none;border:1px solid #aaa;border-radius:3px;cursor:pointer;padding:1px 6px;font-size:0.85rem;line-height:1.4;" title="Show items">+</button>
               </td>
@@ -909,8 +909,8 @@ if (revenueContent) {
           </tr>
         </thead>
         <tbody>
-          ${pageLines.map(l => `
-            <tr>
+          ${pageLines.map((l, i) => `
+            <tr style="--i:${i}">
               <td>${l.date}</td>
               <td><code>${l.orderShort}</code></td>
               <td>${esc(l.title)}${l.variantLabel ? ' <span style="color:#6b7280;font-size:0.8rem;">(' + esc(l.variantLabel) + ')</span>' : ''}</td>
@@ -943,8 +943,8 @@ if (revenueContent) {
           </tr>
         </thead>
         <tbody>
-          ${allSummaryRows.map(r => `
-            <tr>
+          ${allSummaryRows.map((r, i) => `
+            <tr style="--i:${i}">
               <td>${esc(r.title)}</td>
               <td>PKR ${r.price.toLocaleString()}</td>
               <td>${r.qty}</td>
@@ -1042,7 +1042,7 @@ if (reviewsTable) {
   let allReviews = [];
 
   async function loadReviews() {
-    reviewsTable.innerHTML = '<p>Loading…</p>';
+    reviewsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     if (!allReviews.length) {
       allReviews = await getAllReviews();
     }
@@ -1067,8 +1067,8 @@ if (reviewsTable) {
           </tr>
         </thead>
         <tbody>
-          ${pageReviews.map(r => `
-            <tr data-id="${r.id}">
+          ${pageReviews.map((r, i) => `
+            <tr data-id="${r.id}" style="--i:${i}">
               <td>
                 ${r.pinned ? '<span class="pin-badge">Pinned</span><br/>' : ''}
                 ${esc(r.products?.title || '–')}
@@ -1148,7 +1148,7 @@ if (couponsTable) {
   let allCoupons = [];
 
   async function loadCoupons() {
-    couponsTable.innerHTML = '<p>Loading…</p>';
+    couponsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     if (!allCoupons.length) {
       allCoupons = await getCoupons();
     }
@@ -1173,8 +1173,8 @@ if (couponsTable) {
           </tr>
         </thead>
         <tbody>
-          ${pageCoupons.map(c => `
-            <tr>
+          ${pageCoupons.map((c, i) => `
+            <tr style="--i:${i}">
               <td><strong>${esc(c.code)}</strong></td>
               <td>${c.discount_percent}%</td>
               <td>${c.used_count}${c.max_uses > 0 ? ` / ${c.max_uses}` : ' / ∞'}</td>
