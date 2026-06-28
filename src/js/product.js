@@ -1,8 +1,17 @@
 // src/js/product.js
-import { getProducts, getProductById, getReviews, createReview, getProductVariants } from './api.js';
+import { getProducts, getProductById, getReviews, createReview, getProductVariants, getCategories } from './api.js';
 import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } from './main.js';
 
-const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
+let CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
+
+async function initCategories() {
+  try {
+    const cats = await getCategories();
+    if (cats && cats.length) {
+      CATEGORIES = cats.map(c => c.name);
+    }
+  } catch { /* keep defaults */ }
+}
 
 function parseCats(cat) {
   if (Array.isArray(cat)) return cat.map(c => String(c).trim()).filter(Boolean);
@@ -699,5 +708,7 @@ window.closeLightbox = function(e) {
   document.body.style.overflow = '';
 };
 
-renderShop();
+initCategories().then(() => {
+  renderShop();
+});
 renderDetail();

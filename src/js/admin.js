@@ -3,6 +3,7 @@ import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, deleteOrder, updateOrderStatus,
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
+  getCategories, createCategory, deleteCategory,
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
 } from './api.js';
@@ -33,7 +34,37 @@ const ORDER_STATUSES = [
 
 const REVENUE_STATUSES = new Set(['cancelled', 'return_requested', 'returned']);
 
-const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters', 'Others'];
+const DEFAULT_CATS = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters', 'Others'];
+let CATEGORIES = [...DEFAULT_CATS];
+
+async function loadCategories() {
+  try {
+    const cats = await getCategories();
+    if (cats && cats.length) {
+      CATEGORIES = cats.map(c => c.name);
+    }
+  } catch { /* keep defaults */ }
+  // Rebuild category checkboxes in product form
+  const container = document.getElementById('p-categories');
+  if (container) {
+    container.innerHTML = CATEGORIES.map(c => `
+      <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;cursor:pointer;">
+        <input type="checkbox" value="${c.toLowerCase()}" /> ${c}
+      </label>
+    `).join('');
+  }
+  // Rebuild category filter dropdown
+  const sel = document.getElementById('filter-category');
+  if (sel) {
+    sel.innerHTML = '<option value="">All Categories</option>';
+    CATEGORIES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.toLowerCase();
+      opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  }
+}
 
 function countStatus(orders, status) {
   return orders.filter(o => o.status === status).length;
@@ -651,22 +682,7 @@ if (productsTable) {
     loadProducts();
   });
 
-  // Populate category filter dropdown
-  (async function initCategoryFilter() {
-    const allProds = await getProducts({ limit: 1000 });
-    const allCats = new Set();
-    allProds.forEach(p => parseCats(p.category).forEach(c => allCats.add(c.toLowerCase())));
-    const sel = document.getElementById('filter-category');
-    if (sel) {
-      [...allCats].sort().forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
-        sel.appendChild(opt);
-      });
-    }
-  })();
-
+  loadCategories();
   loadProducts();
 }
 
@@ -1265,6 +1281,111 @@ if (couponsTable) {
       msg.style.display = 'block';
     }
     btn.disabled = false; btn.textContent = 'Create Coupon';
+  });
+}
+
+// --- Categories ---
+const categoriesTable = document.getElementById('categories-table');
+if (categoriesTable) {
+  const CATS_PER_PAGE = 20;
+  let catsPage = 1;
+  let allCatsArr = [];
+
+  async function loadAdminCategories() {
+    categoriesTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
+    try {
+      allCatsArr = await getCategories();
+    } catch {
+      categoriesTable.innerHTML = '<p>Failed to load categories.</p>';
+      return;
+    }
+    if (!allCatsArr.length) {
+      categoriesTable.innerHTML = '<p>No categories yet. Add one above.</p>';
+      return;
+    }
+    const totalItems = allCatsArr.length;
+    const totalPages = Math.ceil(totalItems / CATS_PER_PAGE) || 1;
+    if (catsPage > totalPages) catsPage = totalPages;
+    const pageCats = allCatsArr.slice((catsPage - 1) * CATS_PER_PAGE, catsPage * CATS_PER_PAGE);
+
+    categoriesTable.innerHTML = `
+      <div class="admin-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Sort Order</th><th>Created</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pageCats.map((c, i) => `
+            <tr style="--i:${i}">
+              <td><strong>${esc(c.name)}</strong></td>
+              <td>${c.sort_order ?? 0}</td>
+              <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('en-PK') : '–'}</td>
+              <td class="action-cell">
+                <button class="button delete-cat-btn" data-id="${c.id}" style="background:#c62828;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="pagination">
+        <button class="button page-btn" id="cats-prev" ${catsPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${catsPage} of ${totalPages} (${totalItems} total)</span>
+        <button class="button page-btn" id="cats-next" ${catsPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    `;
+
+    categoriesTable.querySelectorAll('.delete-cat-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm(`Delete category? Products already using this category won't be affected.`)) return;
+        btn.disabled = true;
+        try {
+          await deleteCategory(btn.dataset.id);
+          allCatsArr = [];
+          catsPage = 1;
+          loadAdminCategories();
+          loadCategories(); // refresh global categories
+        } catch { btn.disabled = false; }
+      });
+    });
+  }
+
+  loadAdminCategories();
+
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'cats-prev') {
+      if (catsPage > 1) { catsPage--; loadAdminCategories(); }
+    }
+    if (e.target.id === 'cats-next') {
+      const totalPages = Math.ceil(allCatsArr.length / CATS_PER_PAGE) || 1;
+      if (catsPage < totalPages) { catsPage++; loadAdminCategories(); }
+    }
+  });
+
+  document.getElementById('category-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('create-category-btn');
+    const msg = document.getElementById('category-form-msg');
+    btn.disabled = true; btn.textContent = 'Adding…'; msg.style.display = 'none';
+    try {
+      const data = {
+        name: document.getElementById('c-name').value.trim(),
+        sort_order: parseInt(document.getElementById('c-sort').value) || 0,
+      };
+      await createCategory(data);
+      e.target.reset();
+      document.getElementById('c-sort').value = '0';
+      allCatsArr = [];
+      catsPage = 1;
+      loadAdminCategories();
+      loadCategories(); // refresh global categories
+    } catch (err) {
+      msg.textContent = err.message || 'Failed to create category.';
+      msg.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = 'Add Category';
   });
 }
 

@@ -616,6 +616,31 @@ BEGIN
   END IF;
 END $$;
 
+-- 19. Categories table
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Seed default categories
+INSERT INTO categories (name, sort_order) VALUES
+  ('Vase', 1),
+  ('Jewelry boxes', 2),
+  ('Lamps', 3),
+  ('Tables', 4),
+  ('Candle stands', 5),
+  ('Planters', 6),
+  ('Others', 7)
+ON CONFLICT (name) DO NOTHING;
+
+-- 20. Enable anon read access for categories
+ALTER TABLE IF EXISTS categories ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "anon_read_categories" ON categories;
+CREATE POLICY "anon_read_categories" ON categories
+  FOR SELECT USING (true);
+
 -- =============================================
--- 19. (end)
+-- 21. (end)
 -- =============================================

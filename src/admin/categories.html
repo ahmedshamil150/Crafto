@@ -4,18 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="../favicon.png" />
-  <meta property="og:title" content="Crafto Admin – Orders" />
-  <meta property="og:description" content="Crafto admin panel – manage orders." />
+  <meta property="og:title" content="Crafto Admin – Categories" />
+  <meta property="og:description" content="Crafto admin panel – manage categories." />
   <meta property="og:image" content="../ogimage.jpeg" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <title>Crafto Admin – Orders</title>
+  <title>Crafto Admin – Categories</title>
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/admin.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body class="admin-body">
-  <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  <button type="button" class="admin-burger" id="admin-burger" aria-label="Menu" aria-expanded="false">☰</button>
   <div class="admin-overlay" id="admin-overlay" aria-hidden="true"></div>
   <aside class="admin-sidebar" id="admin-sidebar">
     <h2>Crafto Admin</h2>
@@ -23,9 +23,9 @@
       <ul>
         <li><a href="./dashboard.html">Dashboard</a></li>
         <li><a href="./products.html">Products</a></li>
-        <li><a href="./orders.html" class="active">Orders</a></li>
+        <li><a href="./orders.html">Orders</a></li>
         <li><a href="./revenue.html">Revenue</a></li>
-        <li><a href="./categories.html">Categories</a></li>
+        <li><a href="./categories.html" class="active">Categories</a></li>
         <li><a href="./coupons.html">Coupons</a></li>
         <li><a href="./hero.html">Hero</a></li>
         <li><a href="./reviews.html">Reviews</a></li>
@@ -36,10 +36,26 @@
   </aside>
   <main class="admin-main">
     <div class="admin-page-header">
-      <h2>Orders</h2>
+      <h2>Categories</h2>
     </div>
-    <div id="order-filters" style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;"></div>
-    <div id="orders-table"></div>
+
+    <div class="admin-card" style="max-width:100%;margin-bottom:1.5rem;">
+      <h3 style="margin-bottom:1rem;font-size:1.05rem;">Add Category</h3>
+      <form id="category-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;align-items:end;">
+        <label>Name *
+          <input id="c-name" type="text" placeholder="e.g. Rugs" required />
+        </label>
+        <label>Sort Order
+          <input id="c-sort" type="number" min="0" value="0" />
+        </label>
+        <div style="display:flex;align-items:end;padding-bottom:0.2rem;">
+          <button type="submit" class="button" id="create-category-btn">Add Category</button>
+        </div>
+      </form>
+      <p id="category-form-msg" style="color:red;display:none;margin-top:0.75rem;"></p>
+    </div>
+
+    <div id="categories-table"></div>
   </main>
   <script type="module" src="../js/admin.js"></script>
 </body>

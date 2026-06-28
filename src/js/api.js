@@ -373,3 +373,28 @@ export async function deleteVariant(id) {
     method: 'DELETE',
   });
 }
+
+// --- Categories ---
+export async function getCategories() {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/categories?order=sort_order.asc,name.asc`, { headers: headers() });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createCategory(data) {
+  const result = await adminFetch({
+    path: '/rest/v1/categories',
+    method: 'POST',
+    body: data,
+    prefer: 'return=representation',
+  });
+  return result.data;
+}
+
+export async function deleteCategory(id) {
+  await adminFetch({
+    path: `/rest/v1/categories?id=eq.${id}`,
+    method: 'DELETE',
+  });
+}
