@@ -34,6 +34,7 @@ export default defineConfig({
         contactSuccess: resolve(__dirname, 'src/contact-success.html'),
         privacy:        resolve(__dirname, 'src/privacy.html'),
         wishlist:       resolve(__dirname, 'src/wishlist.html'),
+        notFound:       resolve(__dirname, 'src/404.html'),
       },
     },
   },

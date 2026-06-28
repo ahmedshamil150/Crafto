@@ -2,7 +2,7 @@ import { readdirSync, renameSync, mkdirSync, cpSync, rmSync, existsSync } from '
 import { join, dirname, basename } from 'path';
 
 const dist = join(import.meta.dirname, '..', 'dist');
-const exclude = new Set(['index.html']);
+const exclude = new Set(['index.html', '404.html']);
 const handled = new Set();
 
 function walk(dir) {
