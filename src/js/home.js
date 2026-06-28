@@ -3,6 +3,14 @@ import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
 
 const grid = document.getElementById('home-product-grid');
 
+function parseCats(catStr) {
+  return (catStr || '').split(',').map(c => c.trim()).filter(Boolean);
+}
+
+function displayCats(catStr) {
+  return parseCats(catStr).map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ') || 'Heritage';
+}
+
 function esc(str) {
   const el = document.createElement('span');
   el.textContent = str ?? '';
@@ -32,7 +40,7 @@ function productCard(p) {
         <div class="absolute top-2 right-2 md:top-3 md:right-3 z-10 made-in-pakistan-badge text-white text-[10px] px-3 py-1 rounded-full font-label-caps uppercase tracking-wider" style="display:none;" id="badge-${p.id}">Authentic</div>
       </div>
       <div class="p-3 md:p-6 text-center">
-        <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase mb-1 md:mb-2">${p.category ? esc(p.category) : 'Heritage'}</span>
+        <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase mb-1 md:mb-2">${p.category ? esc(displayCats(p.category)) : 'Heritage'}</span>
         <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mb-1 md:mb-2 leading-tight">${esc(p.title)}</h3>
         <p class="text-sm md:text-body-lg text-deep-emerald font-semibold">PKR ${fp.toLocaleString()}</p>
         <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">

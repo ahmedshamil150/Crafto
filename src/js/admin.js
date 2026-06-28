@@ -7,6 +7,14 @@ import {
   getProductVariants, createVariant, updateVariant, deleteVariant,
 } from './api.js';
 
+function parseCats(catStr) {
+  return (catStr || '').split(',').map(c => c.trim()).filter(Boolean);
+}
+
+function displayCats(catStr) {
+  return parseCats(catStr).map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ') || 'Heritage';
+}
+
 function esc(str) {
   const el = document.createElement('span');
   el.textContent = str ?? '';
@@ -222,11 +230,14 @@ if (productsTable) {
           <label>Title *<input id="p-title" type="text" required /></label>
           <label>Description<textarea id="p-desc" rows="3"></textarea></label>
           <label>Price (PKR) *<input id="p-price" type="number" min="0" step="0.01" required /></label>
-          <label>Category *
-            <select id="p-category" required>
-              <option value="">— Select —</option>
-              ${CATEGORIES.map(c => `<option value="${c.toLowerCase()}">${c}</option>`).join('')}
-            </select>
+          <label>Categories *
+            <div id="p-categories" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+              ${CATEGORIES.map(c => `
+                <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;cursor:pointer;">
+                  <input type="checkbox" value="${c.toLowerCase()}" /> ${c}
+                </label>
+              `).join('')}
+            </div>
           </label>
           <label>Stock <small>(total for products without variants)</small><input id="p-stock" type="number" min="0" value="0" /></label>
           <div class="variants-section" style="border:1px solid #ddd;border-radius:6px;padding:12px;margin-top:8px;">
@@ -285,7 +296,11 @@ if (productsTable) {
     document.getElementById('p-title').value    = product?.title || '';
     document.getElementById('p-desc').value     = product?.description || '';
     document.getElementById('p-price').value    = product?.price || '';
-    document.getElementById('p-category').value = product?.category?.toLowerCase() || '';
+    // Populate category checkboxes
+    const savedCats = new Set(parseCats(product?.category).map(c => c.toLowerCase()));
+    document.querySelectorAll('#p-categories input[type="checkbox"]').forEach(cb => {
+      cb.checked = savedCats.has(cb.value);
+    });
     document.getElementById('p-stock').value    = product?.stock ?? 0;
     document.getElementById('p-discount').value = product?.discount_percent ?? 0;
     document.getElementById('p-featured').checked = product?.featured || false;
@@ -335,11 +350,16 @@ if (productsTable) {
 
       if (!image_url) throw new Error('Image 1 is required.');
 
+      const selectedCats = [];
+      document.querySelectorAll('#p-categories input[type="checkbox"]:checked').forEach(cb => {
+        selectedCats.push(cb.value);
+      });
+      if (!selectedCats.length) throw new Error('Select at least one category.');
       const payload = {
         title:           document.getElementById('p-title').value.trim(),
         description:     document.getElementById('p-desc').value.trim(),
         price:           parseFloat(document.getElementById('p-price').value),
-        category:        document.getElementById('p-category').value,
+        category:        selectedCats.join(', '),
         stock:           parseInt(document.getElementById('p-stock').value) || 0,
         discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
         featured:        document.getElementById('p-featured').checked,
@@ -473,7 +493,7 @@ if (productsTable) {
   function applyProductFilters(products) {
     const f = getProductFilterState();
     let result = [...products];
-    if (f.category) result = result.filter(p => (p.category || '').toLowerCase() === f.category.toLowerCase());
+    if (f.category) result = result.filter(p => parseCats(p.category).some(c => c.toLowerCase() === f.category.toLowerCase()));
     if (f.stock === 'in-stock') result = result.filter(p => (p.stock ?? 0) > 0);
     if (f.stock === 'out-of-stock') result = result.filter(p => (p.stock ?? 0) <= 0);
     if (f.discounted) result = result.filter(p => (p.discount_percent || 0) > 0);
@@ -495,7 +515,7 @@ if (productsTable) {
     }
 
     let filtered = [...allProducts];
-    if (filterState.category) filtered = filtered.filter(p => (p.category || '').toLowerCase() === filterState.category.toLowerCase());
+    if (filterState.category) filtered = filtered.filter(p => parseCats(p.category).some(c => c.toLowerCase() === filterState.category.toLowerCase()));
     if (filterState.stock === 'in-stock') filtered = filtered.filter(p => (p.stock ?? 0) > 0);
     if (filterState.stock === 'out-of-stock') filtered = filtered.filter(p => (p.stock ?? 0) <= 0);
     if (filterState.discounted) filtered = filtered.filter(p => (p.discount_percent || 0) > 0);
@@ -566,7 +586,7 @@ if (productsTable) {
             <tr data-id="${p.id}">
               <td><img src="${p.image_url || 'https://placehold.co/60x45?text=?'}" style="width:60px;height:45px;object-fit:cover;border-radius:4px;" /></td>
               <td>${p.title}</td>
-              <td>${p.category || '–'}</td>
+              <td>${p.category ? displayCats(p.category) : '–'}</td>
               <td>${Number(p.price).toLocaleString()}</td>
               <td>${p.discount_percent ? `${p.discount_percent}%` : '–'}</td>
               <td>${stockDisplay}</td>
@@ -632,14 +652,15 @@ if (productsTable) {
 
   // Populate category filter dropdown
   (async function initCategoryFilter() {
-    const cats = await getProducts({ limit: 1000 });
-    const unique = [...new Set(cats.map(p => p.category).filter(Boolean))];
+    const allProds = await getProducts({ limit: 1000 });
+    const allCats = new Set();
+    allProds.forEach(p => parseCats(p.category).forEach(c => allCats.add(c.toLowerCase())));
     const sel = document.getElementById('filter-category');
     if (sel) {
-      unique.forEach(c => {
+      [...allCats].sort().forEach(c => {
         const opt = document.createElement('option');
         opt.value = c;
-        opt.textContent = c;
+        opt.textContent = c.charAt(0).toUpperCase() + c.slice(1);
         sel.appendChild(opt);
       });
     }

@@ -243,7 +243,7 @@ async function loadRecommended() {
                 ${p.discount_percent ? `<span class="absolute top-2 right-2 md:top-3 md:right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-label-caps">-${p.discount_percent}%</span>` : ''}
               </div>
               <div class="p-4 text-center">
-                <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc(p.category) : 'Heritage'}</span>
+                <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc((p.category || '').split(',').map(c => c.trim()).filter(Boolean).map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ')) : 'Heritage'}</span>
                 <h3 class="font-headline-md text-sm text-charcoal-text mt-1">${esc(p.title)}</h3>
                 <p class="font-body-md text-deep-emerald font-semibold mt-1">PKR ${fp.toLocaleString()}</p>
                 <button class="checkout-add-cart btn-shine mt-3 w-full px-3 py-2 bg-deep-emerald text-white rounded-lg font-label-caps text-[10px] hover:bg-primary transition-all active:scale-[0.97]"

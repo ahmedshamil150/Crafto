@@ -4,9 +4,20 @@ import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } f
 
 const CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
 
-function normalizeCat(cat) {
-  const c = (cat || '').trim().toLowerCase();
-  return CATEGORIES.find(k => k.toLowerCase() === c) ? c : 'others';
+function parseCats(catStr) {
+  return (catStr || '').split(',').map(c => c.trim()).filter(Boolean);
+}
+
+function displayCats(catStr) {
+  return parseCats(catStr).map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ') || 'Heritage';
+}
+
+function matchesTab(catStr, tab) {
+  if (tab === 'all') return true;
+  const cats = parseCats(catStr).map(c => c.toLowerCase());
+  const known = CATEGORIES.map(c => c.toLowerCase());
+  if (tab === 'others') return !cats.some(c => known.includes(c));
+  return cats.includes(tab);
 }
 
 function discPrice(price, pct) {
@@ -69,7 +80,7 @@ function productCardHtml(p) {
         ${onSale ? `<div class="absolute top-2 right-2 md:top-3 md:right-3 z-10 bg-deep-emerald text-white text-[10px] px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
       </div>
       <div class="p-3 md:p-5 text-center">
-        <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(p.category) : 'Heritage'}</span>
+        <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(displayCats(p.category)) : 'Heritage'}</span>
         <a href="./product.html?id=${p.id}">
           <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mt-1 mb-1 md:mb-2 hover:text-deep-emerald transition-colors leading-tight">${esc(p.title)}</h3>
         </a>
@@ -118,7 +129,7 @@ function renderGrid() {
   }
 
   if (activeTab !== 'all') {
-    filtered = filtered.filter(p => normalizeCat(p.category) === activeTab);
+    filtered = filtered.filter(p => matchesTab(p.category, activeTab));
   }
 
   if (filterDisc) {
@@ -273,7 +284,7 @@ async function renderDetail() {
 
       <div class="fade-in-up" style="transition-delay:0.1s">
         <div class="flex flex-wrap items-center gap-3 mb-3">
-          ${p.category ? '<span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">' + esc(p.category) + '</span>' : ''}
+          ${p.category ? '<span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">' + esc(displayCats(p.category)) + '</span>' : ''}
           ${onSale ? '<span class="bg-red-100 text-red-700 text-[10px] font-label-caps px-2.5 py-0.5 rounded-full">-' + p.discount_percent + '%</span>' : ''}
         </div>
         <h1 class="font-headline-lg text-headline-lg text-deep-emerald mb-4">${esc(p.title)}</h1>
@@ -504,7 +515,10 @@ async function loadRecommended(category, currentId) {
   const recSection = document.getElementById('recommended');
   if (!recSection) return;
   recSection.innerHTML = '<p class="text-center text-on-surface-variant py-8 text-sm">Loading recommendations…</p>';
-  const products = await getProducts({ category, limit: 5 });
+  // Fetch all products and filter client-side since a product may have multiple categories
+  const allProds = await getProducts({ limit: 50 });
+  const cats = parseCats(category).map(c => c.toLowerCase());
+  const products = allProds.filter(p => parseCats(p.category).some(c => cats.includes(c.toLowerCase())));
   const filtered = products.filter(p => p.id !== currentId).slice(0, 4);
   if (!filtered.length) { recSection.innerHTML = ''; return; }
   recSection.innerHTML = `
@@ -527,7 +541,7 @@ async function loadRecommended(category, currentId) {
                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
               </div>
               <div class="p-2 md:p-4 text-center">
-                <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc(p.category) : 'Heritage'}</span>
+                <span class="text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase block">${p.category ? esc(displayCats(p.category)) : 'Heritage'}</span>
                 <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text hover:text-deep-emerald transition-colors leading-tight">${esc(p.title)}</h3>
                 <p class="text-xs md:text-sm font-semibold mt-0.5 md:mt-1">
                   ${os ? `<span class="text-on-surface-variant/50 line-through text-[10px] md:text-sm mr-1">PKR ${Number(p.price).toLocaleString()}</span>` : ''}
