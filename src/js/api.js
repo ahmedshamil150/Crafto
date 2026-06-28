@@ -15,12 +15,14 @@ async function adminFetch({ path, method, body, prefer, upload }) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path, method, body, prefer, upload }),
   });
+  const text = await res.text();
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg = err.data?.message || err.data?.error || err.error || `HTTP ${res.status}`;
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = {}; }
+    const msg = parsed.data?.message || parsed.data?.error || parsed.error || `HTTP ${res.status}`;
     throw new Error(msg);
   }
-  return res.json();
+  return text ? JSON.parse(text) : {};
 }
 
 export async function getProducts({ limit, offset, featured, category } = {}) {
