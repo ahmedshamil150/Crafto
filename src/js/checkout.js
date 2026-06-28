@@ -29,7 +29,7 @@ const SHIPPING_FEE = 200;
 function renderSummary() {
   const cart = getCart();
   if (!cart.length) {
-    summaryEl.innerHTML = `<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/10 text-center"><span class="material-symbols-outlined text-deep-emerald text-4xl mb-3">shopping_cart</span><p class="font-body-md text-on-surface-variant">Your cart is empty.</p><a href="./shop.html" class="inline-block mt-3 px-5 py-2 bg-deep-emerald text-white rounded-lg font-label-caps text-sm">Go Shopping</a></div>`;
+    summaryEl.innerHTML = `<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/10 text-center"><span class="material-symbols-outlined text-deep-emerald text-4xl mb-3">shopping_cart</span><p class="font-body-md text-on-surface-variant">Your cart is empty.</p><a href="./shop" class="inline-block mt-3 px-5 py-2 bg-deep-emerald text-white rounded-lg font-label-caps text-sm">Go Shopping</a></div>`;
     if (submitBtn) submitBtn.disabled = true;
     return;
   }

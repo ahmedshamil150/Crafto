@@ -86,7 +86,7 @@ const isLoginPage = document.getElementById('admin-login-form') !== null;
 
 // --- Auth guard ---
 if (!isLoginPage && !sessionStorage.getItem('crafto_admin')) {
-  window.location.href = './login.html';
+  window.location.href = './login';
 }
 
 // --- Login ---
@@ -96,7 +96,7 @@ document.getElementById('admin-login-form')?.addEventListener('submit', e => {
   const pass = document.getElementById('password').value;
   if (ADMIN_USERS[user] && ADMIN_USERS[user] === pass) {
     sessionStorage.setItem('crafto_admin', user);
-    window.location.href = './dashboard.html';
+    window.location.href = './dashboard';
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
@@ -106,7 +106,7 @@ document.getElementById('admin-login-form')?.addEventListener('submit', e => {
 document.getElementById('logout-btn')?.addEventListener('click', e => {
   e.preventDefault();
   sessionStorage.removeItem('crafto_admin');
-  window.location.href = './login.html';
+  window.location.href = './login';
 });
 
 // --- Mobile sidebar ---

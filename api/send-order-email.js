@@ -38,11 +38,11 @@ export default async function handler(req, res) {
         <tr><td colspan="2" style="padding:4px 0 0;font-size:12px;color:#6f7a73;text-align:right;">Cash on Delivery</td></tr>
       </table>
       <p style="margin:24px 0 8px;font-size:14px;color:#1A1A1A;">We will confirm your order and let you know in a while.</p>
-      <a href="https://crafto.vercel.app/order-status.html?id=${orderId}" style="display:inline-block;padding:12px 28px;background:#006A4E;color:#ffffff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">Track Your Order</a>
+      <a href="https://crafto.vercel.app/order-status?id=${orderId}" style="display:inline-block;padding:12px 28px;background:#006A4E;color:#ffffff;text-decoration:none;border-radius:999px;font-size:14px;font-weight:600;">Track Your Order</a>
     </td></tr>
     <tr><td style="background:#F9F7F2;padding:24px 40px;text-align:center;border-top:1px solid #e4e2dd;">
       <p style="margin:0;font-size:12px;color:#6f7a73;">Crafto — Pakistan's home for authentic handicrafts</p>
-      <p style="margin:4px 0 0;font-size:11px;color:#6f7a73;">Questions? Reply to this email or visit <a href="https://crafto.vercel.app/contact.html" style="color:#006A4E;">our contact page</a>.</p>
+      <p style="margin:4px 0 0;font-size:11px;color:#6f7a73;">Questions? Reply to this email or visit <a href="https://crafto.vercel.app/contact" style="color:#006A4E;">our contact page</a>.</p>
     </td></tr>
   </table>
 </td></tr></table></body></html>`,

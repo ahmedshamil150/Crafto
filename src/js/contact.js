@@ -28,7 +28,7 @@ form?.addEventListener('submit', async e => {
     });
     const json = await res.json();
     if (json.success) {
-      window.location.href = './contact-success.html';
+      window.location.href = './contact-success';
     } else {
       throw new Error(json.message || 'Failed to send.');
     }

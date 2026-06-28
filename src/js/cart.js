@@ -71,10 +71,10 @@ function render() {
           <span>Subtotal</span><span>PKR ${subtotal.toLocaleString()}</span>
         </div>
         <p class="text-xs text-on-surface-variant/70">Shipping & taxes calculated at checkout</p>
-        <a href="./checkout.html" class="btn-shine flex items-center justify-center gap-2 w-full px-5 py-3 bg-deep-emerald text-white rounded-lg font-label-caps text-label-caps hover:bg-primary transition-all active:scale-[0.97] text-sm">
+        <a href="./checkout" class="btn-shine flex items-center justify-center gap-2 w-full px-5 py-3 bg-deep-emerald text-white rounded-lg font-label-caps text-label-caps hover:bg-primary transition-all active:scale-[0.97] text-sm">
           Proceed to Checkout <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </a>
-        <a href="./shop.html" class="flex items-center justify-center gap-1 w-full px-5 py-2.5 border border-outline/30 text-on-surface-variant rounded-lg font-label-caps text-label-caps hover:bg-surface-container-low transition-all text-sm">
+        <a href="./shop" class="flex items-center justify-center gap-1 w-full px-5 py-2.5 border border-outline/30 text-on-surface-variant rounded-lg font-label-caps text-label-caps hover:bg-surface-container-low transition-all text-sm">
           <span class="material-symbols-outlined text-sm">arrow_back</span> Continue Shopping
         </a>
       </div>

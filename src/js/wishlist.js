@@ -16,7 +16,7 @@ function render() {
       <div class="md:col-span-full text-center py-16">
         <span class="material-symbols-outlined text-6xl text-on-surface-variant/30" data-icon="favorite">favorite</span>
         <p class="text-on-surface-variant mt-4 text-lg">Your wishlist is empty.</p>
-        <a href="./shop.html" class="inline-block mt-6 bg-deep-emerald text-white px-8 py-3 rounded-full font-label-caps text-label-caps hover:bg-primary-container transition-all">Browse Products</a>
+        <a href="./shop" class="inline-block mt-6 bg-deep-emerald text-white px-8 py-3 rounded-full font-label-caps text-label-caps hover:bg-primary-container transition-all">Browse Products</a>
       </div>
     `;
     return;
