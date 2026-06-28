@@ -1,7 +1,7 @@
 // src/js/admin.js
 import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
-  getAllReviews, deleteReview, setReviewPinned, getOrdersCount, uploadImage,
+  getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
