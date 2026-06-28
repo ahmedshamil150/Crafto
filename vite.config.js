@@ -36,4 +36,23 @@ export default defineConfig({
       },
     },
   },
+  plugins: [
+    // Move stylesheet links before any <script> tags so CSS is discovered in parallel with JS
+    {
+      name: 'reorder-css-before-scripts',
+      enforce: 'post',
+      transformIndexHtml(html) {
+        // Move stylesheet links to before the first <script> so CSS is discovered in parallel with JS
+        const cssLinks = [];
+        let result = html.replace(/<link[^>]*rel="stylesheet"[^>]*\/?>/gi, (m) => { cssLinks.push(m); return ''; });
+        if (cssLinks.length) {
+          const idx = result.search(/<script[\s>]/i);
+          if (idx !== -1) {
+            result = result.slice(0, idx) + cssLinks.join('\n') + '\n' + result.slice(idx);
+          }
+        }
+        return result;
+      }
+    }
+  ],
 });
