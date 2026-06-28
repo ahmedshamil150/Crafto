@@ -31,7 +31,7 @@ function productCard(p) {
   return `
     <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
       <div class="relative aspect-[4/5] overflow-hidden">
-        <a href="./product.html?id=${p.id}">
+        <a href="./product?id=${p.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
         </a>
         <button class="home-wishlist absolute top-2 left-2 md:top-3 md:left-3 z-10 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
@@ -45,7 +45,7 @@ function productCard(p) {
         <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mb-1 md:mb-2 leading-tight">${esc(p.title)}</h3>
         <p class="text-sm md:text-body-lg text-deep-emerald font-semibold">PKR ${fp.toLocaleString()}</p>
         <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
-          <a href="./product.html?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-6 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
+          <a href="./product?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-6 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
           <button class="home-add-cart btn-shine flex-none md:flex-none w-8 h-8 md:w-auto md:px-5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors flex items-center justify-center"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
         </div>
@@ -231,7 +231,7 @@ function renderCategoryCards() {
           <span class="category-section__number">0${i + 1}</span>
           <h3 class="category-section__title">${c.label}</h3>
           <p class="category-section__desc">${c.desc}</p>
-          <a href="./shop.html?category=${encodeURIComponent(c.id)}" class="category-section__btn">Shop Now</a>
+          <a href="./shop?category=${encodeURIComponent(c.id)}" class="category-section__btn">Shop Now</a>
         </div>
       </div>
     `;

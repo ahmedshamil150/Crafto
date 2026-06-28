@@ -201,7 +201,7 @@ form?.addEventListener('submit', async e => {
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast(`Order placed! Your Order ID: ${orderNumber}`);
-    setTimeout(() => window.location.href = `./order-status.html?id=${orderNumber}`, 2000);
+    setTimeout(() => window.location.href = `./order-status?id=${orderNumber}`, 2000);
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.classList.remove('hidden');
@@ -233,7 +233,7 @@ async function loadRecommended() {
           return `
             <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10 product-card">
               <div class="relative aspect-[4/5] overflow-hidden">
-                <a href="./product.html?id=${p.id}">
+                <a href="./product?id=${p.id}">
                   <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
                 </a>
                 <button class="checkout-wishlist absolute top-2 left-2 md:top-3 md:left-3 z-10 w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-all ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"

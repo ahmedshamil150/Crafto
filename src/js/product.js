@@ -80,7 +80,7 @@ function productCardHtml(p) {
   return `
     <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
       <div class="relative aspect-[4/5] overflow-hidden">
-        <a href="./product.html?id=${p.id}">
+        <a href="./product?id=${p.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
         </a>
         <button class="shop-wishlist absolute top-2 left-2 md:top-3 md:left-3 z-10 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:scale-110 transition-transform ${inWl ? 'text-red-500' : 'text-on-surface-variant'}"
@@ -91,7 +91,7 @@ function productCardHtml(p) {
       </div>
       <div class="p-3 md:p-5 text-center">
         <span class="hidden md:block text-metallic-gold font-label-caps text-[10px] tracking-widest uppercase">${p.category ? esc(displayCats(p.category)) : 'Heritage'}</span>
-        <a href="./product.html?id=${p.id}">
+        <a href="./product?id=${p.id}">
           <h3 class="font-headline-md text-xs md:text-headline-md text-charcoal-text mt-1 mb-1 md:mb-2 hover:text-deep-emerald transition-colors leading-tight">${esc(p.title)}</h3>
         </a>
         <p class="text-sm md:font-body-lg font-semibold">
@@ -99,7 +99,7 @@ function productCardHtml(p) {
           <span class="text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
         </p>
         <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
-          <a href="./product.html?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-5 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
+          <a href="./product?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-5 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
           <button class="shop-add-cart btn-shine flex-none md:flex-none w-8 h-8 md:w-auto md:px-5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95 flex items-center justify-center"
             data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
         </div>
@@ -554,7 +554,7 @@ async function loadRecommended(category, currentId) {
               <span class="material-symbols-outlined text-xs md:text-sm">${inWl ? 'favorite' : 'favorite_border'}</span>
             </button>
             ${os ? `<div class="absolute top-2 left-2 md:top-3 md:left-3 z-10 bg-deep-emerald text-white text-[10px] px-2 py-0.5 md:px-2.5 md:py-0.5 rounded-full font-label-caps font-bold">-${p.discount_percent}%</div>` : ''}
-            <a href="./product.html?id=${p.id}">
+            <a href="./product?id=${p.id}">
               <div class="relative aspect-[4/5] overflow-hidden">
                 <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
               </div>
