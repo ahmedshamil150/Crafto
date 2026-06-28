@@ -836,8 +836,8 @@ if (ordersTable) {
           await deleteOrder(btn.dataset.id);
           ordersPage = 1;
           loadOrders();
-        } catch {
-          alert('Failed to delete order.');
+        } catch (err) {
+          alert('Failed to delete order: ' + (err.message || 'unknown error'));
           btn.disabled = false;
           btn.textContent = 'Delete';
         }

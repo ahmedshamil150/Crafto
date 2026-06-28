@@ -17,7 +17,8 @@ async function adminFetch({ path, method, body, prefer, upload }) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const msg = err.data?.message || err.data?.error || err.error || `HTTP ${res.status}`;
+    throw new Error(msg);
   }
   return res.json();
 }
@@ -134,6 +135,14 @@ export async function getOrdersCount({ status } = {}) {
 }
 
 export async function deleteOrder(id) {
+  // Delete any tracking records referencing this order first (ignore errors if table doesn't exist)
+  try {
+    await adminFetch({
+      path: `/rest/v1/order_tracking?order_id=eq.${id}`,
+      method: 'DELETE',
+    });
+  } catch {}
+  // Delete the order itself
   await adminFetch({
     path: `/rest/v1/orders?id=eq.${id}`,
     method: 'DELETE',
