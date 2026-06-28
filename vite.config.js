@@ -37,21 +37,19 @@ export default defineConfig({
     },
   },
   plugins: [
-    // Move stylesheet links before any <script> tags so CSS is discovered in parallel with JS
+    // Make the Vite-generated CSS link non-render-blocking (critical CSS is already inlined)
     {
-      name: 'reorder-css-before-scripts',
+      name: 'defer-stylesheet',
       enforce: 'post',
       transformIndexHtml(html) {
-        // Move stylesheet links to before the first <script> so CSS is discovered in parallel with JS
-        const cssLinks = [];
-        let result = html.replace(/<link[^>]*rel="stylesheet"[^>]*\/?>/gi, (m) => { cssLinks.push(m); return ''; });
-        if (cssLinks.length) {
-          const idx = result.search(/<script[\s>]/i);
-          if (idx !== -1) {
-            result = result.slice(0, idx) + cssLinks.join('\n') + '\n' + result.slice(idx);
+        // Only target the main CSS link (not Google Fonts which already have media="print")
+        return html.replace(
+          /(<link[^>]*rel="stylesheet"[^>]*href="[^"]*\.css[^"]*"[^>]*\/?>)/gi,
+          (match) => {
+            if (match.includes('media=')) return match;
+            return match.replace('rel="stylesheet"', `rel="stylesheet" media="print" onload="this.media='all'"`);
           }
-        }
-        return result;
+        );
       }
     }
   ],
