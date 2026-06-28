@@ -133,6 +133,13 @@ export async function getOrdersCount({ status } = {}) {
   return result.count ? parseInt(result.count, 10) : 0;
 }
 
+export async function deleteOrder(id) {
+  await adminFetch({
+    path: `/rest/v1/orders?id=eq.${id}`,
+    method: 'DELETE',
+  });
+}
+
 export async function createOrder(order) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
     method: 'POST',

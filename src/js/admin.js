@@ -1,6 +1,6 @@
 // src/js/admin.js
 import {
-  getProducts, getOrders, createProduct, updateProduct, deleteProduct, updateOrderStatus,
+  getProducts, getOrders, createProduct, updateProduct, deleteProduct, deleteOrder, updateOrderStatus,
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
   getActiveHeroImage, getHeroImages, setHeroImage,
@@ -726,7 +726,7 @@ if (ordersTable) {
         <thead>
           <tr>
             <th style="width:32px;"></th>
-            <th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th>
+            <th>Date</th><th>Customer</th><th>Phone</th><th>Address</th><th>Total (PKR)</th><th>Status</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -754,9 +754,12 @@ if (ordersTable) {
                   </select>
                 `}
               </td>
+              <td class="action-cell">
+                <button class="button delete-order-btn" data-id="${o.id}" style="background:#c62828;">Delete</button>
+              </td>
             </tr>
             <tr class="items-detail-row" id="items-${o.id}" style="display:none;">
-              <td colspan="7" style="padding:0.75rem 1rem;background:#f9f9f9;">
+              <td colspan="8" style="padding:0.75rem 1rem;background:#f9f9f9;">
                 <div style="font-weight:600;margin-bottom:0.5rem;">Order Items</div>
                 ${renderItems(o.items)}
               </td>
@@ -821,6 +824,23 @@ if (ordersTable) {
       btn.addEventListener('click', () => {
         if (!confirm('Reject this return request?')) return;
         handleReturnAction(btn, 'return_rejected', 'Reject');
+      });
+    });
+
+    ordersTable.querySelectorAll('.delete-order-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Permanently delete this order? This cannot be undone.')) return;
+        btn.disabled = true;
+        btn.textContent = 'Deleting…';
+        try {
+          await deleteOrder(btn.dataset.id);
+          ordersPage = 1;
+          loadOrders();
+        } catch {
+          alert('Failed to delete order.');
+          btn.disabled = false;
+          btn.textContent = 'Delete';
+        }
       });
     });
 

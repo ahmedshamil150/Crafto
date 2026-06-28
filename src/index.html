@@ -2,6 +2,10 @@
 <html class="scroll-smooth" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://cdn.tailwindcss.com" />
+<link rel="preload" as="image" href="https://images.unsplash.com/photo-1602872030216-3ae373e4c0a7?q=80&w=2070&auto=format&fit=crop" fetchpriority="high" />
 <link rel="icon" type="image/png" href="./favicon.png" />
 <meta property="og:title" content="Crafto | Authentic Pakistani Craftsmanship" />
 <meta property="og:description" content="Discover unique home décor and handicrafts meticulously created by skilled Pakistani artisans who preserve centuries of heritage." />
@@ -14,8 +18,8 @@
 <title>Crafto | Authentic Pakistani Craftsmanship</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,400&amp;family=Hanken+Grotesk:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<script defer src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 <script id="tailwind-config">
 tailwind.config = {
   darkMode: "class",
@@ -161,7 +165,7 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto}
 <!-- Hero Section -->
 <section class="relative h-screen flex items-start md:items-center overflow-hidden">
 <div class="absolute inset-0 z-0">
-<div id="hero-bg" class="w-full h-full bg-cover bg-center bg-fixed" style="background-image: url('https://images.unsplash.com/photo-1602872030216-3ae373e4c0a7?q=80&w=2070&auto=format&fit=crop')"></div>
+<div id="hero-bg" class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1602872030216-3ae373e4c0a7?q=80&w=2070&auto=format&fit=crop')"></div>
 <div class="absolute inset-0 bg-black/30 md:bg-black/20"></div>
 </div>
 <div class="container mx-auto px-margin-mobile md:px-margin-desktop relative z-10 pt-24 md:pt-0">
