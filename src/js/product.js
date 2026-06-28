@@ -37,8 +37,8 @@ let activeTab = 'all';
 let sortState = ''; // '', 'asc', 'desc'
 let filterDisc = false;
 let searchQuery = '';
-const DISPLAY_PAGE_SIZE = 16;
-let visibleCount = DISPLAY_PAGE_SIZE;
+const PRODUCTS_PER_PAGE = 16;
+let currentPage = 1;
 
 function esc(str) {
   const el = document.createElement('span');
@@ -110,7 +110,7 @@ function renderTabs() {
   tabsEl.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       activeTab = btn.dataset.tab;
-      visibleCount = DISPLAY_PAGE_SIZE;
+      currentPage = 1;
       renderTabs();
       renderGrid();
     });
@@ -143,14 +143,18 @@ function renderGrid() {
     filtered.sort((a, b) => discPrice(b.price, b.discount_percent) - discPrice(a.price, a.discount_percent));
   }
 
-  if (!filtered.length) {
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / PRODUCTS_PER_PAGE) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  if (!totalItems) {
     grid.innerHTML = '<p class="loading">No products in this category.</p>';
-    const wrap = document.getElementById('load-more-wrap');
+    const wrap = document.getElementById('pagination-wrap');
     if (wrap) wrap.innerHTML = '';
     return;
   }
 
-  const page = filtered.slice(0, visibleCount);
+  const page = filtered.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
   grid.innerHTML = page.map(productCardHtml).join('');
   grid.querySelectorAll('.shop-add-cart').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -170,17 +174,21 @@ function renderGrid() {
     });
   });
 
-  const wrap = document.getElementById('load-more-wrap');
+  const wrap = document.getElementById('pagination-wrap');
   if (wrap) {
-    if (visibleCount < filtered.length) {
-      wrap.innerHTML = '<button class="button load-more-btn" id="load-more-btn">Load More</button>';
-      document.getElementById('load-more-btn')?.addEventListener('click', () => {
-        visibleCount += DISPLAY_PAGE_SIZE;
-        renderGrid();
-      });
-    } else {
-      wrap.innerHTML = '';
-    }
+    wrap.innerHTML = `
+      <div class="flex items-center justify-center gap-4 mt-6">
+        <button class="button page-btn px-4 py-2 border border-deep-emerald text-deep-emerald rounded hover:bg-deep-emerald hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="shop-prev" ${currentPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="text-sm text-on-surface-variant font-label-caps">Page ${currentPage} of ${totalPages} (${totalItems})</span>
+        <button class="button page-btn px-4 py-2 border border-deep-emerald text-deep-emerald rounded hover:bg-deep-emerald hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed" id="shop-next" ${currentPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    `;
+    document.getElementById('shop-prev')?.addEventListener('click', () => {
+      if (currentPage > 1) { currentPage--; renderGrid(); }
+    });
+    document.getElementById('shop-next')?.addEventListener('click', () => {
+      if (currentPage < totalPages) { currentPage++; renderGrid(); }
+    });
   }
 }
 
@@ -213,7 +221,7 @@ async function renderShop() {
   if (searchInput) {
     searchInput.addEventListener('input', () => {
       searchQuery = searchInput.value;
-      visibleCount = DISPLAY_PAGE_SIZE;
+      currentPage = 1;
       activeTab = 'all';
       renderTabs();
       renderGrid();
@@ -224,7 +232,7 @@ async function renderShop() {
     if (sortState === '') sortState = 'asc';
     else if (sortState === 'asc') sortState = 'desc';
     else sortState = '';
-    visibleCount = DISPLAY_PAGE_SIZE;
+    currentPage = 1;
     const btn = document.getElementById('sort-price');
     btn.classList.toggle('active', sortState !== '');
     const labels = { '': 'Price', asc: 'Price ↑', desc: 'Price ↓' };
@@ -234,7 +242,7 @@ async function renderShop() {
 
   document.getElementById('filter-discounted')?.addEventListener('click', () => {
     filterDisc = !filterDisc;
-    visibleCount = DISPLAY_PAGE_SIZE;
+    currentPage = 1;
     document.getElementById('filter-discounted').classList.toggle('active', filterDisc);
     renderGrid();
   });
