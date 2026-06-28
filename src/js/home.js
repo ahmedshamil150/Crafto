@@ -79,21 +79,25 @@ async function loadHome() {
     }
   }
 
-  // Load hero image from DB
+  // Load hero image from DB (non-critical, applies after initial paint)
   try {
     const hero = await getActiveHeroImage();
     if (hero) {
       const bgEl = document.getElementById('hero-bg');
       if (bgEl) {
-        bgEl.style.backgroundImage = `url('${hero.image_url}')`;
-        if (hero.mobile_image_url) {
-          const mq = window.matchMedia('(max-width: 767px)');
-          function updateHeroBg(e) {
-            bgEl.style.backgroundImage = e.matches ? `url('${hero.mobile_image_url}')` : `url('${hero.image_url}')`;
+        const img = new Image();
+        img.onload = () => {
+          bgEl.style.backgroundImage = `url('${hero.image_url}')`;
+          if (hero.mobile_image_url) {
+            const mq = window.matchMedia('(max-width: 767px)');
+            function updateHeroBg(e) {
+              bgEl.style.backgroundImage = e.matches ? `url('${hero.mobile_image_url}')` : `url('${hero.image_url}')`;
+            }
+            mq.addEventListener('change', updateHeroBg);
+            updateHeroBg(mq);
           }
-          mq.addEventListener('change', updateHeroBg);
-          updateHeroBg(mq);
-        }
+        };
+        img.src = hero.image_url;
       }
     }
   } catch (e) { /* fall back to default hero */ }
