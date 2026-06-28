@@ -391,7 +391,7 @@ if (productsTable) {
         title:           document.getElementById('p-title').value.trim(),
         description:     document.getElementById('p-desc').value.trim(),
         price:           parseFloat(document.getElementById('p-price').value),
-        category:        selectedCats.join(', '),
+        category:        selectedCats,
         stock:           parseInt(document.getElementById('p-stock').value) || 0,
         discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
         featured:        document.getElementById('p-featured').checked,
