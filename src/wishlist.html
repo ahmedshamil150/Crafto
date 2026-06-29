@@ -69,7 +69,7 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
 @media(max-width:767px){#nav-menu{position:fixed;top:0;left:0;width:280px;height:100dvh;background:var(--cream-canvas,#F9F7F2);z-index:9999;padding:5rem 2rem 2rem;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.1);display:flex!important;flex-direction:column;gap:1.5rem}#nav-menu.open{transform:translateX(0)}#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s ease}#nav-overlay.open{opacity:1;pointer-events:auto}body.nav-open{overflow:hidden!important}}</style>
 </head>
 <body class="bg-cream-canvas text-charcoal-text font-body-md overflow-x-hidden">
-<header class="bg-cream-canvas shadow-sm fixed top-0 w-full z-50">
+<header id="site-header" class="bg-cream-canvas shadow-sm fixed top-0 w-full z-50 transition-all duration-300">
 <nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
 <div class="flex items-center gap-4">
 <button class="md:hidden active:scale-95 transition-transform" id="burger"><span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span></button>
