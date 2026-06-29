@@ -39,22 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   updateWishlistBadge();
 
-  // Morphing navbar
-  const header = document.getElementById('site-header');
-  if (header) {
-    let ticking = false;
-    const update = () => {
-      header.classList.toggle('scrolled', window.scrollY > 60);
-    };
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => { ticking = false; update(); });
-        ticking = true;
-      }
-    });
-    update();
-  }
-
   // Mobile nav toggle
   const burger = document.getElementById('burger');
   const navMenu = document.getElementById('nav-menu');
