@@ -30,7 +30,7 @@ function productCard(p) {
   const inWl = isInWishlist(p.id);
   return `
     <div class="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-outline-variant/10">
-      <div class="relative aspect-[4/5] overflow-hidden">
+      <div class="relative aspect-[3/4] overflow-hidden">
         <a href="./product?id=${p.id}">
           <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${img}" alt="${esc(p.title)}" loading="lazy" />
         </a>
