@@ -39,6 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   updateWishlistBadge();
 
+  // Floating pill nav
+  const header = document.getElementById('site-header');
+  const pill = document.getElementById('header-pill');
+  if (header && pill) {
+    const updatePill = () => {
+      const scrolled = window.scrollY > 80;
+      header.style.opacity = scrolled ? '0' : '1';
+      header.style.pointerEvents = scrolled ? 'none' : '';
+      pill.classList.toggle('hidden', !scrolled);
+      pill.classList.toggle('md:flex', scrolled);
+    };
+    window.addEventListener('scroll', updatePill, { passive: true });
+    updatePill();
+  }
+
   // Mobile nav toggle
   const burger = document.getElementById('burger');
   const navMenu = document.getElementById('nav-menu');

@@ -69,7 +69,7 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
 @media(max-width:767px){#nav-menu{position:fixed;top:0;left:0;width:280px;height:100dvh;background:var(--cream-canvas,#F9F7F2);z-index:9999;padding:5rem 2rem 2rem;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 20px rgba(0,0,0,.1);display:flex!important;flex-direction:column;gap:1.5rem}#nav-menu.open{transform:translateX(0)}#nav-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s ease}#nav-overlay.open{opacity:1;pointer-events:auto}body.nav-open{overflow:hidden!important}}</style>
 </head>
 <body class="bg-cream-canvas text-charcoal-text font-body-md overflow-x-hidden">
-<header class="bg-cream-canvas shadow-sm fixed top-0 w-full z-50">
+<header id="site-header" class="bg-cream-canvas shadow-sm fixed top-0 w-full z-50 transition-all duration-300">
 <nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
 <div class="flex items-center gap-4">
 <button class="md:hidden active:scale-95 transition-transform" id="burger"><span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span></button>
@@ -94,7 +94,18 @@ html{scroll-behavior:smooth}.fade-in{opacity:0;transition:opacity .6s ease-out,t
 </a>
 </div>
 </nav>
-</header><div id="nav-overlay"></div>
+</header>
+<div id="header-pill" class="hidden md:fixed top-0 left-1/2 -translate-x-1/2 z-50 items-center gap-2 bg-cream-canvas/90 backdrop-blur-md shadow-md rounded-full px-4 py-2 mt-3 transition-all duration-300">
+  <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors px-2" href="./">Home</a>
+  <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors px-2" href="./shop">Shop</a>
+  <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors px-2" href="./about">About</a>
+  <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors px-2" href="./contact">Contact</a>
+  <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors px-2" href="./order-status">Track Order</a>
+  <a href="./cart" class="relative text-deep-emerald ml-2">
+    <span class="material-symbols-outlined text-lg" data-icon="shopping_bag">shopping_bag</span>
+    <span class="cart-badge absolute -top-1 -right-1 bg-metallic-gold text-[8px] text-white rounded-full w-3.5 h-3.5 flex items-center justify-center" style="display:none;">0</span>
+  </a>
+</div><div id="nav-overlay"></div>
 <div id="nav-menu">
 <a class="block nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./">Home</a>
 <a class="block nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./shop">Shop</a>
