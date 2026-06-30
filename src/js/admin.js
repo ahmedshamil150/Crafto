@@ -272,6 +272,7 @@ if (productsTable) {
             </div>
           </label>
           <label>Stock <small>(total for products without variants)</small><input id="p-stock" type="number" min="0" value="0" /></label>
+          <label>Weight (kg) <small>(for outstation delivery – Rs 150/kg)</small><input id="p-weight" type="number" min="0" step="0.001" value="0" placeholder="e.g. 1.5" /></label>
           <div class="variants-section" style="border:1px solid #ddd;border-radius:6px;padding:12px;margin-top:8px;">
             <strong style="display:block;margin-bottom:8px;">Variants <small style="font-weight:400;color:#666;">(size/color with separate stock)</small></strong>
             <div id="variants-list"></div>
@@ -334,6 +335,7 @@ if (productsTable) {
       cb.checked = savedCats.has(cb.value);
     });
     document.getElementById('p-stock').value    = product?.stock ?? 0;
+    document.getElementById('p-weight').value   = product?.weight_kg ?? 0;
     document.getElementById('p-discount').value = product?.discount_percent ?? 0;
     document.getElementById('p-featured').checked = product?.featured || false;
     document.getElementById('p-img1').value     = product?.image_url || '';
@@ -393,6 +395,7 @@ if (productsTable) {
         price:           parseFloat(document.getElementById('p-price').value),
         category:        selectedCats,
         stock:           parseInt(document.getElementById('p-stock').value) || 0,
+        weight_kg:       parseFloat(document.getElementById('p-weight').value) || 0,
         discount_percent: parseInt(document.getElementById('p-discount').value) || 0,
         featured:        document.getElementById('p-featured').checked,
         image_url,

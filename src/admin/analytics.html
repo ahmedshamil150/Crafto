@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/admin.css" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body class="admin-body">
   <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
@@ -34,30 +35,38 @@
     <h2>Analytics</h2>
     <p class="admin-subtitle">Last 30 days from Google Analytics</p>
 
-    <div class="admin-stats" id="analytics-overview">
-      <div class="stat-card"><h3 id="stat-totalUsers">–</h3><p>Total Users</p></div>
-      <div class="stat-card"><h3 id="stat-newUsers">–</h3><p>New Users</p></div>
-      <div class="stat-card"><h3 id="stat-sessions">–</h3><p>Sessions</p></div>
-      <div class="stat-card"><h3 id="stat-pageViews">–</h3><p>Page Views</p></div>
-      <div class="stat-card"><h3 id="stat-bounceRate">–</h3><p>Bounce Rate</p></div>
-      <div class="stat-card"><h3 id="stat-avgDuration">–</h3><p>Avg Session</p></div>
+    <div id="ga-signin-prompt" style="text-align:center;padding:48px 24px;background:#f8f9fa;border-radius:12px;margin-top:16px;display:none;">
+      <p style="margin-bottom:20px;color:#555;">Sign in with Google to view your Analytics data.</p>
+      <div id="g_id_onload" data-client_id="__OAUTH_CLIENT_ID__" data-context="signin" data-ux_mode="popup" data-callback="handleGaCredentialResponse" data-auto_prompt="false"></div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
     </div>
 
-    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
-      <div style="flex:1;min-width:300px;background:#f8f9fa;border-radius:8px;padding:20px;">
-        <h3 class="admin-subtitle" style="margin-top:0;">Daily Trend</h3>
-        <canvas id="daily-chart" height="220"></canvas>
+    <div id="analytics-content" style="display:none;">
+      <div class="admin-stats" id="analytics-overview">
+        <div class="stat-card"><h3 id="stat-totalUsers">–</h3><p>Total Users</p></div>
+        <div class="stat-card"><h3 id="stat-newUsers">–</h3><p>New Users</p></div>
+        <div class="stat-card"><h3 id="stat-sessions">–</h3><p>Sessions</p></div>
+        <div class="stat-card"><h3 id="stat-pageViews">–</h3><p>Page Views</p></div>
+        <div class="stat-card"><h3 id="stat-bounceRate">–</h3><p>Bounce Rate</p></div>
+        <div class="stat-card"><h3 id="stat-avgDuration">–</h3><p>Avg Session</p></div>
       </div>
-      <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
-        <h3 class="admin-subtitle" style="margin-top:0;">Top Pages</h3>
-        <div id="top-pages" style="font-size:14px;"></div>
-      </div>
-    </div>
 
-    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
-      <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
-        <h3 class="admin-subtitle" style="margin-top:0;">Traffic Sources</h3>
-        <div id="traffic-sources" style="font-size:14px;"></div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
+        <div style="flex:1;min-width:300px;background:#f8f9fa;border-radius:8px;padding:20px;">
+          <h3 class="admin-subtitle" style="margin-top:0;">Daily Trend</h3>
+          <canvas id="daily-chart" height="220"></canvas>
+        </div>
+        <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
+          <h3 class="admin-subtitle" style="margin-top:0;">Top Pages</h3>
+          <div id="top-pages" style="font-size:14px;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
+        <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
+          <h3 class="admin-subtitle" style="margin-top:0;">Traffic Sources</h3>
+          <div id="traffic-sources" style="font-size:14px;"></div>
+        </div>
       </div>
     </div>
 
@@ -65,17 +74,71 @@
   </main>
   <script type="module" src="../js/admin.js"></script>
   <script type="module">
+    window.__GA_OAUTH_CLIENT_ID = import.meta.env.VITE_GA_OAUTH_CLIENT_ID || '';
+  </script>
+  <script>
+    // Read OAuth client ID from a global set by the server, or prompt user
+    const CLIENT_ID = window.__GA_OAUTH_CLIENT_ID;
+    let accessToken = null;
 
-    const el = (id) => document.getElementById(id);
+    function getTokenSilently() {
+      return new Promise((resolve, reject) => {
+        google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/analytics.readonly',
+          callback: (resp) => {
+            if (resp.access_token) {
+              accessToken = resp.access_token;
+              resolve(resp.access_token);
+            } else {
+              reject(resp.error || 'No token');
+            }
+          },
+          error_callback: (err) => reject(err),
+        }).requestAccessToken({ prompt: '' });
+      });
+    }
 
-    async function loadAnalytics() {
+    window.handleGaCredentialResponse = async (response) => {
+      // Exchange credential for access token via token client
+      try {
+        const token = await getTokenSilently();
+        document.getElementById('ga-signin-prompt').style.display = 'none';
+        document.getElementById('analytics-content').style.display = 'block';
+        loadAnalytics(token);
+      } catch (err) {
+        document.getElementById('analytics-error').textContent = 'Sign-in failed: ' + err;
+        document.getElementById('analytics-error').style.display = 'block';
+      }
+    };
+
+    async function startAnalytics() {
+      if (!CLIENT_ID) {
+        document.getElementById('analytics-error').textContent = 'GA OAuth Client ID not configured. Set VITE_GA_OAUTH_CLIENT_ID env var.';
+        document.getElementById('analytics-error').style.display = 'block';
+        return;
+      }
+
+      // Try silent token first
+      try {
+        accessToken = await getTokenSilently();
+        document.getElementById('analytics-content').style.display = 'block';
+        loadAnalytics(accessToken);
+      } catch {
+        // Show sign-in button
+        document.getElementById('ga-signin-prompt').style.display = 'block';
+      }
+    }
+
+    async function loadAnalytics(token) {
+      const el = (id) => document.getElementById(id);
       el('analytics-error').style.display = 'none';
 
       try {
         const res = await fetch('/api/analytics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reportType: 'overview' }),
+          body: JSON.stringify({ reportType: 'overview', accessToken: token }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
@@ -99,7 +162,7 @@
         const res = await fetch('/api/analytics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reportType: 'daily' }),
+          body: JSON.stringify({ reportType: 'daily', accessToken: token }),
         });
         const data = await res.json();
         if (res.ok && data.daily) renderDailyChart(data.daily);
@@ -115,9 +178,9 @@
     }
 
     function renderTopPages(pages) {
-      const container = el('top-pages');
+      const container = document.getElementById('top-pages');
       if (!pages.length) { container.innerHTML = '<p style="color:#888;">No data</p>'; return; }
-      container.innerHTML = pages.map((p, i) => `
+      container.innerHTML = pages.map(p => `
         <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;">
           <span style="color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${p.path}</span>
           <span style="font-weight:600;">${p.views}</span>
@@ -126,7 +189,7 @@
     }
 
     function renderTrafficSources(sources) {
-      const container = el('traffic-sources');
+      const container = document.getElementById('traffic-sources');
       if (!sources.length) { container.innerHTML = '<p style="color:#888;">No data</p>'; return; }
       const max = Math.max(...sources.map(s => parseInt(s.sessions || 0)));
       container.innerHTML = sources.map(s => {
@@ -146,7 +209,7 @@
     }
 
     function renderDailyChart(daily) {
-      const canvas = el('daily-chart');
+      const canvas = document.getElementById('daily-chart');
       const ctx = canvas.getContext('2d');
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
@@ -157,7 +220,6 @@
       const h = rect.height;
 
       const labels = daily.map(d => {
-        const y = d.date.slice(0,4);
         const m = d.date.slice(4,6);
         const day = d.date.slice(6,8);
         return `${m}/${day}`;
@@ -171,7 +233,6 @@
       const barW = Math.max(2, cw / values.length - 1);
 
       ctx.clearRect(0, 0, w, h);
-
       ctx.fillStyle = '#006A4E';
       values.forEach((v, i) => {
         const x = pad.l + i * (barW + 1);
@@ -191,7 +252,9 @@
       });
     }
 
-    loadAnalytics();
+    // Set client ID from env var (populated by the module script below)
+    // window.__GA_OAUTH_CLIENT_ID is set by the <script type="module"> before this
+    startAnalytics();
 
     // Mobile sidebar toggle
     document.getElementById('admin-burger')?.addEventListener('click', () => {

@@ -644,3 +644,10 @@ CREATE POLICY "anon_read_categories" ON categories
 -- =============================================
 -- 21. (end)
 -- =============================================
+
+-- =============================================
+-- 22. Add weight_kg to products for outstation delivery pricing
+--     (Rs 150 per kg for cities outside Rawalpindi/Islamabad)
+-- =============================================
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS weight_kg NUMERIC DEFAULT 0;

@@ -131,6 +131,34 @@
               <label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">Delivery Address *</label>
               <textarea id="address" rows="3" placeholder="House no., Street, City, Province" required class="w-full border border-outline/30 rounded-lg px-4 py-3 font-body-md text-charcoal-text bg-white focus:outline-none focus:ring-2 focus:ring-deep-emerald/30 focus:border-deep-emerald transition-all resize-y"></textarea>
             </div>
+            <div>
+              <label class="block font-label-caps text-label-caps text-on-surface-variant mb-1">City / Region *</label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none"><span class="material-symbols-outlined text-lg">location_city</span></span>
+                <select id="delivery-city" required class="w-full border border-outline/30 rounded-lg pl-10 pr-4 py-3 font-body-md text-charcoal-text bg-white focus:outline-none focus:ring-2 focus:ring-deep-emerald/30 focus:border-deep-emerald transition-all appearance-none">
+                  <option value="" disabled selected>Select your city…</option>
+                  <optgroup label="📦 Flat Delivery – Rs 135">
+                    <option value="rawalpindi">Rawalpindi</option>
+                    <option value="islamabad">Islamabad</option>
+                  </optgroup>
+                  <optgroup label="🚚 Outstation – Rs 150/kg">
+                    <option value="lahore">Lahore</option>
+                    <option value="karachi">Karachi</option>
+                    <option value="peshawar">Peshawar</option>
+                    <option value="multan">Multan</option>
+                    <option value="faisalabad">Faisalabad</option>
+                    <option value="quetta">Quetta</option>
+                    <option value="sialkot">Sialkot</option>
+                    <option value="gujranwala">Gujranwala</option>
+                    <option value="hyderabad">Hyderabad</option>
+                    <option value="abbottabad">Abbottabad</option>
+                    <option value="other">Other City</option>
+                  </optgroup>
+                </select>
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 pointer-events-none"><span class="material-symbols-outlined text-sm">expand_more</span></span>
+              </div>
+              <p id="delivery-fee-hint" class="text-xs text-on-surface-variant mt-1.5"></p>
+            </div>
             <button type="button" class="flex items-center gap-2 px-5 py-2.5 border border-deep-emerald text-deep-emerald rounded-lg font-label-caps text-label-caps hover:bg-deep-emerald hover:text-white transition-all text-sm" id="location-btn">
               <span class="material-symbols-outlined text-base">my_location</span> Use Current Location
             </button>

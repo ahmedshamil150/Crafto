@@ -1,42 +1,5 @@
-import { createSign } from 'crypto';
-
-const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
-const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GA4_API = 'https://analyticsdata.googleapis.com/v1beta';
 const PROPERTY_ID = '15173814748';
-
-function getJwtAssertion(svc) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const payload = {
-    iss: svc.client_email,
-    scope: SCOPE,
-    aud: TOKEN_URL,
-    exp: now + 3600,
-    iat: now,
-  };
-  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
-  const message = `${b64(header)}.${b64(payload)}`;
-  const sign = createSign('RSA-SHA256');
-  sign.update(message);
-  const signature = sign.sign(svc.private_key, 'base64url');
-  return `${message}.${signature}`;
-}
-
-async function getAccessToken(svc) {
-  const assertion = getJwtAssertion(svc);
-  const r = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
-  });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.error_description || data.error || 'Failed to get token');
-  return data.access_token;
-}
 
 async function runReport(token, requestBody) {
   const r = await fetch(`${GA4_API}/properties/${PROPERTY_ID}:runReport`, {
@@ -59,24 +22,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const svcJson = process.env.GA_SERVICE_ACCOUNT_JSON;
-  if (!svcJson) {
-    return res.status(500).json({ error: 'Missing GA_SERVICE_ACCOUNT_JSON env var' });
-  }
+  const { reportType, accessToken } = req.body;
 
-  let svc;
-  try { svc = JSON.parse(svcJson); } catch {
-    return res.status(500).json({ error: 'Invalid GA_SERVICE_ACCOUNT_JSON' });
+  if (!accessToken) {
+    return res.status(400).json({ error: 'Missing accessToken' });
   }
-
-  const { reportType } = req.body;
 
   try {
-    const token = await getAccessToken(svc);
-
     if (reportType === 'overview') {
       const [usersRes, pagesRes, sourcesRes] = await Promise.all([
-        runReport(token, {
+        runReport(accessToken, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           metrics: [
             { name: 'totalUsers' },
@@ -87,14 +42,14 @@ export default async function handler(req, res) {
             { name: 'averageSessionDuration' },
           ],
         }),
-        runReport(token, {
+        runReport(accessToken, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'pagePath' }],
           metrics: [{ name: 'screenPageViews' }],
           orderBy: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
           limit: 10,
         }),
-        runReport(token, {
+        runReport(accessToken, {
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'sessionSource' }],
           metrics: [{ name: 'sessions' }],
@@ -128,7 +83,7 @@ export default async function handler(req, res) {
     }
 
     if (reportType === 'daily') {
-      const dailyRes = await runReport(token, {
+      const dailyRes = await runReport(accessToken, {
         dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
         dimensions: [{ name: 'date' }],
         metrics: [

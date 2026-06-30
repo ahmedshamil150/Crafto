@@ -12,6 +12,12 @@ const recSection = document.getElementById('checkout-recommended');
 let appliedCoupon = null;
 let couponDiscount = 0;
 
+// --- Delivery charge constants ---
+const LOCAL_CITIES      = new Set(['rawalpindi', 'islamabad']);
+const LOCAL_FLAT_FEE    = 135;   // Rs for Rawalpindi / Islamabad
+const OUTSTATION_PER_KG = 150;   // Rs per kg for all other cities
+const MIN_OUTSTATION    = 150;   // minimum charge even if weight is 0
+
 function esc(str) {
   const el = document.createElement('span');
   el.textContent = str ?? '';
@@ -24,17 +30,76 @@ function calcSubtotal() {
   return getCart().reduce((s, i) => s + i.price * i.qty, 0);
 }
 
-const SHIPPING_FEE = 200;
+/**
+ * Returns { fee, label } for the current city + cart.
+ * For outstation orders this fetches product weights from Supabase.
+ */
+async function calculateDelivery(city) {
+  if (!city) return { fee: 0, label: 'Select a city to see delivery fee' };
 
-function renderSummary() {
+  if (LOCAL_CITIES.has(city)) {
+    return { fee: LOCAL_FLAT_FEE, label: `Local delivery (Rawalpindi / Islamabad) – flat Rs ${LOCAL_FLAT_FEE}` };
+  }
+
+  // Outstation: sum weight_kg × qty across cart items
+  const cart = getCart();
+  let totalWeightKg = 0;
+  for (const item of cart) {
+    try {
+      const prod = await getProductById(item.id);
+      const kg = parseFloat(prod?.weight_kg ?? 0);
+      totalWeightKg += kg * item.qty;
+    } catch { /* treat as 0 weight */ }
+  }
+
+  // Round to 3 decimal places
+  totalWeightKg = Math.round(totalWeightKg * 1000) / 1000;
+
+  const fee = totalWeightKg > 0
+    ? Math.ceil(totalWeightKg * OUTSTATION_PER_KG)
+    : MIN_OUTSTATION;
+
+  const weightStr = totalWeightKg > 0
+    ? `${totalWeightKg} kg × Rs ${OUTSTATION_PER_KG}/kg`
+    : `min. Rs ${MIN_OUTSTATION}`;
+  return { fee, label: `Outstation delivery – ${weightStr}` };
+}
+
+/** Update the inline hint below the city dropdown */
+function updateDeliveryHint(fee, label) {
+  const hint = document.getElementById('delivery-fee-hint');
+  if (!hint) return;
+  if (!label) { hint.textContent = ''; return; }
+  hint.textContent = fee > 0 ? `Delivery: Rs ${fee.toLocaleString()} — ${label}` : label;
+}
+
+
+// --- Async summary renderer ---
+async function renderSummary() {
   const cart = getCart();
   if (!cart.length) {
     summaryEl.innerHTML = `<div class="bg-white rounded-xl p-8 shadow-sm border border-outline-variant/10 text-center"><span class="material-symbols-outlined text-deep-emerald text-4xl mb-3">shopping_cart</span><p class="font-body-md text-on-surface-variant">Your cart is empty.</p><a href="./shop" class="inline-block mt-3 px-5 py-2 bg-deep-emerald text-white rounded-lg font-label-caps text-sm">Go Shopping</a></div>`;
     if (submitBtn) submitBtn.disabled = true;
     return;
   }
+  if (submitBtn) submitBtn.disabled = false;
+  const city = document.getElementById('delivery-city')?.value || '';
+  const { fee: deliveryFee, label: deliveryLabel } = await calculateDelivery(city);
+  updateDeliveryHint(deliveryFee, deliveryLabel);
+
   const subtotal = calcSubtotal();
-  const total = subtotal - couponDiscount + SHIPPING_FEE;
+  const total = subtotal - couponDiscount + deliveryFee;
+
+  const isLocal = LOCAL_CITIES.has(city);
+  const deliveryDisplay = deliveryFee > 0
+    ? `PKR ${deliveryFee.toLocaleString()}`
+    : `<span class="text-on-surface-variant/60 italic">Select city</span>`;
+  const deliveryBadge = city
+    ? (isLocal
+        ? `<span class="text-[10px] bg-green-100 text-green-700 rounded px-1.5 py-0.5 ml-1">Local</span>`
+        : `<span class="text-[10px] bg-orange-100 text-orange-700 rounded px-1.5 py-0.5 ml-1">Outstation</span>`)
+    : '';
+
   summaryEl.innerHTML = `
     <div class="bg-white rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
       <div class="bg-deep-emerald px-6 py-4">
@@ -64,9 +129,10 @@ function renderSummary() {
           <div class="flex justify-between font-body-md text-sm text-green-700">
             <span>Discount (${Math.round(couponDiscount / subtotal * 100)}% off)</span><span>-PKR ${couponDiscount.toLocaleString()}</span>
           </div>` : ''}
-          <div class="flex justify-between font-body-md text-sm text-on-surface-variant">
-            <span>Shipping</span><span>PKR ${SHIPPING_FEE.toLocaleString()}</span>
+          <div class="flex justify-between font-body-md text-sm text-on-surface-variant items-center">
+            <span>Delivery ${deliveryBadge}</span><span>${deliveryDisplay}</span>
           </div>
+          ${deliveryFee > 0 && !isLocal ? `<p class="text-[10px] text-on-surface-variant/70 -mt-1">${esc(deliveryLabel)}</p>` : ''}
           <hr class="border-outline-variant/20" />
           <div class="flex justify-between font-headline-md text-headline-md text-deep-emerald">
             <span>Total</span><span>PKR ${Math.max(0, total).toLocaleString()}</span>
@@ -77,6 +143,9 @@ function renderSummary() {
     </div>
   `;
 }
+
+// Re-render summary whenever city changes
+document.getElementById('delivery-city')?.addEventListener('change', () => renderSummary());
 
 document.getElementById('location-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('location-btn');
@@ -119,13 +188,13 @@ applyBtn?.addEventListener('click', async () => {
     couponDiscount = Math.round(calcSubtotal() * discPct / 100);
     couponMsg.textContent = `${discPct}% off applied! You save PKR ${couponDiscount.toLocaleString()}`;
     couponMsg.className = 'text-sm text-green-700 mt-1';
-    renderSummary();
+    await renderSummary();
   } catch (err) {
     couponMsg.textContent = err.message;
     couponMsg.className = 'text-sm text-red-600 mt-1';
     appliedCoupon = null;
     couponDiscount = 0;
-    renderSummary();
+    await renderSummary();
   }
   applyBtn.disabled = false;
   applyBtn.textContent = 'Apply';
@@ -138,18 +207,32 @@ form?.addEventListener('submit', async e => {
   const cart = getCart();
   if (!cart.length) return;
 
+  // Require city selection
+  const cityEl  = document.getElementById('delivery-city');
+  const city    = cityEl?.value || '';
+  if (!city) {
+    cityEl?.focus();
+    showToast('Please select your city to calculate delivery charges.', 'error');
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span class="material-symbols-outlined text-base animate-spin">progress_activity</span> Placing Order…';
 
   const errorEl = document.getElementById('checkout-error');
   const phone   = document.getElementById('phone').value.trim();
   const email   = document.getElementById('email').value.trim();
-  const total   = Math.max(0, calcSubtotal() - couponDiscount + SHIPPING_FEE);
+
+  // Compute delivery charge from selected city
+  const { fee: deliveryFee, label: deliveryLabel } = await calculateDelivery(city);
+  const total = Math.max(0, calcSubtotal() - couponDiscount + deliveryFee);
+
+  const cityLabel = cityEl?.options[cityEl.selectedIndex]?.text || city;
   const order = {
     id:               crypto.randomUUID(),
     customer_name:    document.getElementById('name').value.trim(),
     customer_phone:   phone,
-    customer_address: document.getElementById('address').value.trim(),
+    customer_address: `${document.getElementById('address').value.trim()} (${cityLabel})`,
     items:            cart,
     total,
     status:           'pending',
@@ -188,6 +271,7 @@ form?.addEventListener('submit', async e => {
         phone: order.customer_phone,
         address: order.customer_address,
         items: cart.map(i => `${i.title} × ${i.qty}`).join(', '),
+        delivery: `Rs ${deliveryFee.toLocaleString()} — ${deliveryLabel}`,
         total: `PKR ${total.toLocaleString()}`,
         coupon: appliedCoupon || 'None',
       }),
