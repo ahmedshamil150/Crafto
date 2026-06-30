@@ -733,6 +733,9 @@ DECLARE
   inv_id UUID;
   inv_num TEXT;
   subtotal_calc NUMERIC;
+  item jsonb;
+  price_val TEXT;
+  qty_val INT;
 BEGIN
   SELECT * INTO order_rec FROM orders WHERE id = p_order_id;
   
@@ -742,17 +745,40 @@ BEGIN
 
   inv_num := generate_invoice_number();
   
-  -- Calculate subtotal from items with proper JSON handling
-  SELECT COALESCE(SUM(
-    CASE 
-      WHEN (item->>'price') ~ '^[0-9]+(\.[0-9]+)?$' THEN 
-        (item->>'price')::NUMERIC * (item->>'qty')::INT
-      WHEN (item->'price') IS NOT NULL THEN
-        (item->'price')::TEXT::NUMERIC * (item->>'qty')::INT
-      ELSE 0
-    END
-  ), 0) INTO subtotal_calc
-  FROM jsonb_array_elements(order_rec.items) AS item;
+  -- Calculate subtotal from items with robust JSON handling
+  subtotal_calc := 0;
+  FOR item IN SELECT * FROM jsonb_array_elements(order_rec.items)
+  LOOP
+    -- Extract price as text first
+    price_val := NULL;
+    IF item ? 'price' THEN
+      IF jsonb_typeof(item->'price') = 'number' THEN
+        price_val := (item->'price')::TEXT;
+      ELSIF jsonb_typeof(item->'price') = 'string' THEN
+        price_val := item->>'price';
+      END IF;
+    END IF;
+    
+    -- Extract qty
+    qty_val := 1;
+    IF item ? 'qty' THEN
+      IF jsonb_typeof(item->'qty') = 'number' THEN
+        qty_val := (item->'qty')::INT;
+      ELSIF jsonb_typeof(item->'qty') = 'string' THEN
+        qty_val := (item->>'qty')::INT;
+      END IF;
+    END IF;
+    
+    -- Convert price to numeric with error handling
+    IF price_val IS NOT NULL THEN
+      BEGIN
+        subtotal_calc := subtotal_calc + (price_val::NUMERIC * qty_val);
+      EXCEPTION WHEN OTHERS THEN
+        -- If conversion fails, skip this item
+        RAISE NOTICE 'Failed to parse price for item: %, price: %', item, price_val;
+      END;
+    END IF;
+  END LOOP;
   
   INSERT INTO invoices (
     order_id, invoice_number, customer_name, customer_phone, customer_address,
