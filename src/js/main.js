@@ -56,11 +56,11 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #D4AF37;
+  color: #fff;
   transition: color 0.3s ease;
   z-index: 1;
 }
-.pill-item:hover { color: #fff; }
+.pill-item:hover { color: #006A4E; }
 .hover-circle {
   position: absolute;
   bottom: 0;
@@ -68,7 +68,7 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: #006A4E;
+  background: #fff;
   transform: translateX(-50%) scale(0);
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform-origin: bottom center;
@@ -102,10 +102,10 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #D4AF37;
+  color: #fff;
   transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
-.pill-cart:hover { background: #006A4E; color: #fff; transform: scale(1.1); }
+.pill-cart:hover { background: #fff; color: #006A4E; transform: scale(1.1); }
 `;
   document.head.appendChild(style);
 })();
