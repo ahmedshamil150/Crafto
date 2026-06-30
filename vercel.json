@@ -13,6 +13,7 @@
     { "source": "/contact", "destination": "/contact.html" },
     { "source": "/contact-success", "destination": "/contact-success.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/admin/invoices", "destination": "/admin/invoices.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }

@@ -398,3 +398,59 @@ export async function deleteCategory(id) {
     method: 'DELETE',
   });
 }
+
+// --- Invoices ---
+export async function getInvoices({ limit, offset, status } = {}) {
+  if (!SUPABASE_URL) return [];
+  const params = new URLSearchParams({ order: 'created_at.desc' });
+  if (limit) params.set('limit', limit);
+  if (offset != null) params.set('offset', offset);
+  if (status) params.set('status', `eq.${status}`);
+  const result = await adminFetch({
+    path: `/rest/v1/invoices?${params}`,
+  });
+  return result.data || [];
+}
+
+export async function getInvoicesCount({ status } = {}) {
+  if (!SUPABASE_URL) return 0;
+  let path = '/rest/v1/invoices?select=id&limit=0';
+  if (status) path += `&status=eq.${status}`;
+  const result = await adminFetch({
+    path,
+    prefer: 'count=exact',
+  });
+  return result.count ? parseInt(result.count, 10) : 0;
+}
+
+export async function getInvoiceById(id) {
+  if (!SUPABASE_URL) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?id=eq.${id}&limit=1`, { headers: headers() });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data[0] || null;
+}
+
+export async function getInvoiceByOrderId(orderId) {
+  if (!SUPABASE_URL) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?order_id=eq.${orderId}&limit=1`, { headers: headers() });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data[0] || null;
+}
+
+export async function deleteInvoice(id) {
+  await adminFetch({
+    path: `/rest/v1/invoices?id=eq.${id}`,
+    method: 'DELETE',
+  });
+}
+
+export async function cancelInvoice(id) {
+  await adminFetch({
+    path: `/rest/v1/invoices?id=eq.${id}`,
+    method: 'PATCH',
+    body: { status: 'cancelled' },
+    prefer: 'return=representation',
+  });
+}

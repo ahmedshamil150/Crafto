@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx,.html"
   },
+  "dependencies": {
+    "jspdf": "^2.5.1"
+  },
   "devDependencies": {
     "vite": "^5.0.0",
     "eslint": "^8.0.0"

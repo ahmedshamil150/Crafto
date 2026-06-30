@@ -6,7 +6,9 @@ import {
   getCategories, createCategory, deleteCategory,
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
+  getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice,
 } from './api.js';
+import { downloadInvoicePDF } from './invoice-pdf.js';
 
 function parseCats(cat) {
   if (Array.isArray(cat)) return cat.map(c => String(c).trim()).filter(Boolean);
@@ -1496,4 +1498,149 @@ if (heroForm) {
       }
     });
   });
+}
+
+// --- Invoices list ---
+const invoicesTable = document.getElementById('invoices-table');
+if (invoicesTable) {
+  const INVOICES_PER_PAGE = 10;
+  let invoicesPage = 1;
+  let invoicesStatusFilter = '';
+
+  const FILTER_INVOICE_STATUSES = ['', 'active', 'cancelled'];
+
+  function renderInvoiceFilters() {
+    const filterBar = document.getElementById('invoice-filters');
+    if (!filterBar) return;
+    filterBar.innerHTML = FILTER_INVOICE_STATUSES.map(s => `
+      <button class="invoice-filter-btn button ${invoicesStatusFilter === s ? 'active' : ''}"
+        data-status="${s}" style="text-transform:capitalize;${s === '' ? 'min-width:auto;' : ''}">
+        ${s || 'All'}
+      </button>
+    `).join('');
+    filterBar.querySelectorAll('.invoice-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        invoicesStatusFilter = btn.dataset.status;
+        invoicesPage = 1;
+        loadInvoices();
+      });
+    });
+  }
+
+  function renderInvoiceItems(items) {
+    const arr = Array.isArray(items) ? items : [];
+    if (!arr.length) return '<em>No items</em>';
+    return arr.map(i => `
+      <div style="display:flex;justify-content:space-between;padding:2px 0;">
+        <span>${esc(i.title)}${i.variant_label ? ' (' + esc(i.variant_label) + ')' : ''} × ${i.qty}</span>
+        <span>PKR ${(Number(i.price) * Number(i.qty)).toLocaleString()}</span>
+      </div>
+    `).join('');
+  }
+
+  async function loadInvoices() {
+    invoicesTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
+    renderInvoiceFilters();
+    const filterOpts = invoicesStatusFilter ? { status: invoicesStatusFilter } : {};
+    const [invoices, count] = await Promise.all([
+      getInvoices({ limit: INVOICES_PER_PAGE, offset: (invoicesPage - 1) * INVOICES_PER_PAGE, ...filterOpts }),
+      getInvoicesCount(filterOpts),
+    ]);
+    const totalPages = Math.ceil(count / INVOICES_PER_PAGE) || 1;
+
+    if (!invoices.length) { invoicesTable.innerHTML = '<p>No invoices yet.</p>'; return; }
+
+    invoicesTable.innerHTML = `
+      <div class="admin-table-wrap">
+      <table class="admin-table-wide">
+        <thead>
+          <tr>
+            <th>Invoice #</th><th>Date</th><th>Customer</th><th>Phone</th><th>Total (PKR)</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${invoices.map((inv, i) => `
+            <tr class="invoice-main-row" data-invoice-id="${inv.id}" style="--i:${i}">
+              <td><code style="font-size:0.8rem;">${inv.invoice_number}</code></td>
+              <td>${new Date(inv.created_at).toLocaleDateString('en-PK')}</td>
+              <td>${inv.customer_name || '–'}</td>
+              <td>${inv.customer_phone || '–'}</td>
+              <td>PKR ${Number(inv.total || 0).toLocaleString()}</td>
+              <td>
+                <span style="padding:4px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;${
+                  inv.status === 'active' ? 'background:#dcfce7;color:#166534;' : 
+                  inv.status === 'cancelled' ? 'background:#fee2e2;color:#991b1b;' : 
+                  'background:#f3f4f6;color:#374151;'
+                }">${inv.status.replace('_', ' ')}</span>
+              </td>
+              <td class="action-cell">
+                <button class="button download-invoice-btn" data-id="${inv.id}" style="background:#006A4E;">Download PDF</button>
+                ${inv.status === 'active' ? `
+                  <button class="button cancel-invoice-btn" data-id="${inv.id}" style="background:#c62828;">Cancel</button>
+                ` : ''}
+                <button class="button delete-invoice-btn" data-id="${inv.id}" style="background:#6b7280;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="pagination">
+        <button class="button page-btn" id="inv-prev" ${invoicesPage <= 1 ? 'disabled' : ''}>← Prev</button>
+        <span class="page-info">Page ${invoicesPage} of ${totalPages} (${count} total)</span>
+        <button class="button page-btn" id="inv-next" ${invoicesPage >= totalPages ? 'disabled' : ''}>Next →</button>
+      </div>
+    `;
+
+    // Download PDF button
+    invoicesTable.querySelectorAll('.download-invoice-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const invoice = invoices.find(inv => inv.id === btn.dataset.id);
+        if (invoice) {
+          try {
+            downloadInvoicePDF(invoice, null);
+          } catch (err) {
+            alert(`Failed to generate PDF: ${err.message}`);
+          }
+        }
+      });
+    });
+
+    // Cancel invoice button
+    invoicesTable.querySelectorAll('.cancel-invoice-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to cancel this invoice?')) return;
+        try {
+          await cancelInvoice(btn.dataset.id);
+          invoicesPage = 1;
+          loadInvoices();
+        } catch (err) {
+          alert(`Failed to cancel invoice: ${err.message}`);
+        }
+      });
+    });
+
+    // Delete invoice button
+    invoicesTable.querySelectorAll('.delete-invoice-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) return;
+        try {
+          await deleteInvoice(btn.dataset.id);
+          invoicesPage = 1;
+          loadInvoices();
+        } catch (err) {
+          alert(`Failed to delete invoice: ${err.message}`);
+        }
+      });
+    });
+
+    document.getElementById('inv-prev')?.addEventListener('click', () => {
+      if (invoicesPage > 1) { invoicesPage--; loadInvoices(); }
+    });
+    document.getElementById('inv-next')?.addEventListener('click', () => {
+      if (invoicesPage < totalPages) { invoicesPage++; loadInvoices(); }
+    });
+  }
+
+  loadInvoices();
 }

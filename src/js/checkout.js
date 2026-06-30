@@ -1,5 +1,6 @@
-import { placeOrder, validateCoupon, getProducts, getProductById, getProductVariants } from './api.js';
+import { placeOrder, validateCoupon, getProducts, getProductById, getProductVariants, getInvoiceByOrderId } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
+import { downloadInvoicePDF } from './invoice-pdf.js';
 
 const form      = document.getElementById('checkout-form');
 const summaryEl = document.getElementById('order-summary');
@@ -285,7 +286,55 @@ form?.addEventListener('submit', async e => {
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast(`Order placed! Your Order ID: ${orderNumber}`);
-    setTimeout(() => window.location.href = `./order-status?id=${orderNumber}`, 2000);
+    
+    // Show success message with invoice download option
+    summaryEl.innerHTML = `
+      <div class="bg-white rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
+        <div class="bg-deep-emerald px-6 py-4">
+          <h3 class="font-label-caps text-label-caps text-white uppercase tracking-wider">Order Placed Successfully!</h3>
+        </div>
+        <div class="p-6 text-center space-y-4">
+          <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+            <span class="material-symbols-outlined text-4xl text-green-600">check_circle</span>
+          </div>
+          <p class="font-body-md text-charcoal-text">Your order has been placed successfully.</p>
+          <p class="font-label-caps text-[10px] text-on-surface-variant uppercase">Order ID: ${orderNumber}</p>
+          <div class="flex flex-col gap-3 pt-4">
+            <button id="download-invoice-btn" class="btn-shine w-full px-6 py-3 bg-deep-emerald text-white rounded-lg font-label-caps text-label-caps hover:bg-primary transition-all active:scale-[0.97] text-sm">
+              <span class="material-symbols-outlined text-sm align-middle">download</span> Download Invoice
+            </button>
+            <button id="track-order-btn" class="w-full px-6 py-3 border-2 border-deep-emerald text-deep-emerald rounded-lg font-label-caps text-label-caps hover:bg-deep-emerald hover:text-white transition-all active:scale-[0.97] text-sm">
+              Track Your Order
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Download invoice button
+    document.getElementById('download-invoice-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('download-invoice-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm align-middle animate-spin">progress_activity</span> Loading…';
+      try {
+        const invoice = await getInvoiceByOrderId(order.id);
+        if (invoice) {
+          downloadInvoicePDF(invoice, order);
+          showToast('Invoice downloaded successfully');
+        } else {
+          showToast('Invoice not available yet', 'error');
+        }
+      } catch (err) {
+        showToast(`Failed to download invoice: ${err.message}`, 'error');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">download</span> Download Invoice';
+    });
+    
+    // Track order button
+    document.getElementById('track-order-btn')?.addEventListener('click', () => {
+      window.location.href = `./order-status?id=${orderNumber}`;
+    });
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.classList.remove('hidden');

@@ -1,5 +1,6 @@
-import { trackOrder, cancelOrder, requestReturn } from './api.js';
+import { trackOrder, cancelOrder, requestReturn, getInvoiceByOrderId } from './api.js';
 import { showToast } from './main.js';
+import { downloadInvoicePDF } from './invoice-pdf.js';
 
 const form       = document.getElementById('track-form');
 const resultEl   = document.getElementById('track-result');
@@ -196,6 +197,9 @@ function renderOrder(order, id, phone) {
         </div>
 
         <div class="flex gap-3 pt-2">
+          <button type="button" id="download-invoice-btn" class="btn-shine flex-1 px-4 py-2.5 bg-deep-emerald text-white rounded-lg font-label-caps text-label-caps hover:bg-primary transition-all active:scale-[0.97] text-sm">
+            <span class="material-symbols-outlined text-sm align-middle">download</span> Download Invoice
+          </button>
           ${canCancel(order.status) ? `
             <button type="button" id="cancel-order-btn" class="btn-shine flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-label-caps text-label-caps hover:bg-red-700 transition-all active:scale-[0.97] text-sm">
               <span class="material-symbols-outlined text-sm align-middle">cancel</span> Cancel Order
@@ -210,6 +214,27 @@ function renderOrder(order, id, phone) {
       </div>
     </div>
   `;
+
+  document.getElementById('download-invoice-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('download-invoice-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm align-middle animate-spin">progress_activity</span> Loading…';
+    try {
+      const invoice = await getInvoiceByOrderId(order.id);
+      if (!invoice) {
+        showToast('Invoice not found for this order', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">download</span> Download Invoice';
+        return;
+      }
+      downloadInvoicePDF(invoice, order);
+      showToast('Invoice downloaded successfully');
+    } catch (err) {
+      showToast(`Failed to download invoice: ${err.message}`, 'error');
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">download</span> Download Invoice';
+  });
 
   document.getElementById('cancel-order-btn')?.addEventListener('click', async () => {
     if (!confirm('Cancel this order? This cannot be undone.')) return;
