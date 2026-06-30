@@ -732,6 +732,7 @@ DECLARE
   order_rec orders%ROWTYPE;
   inv_id UUID;
   inv_num TEXT;
+  subtotal_calc NUMERIC;
 BEGIN
   SELECT * INTO order_rec FROM orders WHERE id = p_order_id;
   
@@ -741,6 +742,18 @@ BEGIN
 
   inv_num := generate_invoice_number();
   
+  -- Calculate subtotal from items with proper JSON handling
+  SELECT COALESCE(SUM(
+    CASE 
+      WHEN (item->>'price') ~ '^[0-9]+(\.[0-9]+)?$' THEN 
+        (item->>'price')::NUMERIC * (item->>'qty')::INT
+      WHEN (item->'price') IS NOT NULL THEN
+        (item->'price')::TEXT::NUMERIC * (item->>'qty')::INT
+      ELSE 0
+    END
+  ), 0) INTO subtotal_calc
+  FROM jsonb_array_elements(order_rec.items) AS item;
+  
   INSERT INTO invoices (
     order_id, invoice_number, customer_name, customer_phone, customer_address,
     items, subtotal, discount_amount, delivery_fee, total, coupon_code, status
@@ -748,9 +761,7 @@ BEGIN
   VALUES (
     p_order_id, inv_num, order_rec.customer_name, order_rec.customer_phone, order_rec.customer_address,
     order_rec.items, 
-    -- Calculate subtotal from items
-    (SELECT COALESCE(SUM((item->>'price'::NUMERIC) * (item->>'qty'::INT)), 0) 
-     FROM jsonb_array_elements(order_rec.items) AS item),
+    subtotal_calc,
     0, -- discount_amount (will be calculated if coupon exists)
     0, -- delivery_fee (stored separately or calculated)
     order_rec.total,
