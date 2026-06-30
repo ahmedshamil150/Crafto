@@ -35,6 +35,81 @@ function checkReady() {
 document.addEventListener('page-ready', () => { ready = true; checkReady(); });
 setTimeout(() => { minTime = true; checkReady(); }, 2500);
 
+// Inject pill nav styles
+(function injectPillStyles() {
+  const id = 'pill-nav-styles';
+  if (document.getElementById(id)) return;
+  const style = document.createElement('style');
+  style.id = id;
+  style.textContent = `
+.pill-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: color 0.3s ease;
+  z-index: 1;
+}
+.pill-item:hover { color: #120F17; }
+.hover-circle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateX(-50%) scale(0);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: bottom center;
+  z-index: -1;
+}
+.pill-item:hover .hover-circle { transform: translateX(-50%) scale(1.4); }
+.label-stack {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 1.1em;
+}
+.pill-label,
+.pill-label-hover {
+  display: block;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s ease;
+}
+.pill-label-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(120%);
+  opacity: 0;
+}
+.pill-item:hover .pill-label { transform: translateY(-120%); opacity: 0; }
+.pill-item:hover .pill-label-hover { transform: translateY(0); opacity: 1; }
+.pill-cart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.pill-cart:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+`;
+  document.head.appendChild(style);
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   updateWishlistBadge();
