@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /order-status
+Disallow: /contact-success
+
+Sitemap: https://www.crafto.pk/sitemap.xml
