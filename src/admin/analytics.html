@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <title>Crafto Admin – Analytics</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body class="admin-body">
+  <button type="button" class="admin-burger" id="admin-burger" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"></div>
+  <aside class="admin-sidebar" id="admin-sidebar">
+    <h2>Crafto Admin</h2>
+    <nav>
+      <ul>
+        <li><a href="./dashboard">Dashboard</a></li>
+        <li><a href="./products">Products</a></li>
+        <li><a href="./orders">Orders</a></li>
+        <li><a href="./revenue">Revenue</a></li>
+        <li><a href="./analytics" class="active">Analytics</a></li>
+        <li><a href="./categories">Categories</a></li>
+        <li><a href="./coupons">Coupons</a></li>
+        <li><a href="./hero">Hero</a></li>
+        <li><a href="./reviews">Reviews</a></li>
+        <li><a href="..">← Storefront</a></li>
+        <li><a href="#" id="logout-btn">Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <h2>Analytics</h2>
+    <p class="admin-subtitle">Last 30 days from Google Analytics</p>
+
+    <div class="admin-stats" id="analytics-overview">
+      <div class="stat-card"><h3 id="stat-totalUsers">–</h3><p>Total Users</p></div>
+      <div class="stat-card"><h3 id="stat-newUsers">–</h3><p>New Users</p></div>
+      <div class="stat-card"><h3 id="stat-sessions">–</h3><p>Sessions</p></div>
+      <div class="stat-card"><h3 id="stat-pageViews">–</h3><p>Page Views</p></div>
+      <div class="stat-card"><h3 id="stat-bounceRate">–</h3><p>Bounce Rate</p></div>
+      <div class="stat-card"><h3 id="stat-avgDuration">–</h3><p>Avg Session</p></div>
+    </div>
+
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
+      <div style="flex:1;min-width:300px;background:#f8f9fa;border-radius:8px;padding:20px;">
+        <h3 class="admin-subtitle" style="margin-top:0;">Daily Trend</h3>
+        <canvas id="daily-chart" height="220"></canvas>
+      </div>
+      <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
+        <h3 class="admin-subtitle" style="margin-top:0;">Top Pages</h3>
+        <div id="top-pages" style="font-size:14px;"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:24px;">
+      <div style="flex:1;min-width:280px;background:#f8f9fa;border-radius:8px;padding:20px;">
+        <h3 class="admin-subtitle" style="margin-top:0;">Traffic Sources</h3>
+        <div id="traffic-sources" style="font-size:14px;"></div>
+      </div>
+    </div>
+
+    <p id="analytics-error" style="color:#e74c3c;margin-top:16px;display:none;"></p>
+  </main>
+  <script type="module" src="../js/admin.js"></script>
+  <script type="module">
+
+    const el = (id) => document.getElementById(id);
+
+    async function loadAnalytics() {
+      el('analytics-error').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reportType: 'overview' }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        const o = data.overview;
+        el('stat-totalUsers').textContent = o.totalUsers ?? '0';
+        el('stat-newUsers').textContent = o.newUsers ?? '0';
+        el('stat-sessions').textContent = o.sessions ?? '0';
+        el('stat-pageViews').textContent = o.pageViews ?? '0';
+        el('stat-bounceRate').textContent = o.bounceRate ? `${parseFloat(o.bounceRate).toFixed(1)}%` : '0%';
+        el('stat-avgDuration').textContent = o.avgSessionDuration ? formatDuration(o.avgSessionDuration) : '0s';
+
+        renderTopPages(data.topPages || []);
+        renderTrafficSources(data.trafficSources || []);
+      } catch (err) {
+        el('analytics-error').textContent = 'Failed to load analytics: ' + err.message;
+        el('analytics-error').style.display = 'block';
+      }
+
+      try {
+        const res = await fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reportType: 'daily' }),
+        });
+        const data = await res.json();
+        if (res.ok && data.daily) renderDailyChart(data.daily);
+      } catch {}
+    }
+
+    function formatDuration(sec) {
+      sec = parseFloat(sec);
+      if (sec < 60) return `${Math.round(sec)}s`;
+      const m = Math.floor(sec / 60);
+      const s = Math.round(sec % 60);
+      return `${m}m ${s}s`;
+    }
+
+    function renderTopPages(pages) {
+      const container = el('top-pages');
+      if (!pages.length) { container.innerHTML = '<p style="color:#888;">No data</p>'; return; }
+      container.innerHTML = pages.map((p, i) => `
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;">
+          <span style="color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${p.path}</span>
+          <span style="font-weight:600;">${p.views}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderTrafficSources(sources) {
+      const container = el('traffic-sources');
+      if (!sources.length) { container.innerHTML = '<p style="color:#888;">No data</p>'; return; }
+      const max = Math.max(...sources.map(s => parseInt(s.sessions || 0)));
+      container.innerHTML = sources.map(s => {
+        const pct = max > 0 ? (parseInt(s.sessions) / max) * 100 : 0;
+        return `
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;">
+              <span>${s.source}</span>
+              <span style="font-weight:600;">${s.sessions}</span>
+            </div>
+            <div style="background:#e0e0e0;border-radius:4px;height:6px;overflow:hidden;">
+              <div style="background:#006A4E;width:${pct}%;height:100%;border-radius:4px;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDailyChart(daily) {
+      const canvas = el('daily-chart');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width;
+      const h = rect.height;
+
+      const labels = daily.map(d => {
+        const y = d.date.slice(0,4);
+        const m = d.date.slice(4,6);
+        const day = d.date.slice(6,8);
+        return `${m}/${day}`;
+      });
+      const values = daily.map(d => parseInt(d.users || 0));
+      const max = Math.max(...values, 1);
+
+      const pad = { t: 12, r: 12, b: 24, l: 36 };
+      const cw = w - pad.l - pad.r;
+      const ch = h - pad.t - pad.b;
+      const barW = Math.max(2, cw / values.length - 1);
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.fillStyle = '#006A4E';
+      values.forEach((v, i) => {
+        const x = pad.l + i * (barW + 1);
+        const bh = (v / max) * ch;
+        const y = pad.t + ch - bh;
+        ctx.fillRect(x, y, barW, bh);
+      });
+
+      ctx.fillStyle = '#888';
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      const step = Math.max(1, Math.floor(labels.length / 10));
+      labels.forEach((l, i) => {
+        if (i % step === 0) {
+          ctx.fillText(l, pad.l + i * (barW + 1) + barW / 2, h - 6);
+        }
+      });
+    }
+
+    loadAnalytics();
+
+    // Mobile sidebar toggle
+    document.getElementById('admin-burger')?.addEventListener('click', () => {
+      document.getElementById('admin-sidebar').classList.toggle('open');
+      document.getElementById('admin-overlay').classList.toggle('open');
+    });
+    document.getElementById('admin-overlay')?.addEventListener('click', () => {
+      document.getElementById('admin-sidebar').classList.remove('open');
+      document.getElementById('admin-overlay').classList.remove('open');
+    });
+  </script>
+</body>
+</html>
