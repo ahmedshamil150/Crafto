@@ -56,7 +56,7 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #2d3436;
+  color: #D4AF37;
   transition: color 0.3s ease;
   z-index: 1;
 }
@@ -102,7 +102,7 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  color: #2d3436;
+  color: #D4AF37;
   transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 .pill-cart:hover { background: #006A4E; color: #fff; transform: scale(1.1); }
