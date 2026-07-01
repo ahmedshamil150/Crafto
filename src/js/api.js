@@ -505,3 +505,29 @@ export async function cancelInvoice(id) {
     prefer: 'return=representation',
   });
 }
+
+// --- Charges ---
+
+export async function getCharges() {
+  if (!SUPABASE_URL) return [];
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/charges?order=key.asc`, { headers: headers() });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function upsertCharge(key, data) {
+  const result = await adminFetch({
+    path: `/rest/v1/charges?on_conflict=key`,
+    method: 'POST',
+    body: { key, ...data },
+    prefer: 'resolution=merge-duplicates,return=representation',
+  });
+  return result.data;
+}
+
+export async function deleteCharge(key) {
+  await adminFetch({
+    path: `/rest/v1/charges?key=eq.${encodeURIComponent(key)}`,
+    method: 'DELETE',
+  });
+}

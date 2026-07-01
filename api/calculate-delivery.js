@@ -2,9 +2,19 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SVC_KEY = process.env.VITE_SUPABASE_SERVICE_KEY;
 
 const LOCAL_CITIES = new Set(['rawalpindi', 'islamabad']);
-const LOCAL_FLAT_FEE = 135;
-const OUTSTATION_PER_KG = 150;
-const MIN_OUTSTATION = 150;
+
+async function getCharge(key) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/charges?key=eq.${encodeURIComponent(key)}&limit=1`,
+      { headers: { apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` } }
+    );
+    const data = await r.json();
+    return parseFloat(data?.[0]?.value ?? 0);
+  } catch {
+    return 0;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,8 +24,14 @@ export default async function handler(req, res) {
   const { city, cart } = req.body;
   if (!city) return res.status(400).json({ fee: 0 });
 
+  const [localFee, perKg, minFee] = await Promise.all([
+    getCharge('delivery_local_fee'),
+    getCharge('delivery_outstation_per_kg'),
+    getCharge('delivery_outstation_min'),
+  ]);
+
   if (LOCAL_CITIES.has(city)) {
-    return res.status(200).json({ fee: LOCAL_FLAT_FEE, local: true });
+    return res.status(200).json({ fee: Math.max(localFee, 0), local: true });
   }
 
   // Outstation: sum weight_kg x qty across cart items
@@ -36,8 +52,8 @@ export default async function handler(req, res) {
   }
 
   const fee = totalWeightKg > 0
-    ? Math.ceil(totalWeightKg * OUTSTATION_PER_KG)
-    : MIN_OUTSTATION;
+    ? Math.ceil(totalWeightKg * Math.max(perKg, 0))
+    : Math.max(minFee, 0);
 
   res.status(200).json({ fee, local: false });
 }

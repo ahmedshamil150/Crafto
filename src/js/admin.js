@@ -7,6 +7,7 @@ import {
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
   getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice, getInvoiceByOrderId,
+  getCharges, upsertCharge, deleteCharge,
   clearCache,
 } from './api.js';
 import { downloadInvoicePDF } from './invoice-pdf.js';
@@ -1689,4 +1690,112 @@ if (invoicesTable) {
   }
 
   loadInvoices();
+}
+
+// --- Charges ---
+const chargesTable = document.getElementById('charges-table');
+if (chargesTable) {
+  let allCharges = [];
+  let editChargeKey = null;
+
+  async function loadCharges() {
+    clearCache('charges');
+    chargesTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
+    allCharges = await getCharges();
+
+    if (!allCharges.length) {
+      chargesTable.innerHTML = '<p>No charges yet. Add one above.</p>';
+      return;
+    }
+
+    chargesTable.innerHTML = `
+      <div class="admin-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th><th>Label</th><th>Value</th><th>Type</th><th>Last Updated</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allCharges.map((c, i) => `
+            <tr style="--i:${i}">
+              <td><code style="font-size:0.8rem;">${esc(c.key)}</code></td>
+              <td><strong>${esc(c.label)}</strong></td>
+              <td>${c.type === 'percentage' ? c.value + '%' : 'Rs ' + Number(c.value).toLocaleString()}</td>
+              <td>${c.type === 'percentage' ? 'Percentage' : 'Fixed'}</td>
+              <td style="font-size:0.8rem;color:#666;">${c.updated_at ? new Date(c.updated_at).toLocaleString('en-PK') : '–'}</td>
+              <td class="action-cell">
+                <button class="button edit-charge-btn" data-key="${esc(c.key)}" data-label="${esc(c.label)}" data-value="${c.value}" data-type="${c.type}" style="background:#006A4E;">Edit</button>
+                <button class="button delete-charge-btn" data-key="${esc(c.key)}" style="background:#c62828;">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    `;
+
+    chargesTable.querySelectorAll('.edit-charge-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        editChargeKey = btn.dataset.key;
+        document.getElementById('c-key').value = btn.dataset.key;
+        document.getElementById('c-key').readOnly = true;
+        document.getElementById('c-label').value = btn.dataset.label;
+        document.getElementById('c-value').value = btn.dataset.value;
+        document.getElementById('c-type').value = btn.dataset.type;
+        document.getElementById('save-charge-btn').textContent = 'Update';
+        document.getElementById('cancel-charge-btn').style.display = '';
+      });
+    });
+
+    chargesTable.querySelectorAll('.delete-charge-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this charge rate?')) return;
+        btn.disabled = true;
+        try {
+          await deleteCharge(btn.dataset.key);
+          loadCharges();
+        } catch { btn.disabled = false; }
+      });
+    });
+  }
+
+  loadCharges();
+
+  document.getElementById('cancel-charge-btn')?.addEventListener('click', () => {
+    editChargeKey = null;
+    document.getElementById('charge-form').reset();
+    document.getElementById('c-key').readOnly = false;
+    document.getElementById('c-type').value = 'fixed';
+    document.getElementById('save-charge-btn').textContent = 'Save';
+    document.getElementById('cancel-charge-btn').style.display = 'none';
+    document.getElementById('charge-form-msg').style.display = 'none';
+  });
+
+  document.getElementById('charge-form')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('save-charge-btn');
+    const msg = document.getElementById('charge-form-msg');
+    btn.disabled = true; btn.textContent = 'Saving…'; msg.style.display = 'none';
+    try {
+      const key = document.getElementById('c-key').value.trim();
+      const data = {
+        label: document.getElementById('c-label').value.trim(),
+        value: parseFloat(document.getElementById('c-value').value) || 0,
+        type: document.getElementById('c-type').value,
+      };
+      await upsertCharge(key, data);
+      e.target.reset();
+      document.getElementById('c-type').value = 'fixed';
+      document.getElementById('c-key').readOnly = false;
+      editChargeKey = null;
+      btn.textContent = 'Save';
+      document.getElementById('cancel-charge-btn').style.display = 'none';
+      loadCharges();
+    } catch (err) {
+      msg.textContent = err.message || 'Failed to save charge.';
+      msg.style.display = 'block';
+    }
+    btn.disabled = false; btn.textContent = editChargeKey ? 'Update' : 'Save';
+  });
 }

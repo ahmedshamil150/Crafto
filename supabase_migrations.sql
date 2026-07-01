@@ -1007,3 +1007,34 @@ CREATE INDEX IF NOT EXISTS products_id_idx ON products (id);
 
 -- Run VACUUM ANALYZE to update query planner statistics
 VACUUM ANALYZE products;
+
+-- =============================================
+-- 30. Charges table for configurable delivery/tax/etc rates
+-- =============================================
+CREATE TABLE IF NOT EXISTS charges (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key        TEXT NOT NULL UNIQUE,
+  label      TEXT NOT NULL,
+  value      NUMERIC NOT NULL DEFAULT 0,
+  type       TEXT NOT NULL DEFAULT 'fixed' CHECK (type IN ('fixed', 'percentage')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE charges ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anon_read_charges" ON charges;
+CREATE POLICY "anon_read_charges" ON charges
+  FOR SELECT USING (true);
+
+GRANT SELECT ON charges TO anon;
+
+-- Seed default charges
+INSERT INTO charges (key, label, value, type) VALUES
+  ('delivery_local_fee',        'Local Delivery Fee (Rawalpindi/Islamabad)',       135, 'fixed'),
+  ('delivery_outstation_per_kg','Outstation Delivery per Kg',                      150, 'fixed'),
+  ('delivery_outstation_min',   'Minimum Outstation Delivery Fee',                 150, 'fixed'),
+  ('tax_percent',               'Tax / GST (%)',                                    0, 'percentage'),
+  ('cod_fee',                   'Cash on Delivery Fee',                             0, 'fixed'),
+  ('free_shipping_threshold',   'Free Shipping Minimum Order (0 = disabled)',       0, 'fixed')
+ON CONFLICT (key) DO NOTHING;
