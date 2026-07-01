@@ -212,6 +212,8 @@ export async function placeOrder(order, couponCode) {
     p_customer_address: order.customer_address,
     p_items: order.items,
     p_total: order.total,
+    p_delivery_fee: order.delivery_fee || 0,
+    p_tax_amount:   order.tax_amount || 0,
   };
   if (couponCode) body.p_coupon_code = couponCode;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/place_order`, {

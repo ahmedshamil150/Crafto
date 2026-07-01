@@ -137,6 +137,12 @@ export function generateInvoicePDF(invoice, order) {
     safeText(`PKR ${Number(invoice.delivery_fee).toLocaleString()}`, summaryX + 50, y);
     y += 7;
   }
+
+  if (invoice.tax_amount > 0) {
+    safeText('Tax:', summaryX, y);
+    safeText(`PKR ${Number(invoice.tax_amount).toLocaleString()}`, summaryX + 50, y);
+    y += 7;
+  }
   
   if (invoice.coupon_code) {
     safeText(`Coupon (${invoice.coupon_code}):`, summaryX, y);

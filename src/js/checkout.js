@@ -45,6 +45,19 @@ async function calculateDelivery(city) {
   }
 }
 
+let taxPercent = 0;
+(async function loadTaxRate() {
+  try {
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const res = await fetch(`${url}/rest/v1/charges?key=eq.tax_percent&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    const data = await res.json();
+    taxPercent = parseFloat(data?.[0]?.value) || 0;
+  } catch { /* ignore */ }
+}());
+
 async function renderSummary() {
   const cart = getCart();
   if (!cart.length) {
@@ -57,7 +70,8 @@ async function renderSummary() {
   deliveryFee = await calculateDelivery(city);
 
   const subtotal = calcSubtotal();
-  const total = subtotal - couponDiscount + deliveryFee;
+  const tax = Math.round(subtotal * taxPercent / 100);
+  const total = subtotal - couponDiscount + deliveryFee + tax;
 
   const deliveryDisplay = deliveryFee > 0
     ? `PKR ${deliveryFee.toLocaleString()}`
@@ -100,6 +114,10 @@ async function renderSummary() {
           <div class="flex justify-between font-body-md text-sm text-on-surface-variant items-center">
             <span>Delivery ${deliveryBadge}</span><span>${deliveryDisplay}</span>
           </div>
+          ${tax > 0 ? `
+          <div class="flex justify-between font-body-md text-sm text-on-surface-variant">
+            <span>Tax (${taxPercent}%)</span><span>PKR ${tax.toLocaleString()}</span>
+          </div>` : ''}
           <hr class="border-outline-variant/20" />
           <div class="flex justify-between font-headline-md text-headline-md text-deep-emerald">
             <span>Total</span><span>PKR ${Math.max(0, total).toLocaleString()}</span>
@@ -188,8 +206,10 @@ form?.addEventListener('submit', async e => {
   const phone   = document.getElementById('phone').value.trim();
   const email   = document.getElementById('email').value.trim();
 
+  const subtotal = calcSubtotal();
+  const tax = Math.round(subtotal * taxPercent / 100);
   const fee = await calculateDelivery(city);
-  const total = Math.max(0, calcSubtotal() - couponDiscount + fee);
+  const total = Math.max(0, subtotal - couponDiscount + fee + tax);
 
   const cityLabel = cityEl?.options[cityEl.selectedIndex]?.text || city;
   const order = {
@@ -199,6 +219,8 @@ form?.addEventListener('submit', async e => {
     customer_address: `${document.getElementById('address').value.trim()} (${cityLabel})`,
     items:            cart,
     total,
+    delivery_fee:     fee,
+    tax_amount:       tax,
     status:           'pending',
   };
 

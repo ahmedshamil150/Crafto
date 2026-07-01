@@ -1038,3 +1038,444 @@ INSERT INTO charges (key, label, value, type) VALUES
   ('cod_fee',                   'Cash on Delivery Fee',                             0, 'fixed'),
   ('free_shipping_threshold',   'Free Shipping Minimum Order (0 = disabled)',       0, 'fixed')
 ON CONFLICT (key) DO NOTHING;
+
+-- =============================================
+-- 31. Store delivery_fee on orders + update create_invoice to use it
+-- =============================================
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee NUMERIC DEFAULT 0;
+
+-- Recreate create_invoice to read delivery_fee from order and calculate discount_amount from coupon
+DROP FUNCTION IF EXISTS create_invoice(UUID);
+
+CREATE OR REPLACE FUNCTION create_invoice(p_order_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  order_rec       orders%ROWTYPE;
+  inv_id          UUID;
+  inv_num         TEXT;
+  subtotal_calc   NUMERIC;
+  discount_calc   NUMERIC;
+  coup_rec        coupons%ROWTYPE;
+  item            jsonb;
+  price_val       TEXT;
+  qty_val         INT;
+BEGIN
+  SELECT * INTO order_rec FROM orders WHERE id = p_order_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  inv_num := generate_invoice_number();
+
+  -- Calculate subtotal from items with robust JSON handling
+  subtotal_calc := 0;
+  FOR item IN SELECT * FROM jsonb_array_elements(order_rec.items)
+  LOOP
+    price_val := NULL;
+    IF item ? 'price' THEN
+      IF jsonb_typeof(item->'price') = 'number' THEN
+        price_val := (item->'price')::TEXT;
+      ELSIF jsonb_typeof(item->'price') = 'string' THEN
+        price_val := item->>'price';
+      END IF;
+    END IF;
+
+    qty_val := 1;
+    IF item ? 'qty' THEN
+      IF jsonb_typeof(item->'qty') = 'number' THEN
+        qty_val := (item->'qty')::INT;
+      ELSIF jsonb_typeof(item->'qty') = 'string' THEN
+        qty_val := (item->>'qty')::INT;
+      END IF;
+    END IF;
+
+    IF price_val IS NOT NULL THEN
+      BEGIN
+        subtotal_calc := subtotal_calc + (price_val::NUMERIC * qty_val);
+      EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Failed to parse price for item: %, price: %', item, price_val;
+      END;
+    END IF;
+  END LOOP;
+
+  -- Calculate discount from coupon if present
+  discount_calc := 0;
+  IF order_rec.coupon_code IS NOT NULL THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(order_rec.coupon_code);
+    IF FOUND THEN
+      discount_calc := ROUND(subtotal_calc * coup_rec.discount_percent / 100);
+    END IF;
+  END IF;
+
+  INSERT INTO invoices (
+    order_id, invoice_number, customer_name, customer_phone, customer_address,
+    items, subtotal, discount_amount, delivery_fee, total, coupon_code, status
+  )
+  VALUES (
+    p_order_id, inv_num, order_rec.customer_name, order_rec.customer_phone, order_rec.customer_address,
+    order_rec.items,
+    subtotal_calc,
+    discount_calc,
+    COALESCE(order_rec.delivery_fee, 0),
+    order_rec.total,
+    order_rec.coupon_code,
+    'active'
+  )
+  RETURNING id INTO inv_id;
+
+  RETURN inv_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION create_invoice(UUID) TO anon;
+GRANT EXECUTE ON FUNCTION create_invoice(UUID) TO authenticated;
+
+-- Recreate place_order to accept and store delivery_fee
+DROP FUNCTION IF EXISTS place_order(uuid, text, text, text, jsonb, numeric, text);
+
+CREATE OR REPLACE FUNCTION place_order(
+  p_id               uuid,
+  p_customer_name    text,
+  p_customer_phone   text,
+  p_customer_address text,
+  p_items            jsonb,
+  p_total            numeric,
+  p_coupon_code      text DEFAULT NULL,
+  p_delivery_fee     numeric DEFAULT 0
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  item          jsonb;
+  prod_id       uuid;
+  var_id        uuid;
+  prod_qty      int;
+  prod_rec      RECORD;
+  var_rec       RECORD;
+  coup_rec      coupons%ROWTYPE;
+  ord_num       text;
+  done          bool;
+  rnd_str       text;
+  chars         text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  invoice_id    uuid;
+BEGIN
+  -- Generate unique order_number (CRAFTOID-XXXXXX)
+  done := false;
+  WHILE NOT done LOOP
+    rnd_str := '';
+    FOR i IN 1..6 LOOP
+      rnd_str := rnd_str || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+    END LOOP;
+    ord_num := 'CRAFTOID-' || rnd_str;
+    BEGIN
+      INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code, order_number, delivery_fee)
+      VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
+              CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END,
+              ord_num,
+              p_delivery_fee);
+      done := true;
+    EXCEPTION WHEN unique_violation THEN
+    END;
+  END LOOP;
+
+  FOR item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    prod_id  := (item->>'id')::uuid;
+    prod_qty := (item->>'qty')::int;
+    var_id   := (item->>'variant_id')::uuid;
+
+    IF var_id IS NOT NULL THEN
+      SELECT * INTO var_rec
+      FROM product_variants
+      WHERE id = var_id AND product_id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Variant not found for product "%"', item->>'title';
+      END IF;
+
+      IF var_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          item->>'title', var_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE product_variants
+      SET stock = stock - prod_qty
+      WHERE id = var_id;
+    ELSE
+      SELECT * INTO prod_rec
+      FROM products
+      WHERE id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found: %', item->>'title';
+      END IF;
+
+      IF prod_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          prod_rec.title, prod_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE products
+      SET stock = stock - prod_qty
+      WHERE id = prod_id;
+    END IF;
+  END LOOP;
+
+  -- Apply coupon if provided
+  IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(p_coupon_code) AND coupons.is_active = true FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Invalid coupon code.';
+    END IF;
+
+    IF coup_rec.expires_at IS NOT NULL AND coup_rec.expires_at < now() THEN
+      RAISE EXCEPTION 'Coupon has expired.';
+    END IF;
+
+    IF coup_rec.max_uses > 0 AND coup_rec.used_count >= coup_rec.max_uses THEN
+      RAISE EXCEPTION 'Coupon usage limit reached.';
+    END IF;
+
+    UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
+  END IF;
+
+  -- Automatically create invoice
+  invoice_id := create_invoice(p_id);
+
+  RETURN jsonb_build_object('success', true, 'order_id', p_id, 'order_number', ord_num, 'invoice_id', invoice_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text, numeric) TO anon;
+
+-- =============================================
+-- 32. Add tax_amount to orders & invoices, wire into functions
+-- =============================================
+
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax_amount NUMERIC DEFAULT 0;
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS tax_amount NUMERIC DEFAULT 0;
+
+-- Recreate create_invoice to include tax_amount
+DROP FUNCTION IF EXISTS create_invoice(UUID);
+
+CREATE OR REPLACE FUNCTION create_invoice(p_order_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  order_rec       orders%ROWTYPE;
+  inv_id          UUID;
+  inv_num         TEXT;
+  subtotal_calc   NUMERIC;
+  discount_calc   NUMERIC;
+  coup_rec        coupons%ROWTYPE;
+  item            jsonb;
+  price_val       TEXT;
+  qty_val         INT;
+BEGIN
+  SELECT * INTO order_rec FROM orders WHERE id = p_order_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order not found';
+  END IF;
+
+  inv_num := generate_invoice_number();
+
+  subtotal_calc := 0;
+  FOR item IN SELECT * FROM jsonb_array_elements(order_rec.items)
+  LOOP
+    price_val := NULL;
+    IF item ? 'price' THEN
+      IF jsonb_typeof(item->'price') = 'number' THEN
+        price_val := (item->'price')::TEXT;
+      ELSIF jsonb_typeof(item->'price') = 'string' THEN
+        price_val := item->>'price';
+      END IF;
+    END IF;
+
+    qty_val := 1;
+    IF item ? 'qty' THEN
+      IF jsonb_typeof(item->'qty') = 'number' THEN
+        qty_val := (item->'qty')::INT;
+      ELSIF jsonb_typeof(item->'qty') = 'string' THEN
+        qty_val := (item->>'qty')::INT;
+      END IF;
+    END IF;
+
+    IF price_val IS NOT NULL THEN
+      BEGIN
+        subtotal_calc := subtotal_calc + (price_val::NUMERIC * qty_val);
+      EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Failed to parse price for item: %, price: %', item, price_val;
+      END;
+    END IF;
+  END LOOP;
+
+  discount_calc := 0;
+  IF order_rec.coupon_code IS NOT NULL THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(order_rec.coupon_code);
+    IF FOUND THEN
+      discount_calc := ROUND(subtotal_calc * coup_rec.discount_percent / 100);
+    END IF;
+  END IF;
+
+  INSERT INTO invoices (
+    order_id, invoice_number, customer_name, customer_phone, customer_address,
+    items, subtotal, discount_amount, delivery_fee, tax_amount, total, coupon_code, status
+  )
+  VALUES (
+    p_order_id, inv_num, order_rec.customer_name, order_rec.customer_phone, order_rec.customer_address,
+    order_rec.items,
+    subtotal_calc,
+    discount_calc,
+    COALESCE(order_rec.delivery_fee, 0),
+    COALESCE(order_rec.tax_amount, 0),
+    order_rec.total,
+    order_rec.coupon_code,
+    'active'
+  )
+  RETURNING id INTO inv_id;
+
+  RETURN inv_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION create_invoice(UUID) TO anon;
+GRANT EXECUTE ON FUNCTION create_invoice(UUID) TO authenticated;
+
+-- Recreate place_order to accept and store tax_amount
+DROP FUNCTION IF EXISTS place_order(uuid, text, text, text, jsonb, numeric, text, numeric);
+
+CREATE OR REPLACE FUNCTION place_order(
+  p_id               uuid,
+  p_customer_name    text,
+  p_customer_phone   text,
+  p_customer_address text,
+  p_items            jsonb,
+  p_total            numeric,
+  p_coupon_code      text DEFAULT NULL,
+  p_delivery_fee     numeric DEFAULT 0,
+  p_tax_amount       numeric DEFAULT 0
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  item          jsonb;
+  prod_id       uuid;
+  var_id        uuid;
+  prod_qty      int;
+  prod_rec      RECORD;
+  var_rec       RECORD;
+  coup_rec      coupons%ROWTYPE;
+  ord_num       text;
+  done          bool;
+  rnd_str       text;
+  chars         text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  invoice_id    uuid;
+BEGIN
+  done := false;
+  WHILE NOT done LOOP
+    rnd_str := '';
+    FOR i IN 1..6 LOOP
+      rnd_str := rnd_str || substr(chars, floor(random() * length(chars) + 1)::int, 1);
+    END LOOP;
+    ord_num := 'CRAFTOID-' || rnd_str;
+    BEGIN
+      INSERT INTO orders (id, customer_name, customer_phone, customer_address, items, total, status, coupon_code, order_number, delivery_fee, tax_amount)
+      VALUES (p_id, p_customer_name, p_customer_phone, p_customer_address, p_items, p_total, 'pending',
+              CASE WHEN p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN p_coupon_code ELSE NULL END,
+              ord_num,
+              p_delivery_fee,
+              p_tax_amount);
+      done := true;
+    EXCEPTION WHEN unique_violation THEN
+    END;
+  END LOOP;
+
+  FOR item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    prod_id  := (item->>'id')::uuid;
+    prod_qty := (item->>'qty')::int;
+    var_id   := (item->>'variant_id')::uuid;
+
+    IF var_id IS NOT NULL THEN
+      SELECT * INTO var_rec
+      FROM product_variants
+      WHERE id = var_id AND product_id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Variant not found for product "%"', item->>'title';
+      END IF;
+
+      IF var_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          item->>'title', var_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE product_variants
+      SET stock = stock - prod_qty
+      WHERE id = var_id;
+    ELSE
+      SELECT * INTO prod_rec
+      FROM products
+      WHERE id = prod_id
+      FOR UPDATE;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Product not found: %', item->>'title';
+      END IF;
+
+      IF prod_rec.stock < prod_qty THEN
+        RAISE EXCEPTION 'Insufficient stock for "%". Available: %, requested: %',
+          prod_rec.title, prod_rec.stock, prod_qty;
+      END IF;
+
+      UPDATE products
+      SET stock = stock - prod_qty
+      WHERE id = prod_id;
+    END IF;
+  END LOOP;
+
+  IF p_coupon_code IS NOT NULL AND p_coupon_code <> '' THEN
+    SELECT * INTO coup_rec FROM coupons WHERE LOWER(coupons.code) = LOWER(p_coupon_code) AND coupons.is_active = true FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Invalid coupon code.';
+    END IF;
+
+    IF coup_rec.expires_at IS NOT NULL AND coup_rec.expires_at < now() THEN
+      RAISE EXCEPTION 'Coupon has expired.';
+    END IF;
+
+    IF coup_rec.max_uses > 0 AND coup_rec.used_count >= coup_rec.max_uses THEN
+      RAISE EXCEPTION 'Coupon usage limit reached.';
+    END IF;
+
+    UPDATE coupons SET used_count = used_count + 1 WHERE id = coup_rec.id;
+  END IF;
+
+  invoice_id := create_invoice(p_id);
+
+  RETURN jsonb_build_object('success', true, 'order_id', p_id, 'order_number', ord_num, 'invoice_id', invoice_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION place_order(uuid, text, text, text, jsonb, numeric, text, numeric, numeric) TO anon;

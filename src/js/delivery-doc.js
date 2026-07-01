@@ -136,6 +136,16 @@ export function generateDeliveryDoc(order) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   safeText(`Total Items: ${items.reduce((s, i) => s + (i.qty || 1), 0)}`, 20, y);
+  if (order.delivery_fee && Number(order.delivery_fee) > 0) {
+    doc.setFont('helvetica', 'normal');
+    safeText(`Delivery: PKR ${Number(order.delivery_fee).toLocaleString()}`, pageWidth - 70, y);
+    y += 7;
+  }
+  if (order.tax_amount && Number(order.tax_amount) > 0) {
+    doc.setFont('helvetica', 'normal');
+    safeText(`Tax: PKR ${Number(order.tax_amount).toLocaleString()}`, pageWidth - 70, y);
+    y += 7;
+  }
   doc.setFont('helvetica', 'normal');
   safeText(`Total: PKR ${Number(order.total || 0).toLocaleString()}`, pageWidth - 70, y);
   y += 18;
