@@ -261,7 +261,26 @@ async function renderDetail() {
   if (!detail) return;
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { detail.innerHTML = '<p class="text-center text-on-surface-variant py-20">Product not found.</p>'; return; }
-  const p = await getProductById(id);
+
+  // Show loading skeleton immediately
+  detail.innerHTML = `
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-12 mb-section-gap animate-pulse">
+      <div class="bg-surface-container-low rounded-xl aspect-[4/5]"></div>
+      <div class="space-y-4">
+        <div class="h-4 bg-surface-container-low rounded w-1/3"></div>
+        <div class="h-8 bg-surface-container-low rounded w-3/4"></div>
+        <div class="h-4 bg-surface-container-low rounded w-full"></div>
+        <div class="h-4 bg-surface-container-low rounded w-2/3"></div>
+        <div class="h-10 bg-surface-container-low rounded w-1/4 mt-8"></div>
+        <div class="h-12 bg-surface-container-low rounded-full w-full mt-4"></div>
+      </div>
+    </div>`;
+
+  // Fetch product and variants in parallel
+  const [p, variants] = await Promise.all([
+    getProductById(id),
+    getProductVariants(id).catch(() => []),
+  ]);
   if (!p) { detail.innerHTML = '<p class="text-center text-on-surface-variant py-20">Product not found.</p>'; return; }
 
   const images = [p.image_url, p.image_url_2, p.image_url_3]
@@ -272,7 +291,6 @@ async function renderDetail() {
 
   const finalPrice = discPrice(p.price, p.discount_percent);
   const onSale = hasDisc(p.discount_percent);
-  const variants = await getProductVariants(p.id);
 
   const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
   const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
@@ -708,7 +726,12 @@ window.closeLightbox = function(e) {
   document.body.style.overflow = '';
 };
 
-initCategories().then(() => {
-  renderShop();
-});
-renderDetail();
+const isShopPage = !!document.getElementById('product-grid');
+const isDetailPage = !!document.getElementById('product-detail');
+
+if (isShopPage) {
+  initCategories().then(() => renderShop());
+}
+if (isDetailPage) {
+  renderDetail();
+}

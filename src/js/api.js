@@ -1,6 +1,26 @@
 const SUPABASE_URL      = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Simple in-memory cache with TTL
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function cacheKey(...args) {
+  return args.join('::');
+}
+
+function cached(key, ttl = CACHE_TTL) {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < ttl) {
+    return entry.data;
+  }
+  return null;
+}
+
+function setCache(key, data) {
+  cache.set(key, { data, ts: Date.now() });
+}
+
 function headers() {
   return {
     'Content-Type': 'application/json',
@@ -32,9 +52,14 @@ export async function getProducts({ limit, offset, featured, category } = {}) {
   if (offset != null) params.set('offset', offset);
   if (featured != null) params.set('featured', `eq.${featured}`);
   if (category) params.set('category', `cs.{${category}}`);
+  const key = cacheKey('products', params.toString());
+  const hit = cached(key);
+  if (hit) return hit;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${params}`, { headers: headers() });
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  setCache(key, data);
+  return data;
 }
 
 export async function getProductsCount() {
@@ -49,10 +74,15 @@ export async function getProductsCount() {
 
 export async function getProductById(id) {
   if (!SUPABASE_URL) return null;
+  const key = cacheKey('product', id);
+  const hit = cached(key);
+  if (hit) return hit;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}&limit=1`, { headers: headers() });
   if (!res.ok) return null;
   const data = await res.json();
-  return data[0] || null;
+  const product = data[0] || null;
+  setCache(key, product);
+  return product;
 }
 
 const STORAGE_URL = `${SUPABASE_URL}/storage/v1`;
@@ -218,12 +248,17 @@ export async function requestReturn(orderId, phone) {
 
 export async function getReviews(productId) {
   if (!SUPABASE_URL) return [];
+  const key = cacheKey('reviews', productId);
+  const hit = cached(key);
+  if (hit) return hit;
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=pinned.desc,created_at.desc`,
+    `${SUPABASE_URL}/rest/v1/reviews?product_id=eq.${productId}&order=created_at.desc`,
     { headers: headers() }
   );
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  setCache(key, data);
+  return data;
 }
 
 export async function getAllReviews() {
@@ -339,12 +374,17 @@ export async function setHeroImage(image_url, mobile_image_url) {
 
 export async function getProductVariants(productId) {
   if (!SUPABASE_URL) return [];
+  const key = cacheKey('variants', productId);
+  const hit = cached(key);
+  if (hit) return hit;
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/product_variants?product_id=eq.${productId}&order=created_at`,
     { headers: headers() }
   );
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  setCache(key, data);
+  return data;
 }
 
 export async function createVariant(data) {
@@ -377,9 +417,14 @@ export async function deleteVariant(id) {
 // --- Categories ---
 export async function getCategories() {
   if (!SUPABASE_URL) return [];
+  const key = cacheKey('categories');
+  const hit = cached(key);
+  if (hit) return hit;
   const res = await fetch(`${SUPABASE_URL}/rest/v1/categories?order=sort_order.asc,name.asc`, { headers: headers() });
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  setCache(key, data);
+  return data;
 }
 
 export async function createCategory(data) {

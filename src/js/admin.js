@@ -6,9 +6,10 @@ import {
   getCategories, createCategory, deleteCategory,
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
-  getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice,
+  getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice, getInvoiceByOrderId,
 } from './api.js';
 import { downloadInvoicePDF } from './invoice-pdf.js';
+import { downloadDeliveryDoc } from './delivery-doc.js';
 
 function parseCats(cat) {
   if (Array.isArray(cat)) return cat.map(c => String(c).trim()).filter(Boolean);
@@ -777,7 +778,11 @@ if (ordersTable) {
                 `}
               </td>
               <td class="action-cell">
-                <button class="button delete-order-btn" data-id="${o.id}" style="background:#c62828;">Delete</button>
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                  <button class="button order-invoice-btn" data-id="${o.id}" style="background:#006A4E;padding:4px 8px;font-size:0.75rem;">Invoice</button>
+                  <button class="button order-delivery-btn" data-id="${o.id}" style="background:#D4AF37;padding:4px 8px;font-size:0.75rem;">Delivery</button>
+                  <button class="button delete-order-btn" data-id="${o.id}" style="background:#c62828;padding:4px 8px;font-size:0.75rem;">Delete</button>
+                </div>
               </td>
             </tr>
             <tr class="items-detail-row" id="items-${o.id}" style="display:none;">
@@ -863,6 +868,40 @@ if (ordersTable) {
           btn.disabled = false;
           btn.textContent = 'Delete';
         }
+      });
+    });
+
+    // Invoice download button
+    ordersTable.querySelectorAll('.order-invoice-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+        try {
+          const invoice = await getInvoiceByOrderId(btn.dataset.id);
+          if (!invoice) { alert('No invoice found for this order.'); return; }
+          downloadInvoicePDF(invoice, orders.find(o => o.id === btn.dataset.id));
+        } catch (err) {
+          alert('Failed to load invoice: ' + (err.message || 'unknown error'));
+        }
+        btn.disabled = false;
+        btn.textContent = 'Invoice';
+      });
+    });
+
+    // Delivery document button
+    ordersTable.querySelectorAll('.order-delivery-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Loading…';
+        try {
+          const order = orders.find(o => o.id === btn.dataset.id);
+          if (!order) { alert('Order not found.'); return; }
+          downloadDeliveryDoc(order);
+        } catch (err) {
+          alert('Failed to generate delivery document: ' + (err.message || 'unknown error'));
+        }
+        btn.disabled = false;
+        btn.textContent = 'Delivery';
       });
     });
 

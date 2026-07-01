@@ -999,3 +999,11 @@ $$;
 
 GRANT EXECUTE ON FUNCTION cancel_order(text, text) TO anon;
 GRANT EXECUTE ON FUNCTION cancel_order(text, text) TO authenticated;
+
+-- =============================================
+-- 29. Performance: index products.id for fast product lookups
+-- =============================================
+CREATE INDEX IF NOT EXISTS products_id_idx ON products (id);
+
+-- Run VACUUM ANALYZE to update query planner statistics
+VACUUM ANALYZE products;
