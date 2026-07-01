@@ -12,12 +12,8 @@ const recSection = document.getElementById('checkout-recommended');
 
 let appliedCoupon = null;
 let couponDiscount = 0;
-
-// --- Delivery charge constants ---
-const LOCAL_CITIES      = new Set(['rawalpindi', 'islamabad']);
-const LOCAL_FLAT_FEE    = 135;   // Rs for Rawalpindi / Islamabad
-const OUTSTATION_PER_KG = 150;   // Rs per kg for all other cities
-const MIN_OUTSTATION    = 150;   // minimum charge even if weight is 0
+let deliveryFee = 0;
+let isLocal = false;
 
 function esc(str) {
   const el = document.createElement('span');
@@ -31,51 +27,24 @@ function calcSubtotal() {
   return getCart().reduce((s, i) => s + i.price * i.qty, 0);
 }
 
-/**
- * Returns { fee, label } for the current city + cart.
- * For outstation orders this fetches product weights from Supabase.
- */
 async function calculateDelivery(city) {
-  if (!city) return { fee: 0, label: 'Select a city to see delivery fee' };
-
-  if (LOCAL_CITIES.has(city)) {
-    return { fee: LOCAL_FLAT_FEE, label: `Local delivery (Rawalpindi / Islamabad) – flat Rs ${LOCAL_FLAT_FEE}` };
+  if (!city) return 0;
+  try {
+    const cart = getCart().map(i => ({ id: i.id, qty: i.qty }));
+    const res = await fetch('/api/calculate-delivery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ city, cart }),
+    });
+    const data = await res.json();
+    if (!res.ok) return 0;
+    isLocal = data.local;
+    return data.fee || 0;
+  } catch {
+    return 0;
   }
-
-  // Outstation: sum weight_kg × qty across cart items
-  const cart = getCart();
-  let totalWeightKg = 0;
-  for (const item of cart) {
-    try {
-      const prod = await getProductById(item.id);
-      const kg = parseFloat(prod?.weight_kg ?? 0);
-      totalWeightKg += kg * item.qty;
-    } catch { /* treat as 0 weight */ }
-  }
-
-  // Round to 3 decimal places
-  totalWeightKg = Math.round(totalWeightKg * 1000) / 1000;
-
-  const fee = totalWeightKg > 0
-    ? Math.ceil(totalWeightKg * OUTSTATION_PER_KG)
-    : MIN_OUTSTATION;
-
-  const weightStr = totalWeightKg > 0
-    ? `${totalWeightKg} kg × Rs ${OUTSTATION_PER_KG}/kg`
-    : `min. Rs ${MIN_OUTSTATION}`;
-  return { fee, label: `Outstation delivery – ${weightStr}` };
 }
 
-/** Update the inline hint below the city dropdown */
-function updateDeliveryHint(fee, label) {
-  const hint = document.getElementById('delivery-fee-hint');
-  if (!hint) return;
-  if (!label) { hint.textContent = ''; return; }
-  hint.textContent = fee > 0 ? `Delivery: Rs ${fee.toLocaleString()} — ${label}` : label;
-}
-
-
-// --- Async summary renderer ---
 async function renderSummary() {
   const cart = getCart();
   if (!cart.length) {
@@ -85,13 +54,11 @@ async function renderSummary() {
   }
   if (submitBtn) submitBtn.disabled = false;
   const city = document.getElementById('delivery-city')?.value || '';
-  const { fee: deliveryFee, label: deliveryLabel } = await calculateDelivery(city);
-  updateDeliveryHint(deliveryFee, deliveryLabel);
+  deliveryFee = await calculateDelivery(city);
 
   const subtotal = calcSubtotal();
   const total = subtotal - couponDiscount + deliveryFee;
 
-  const isLocal = LOCAL_CITIES.has(city);
   const deliveryDisplay = deliveryFee > 0
     ? `PKR ${deliveryFee.toLocaleString()}`
     : `<span class="text-on-surface-variant/60 italic">Select city</span>`;
@@ -133,7 +100,6 @@ async function renderSummary() {
           <div class="flex justify-between font-body-md text-sm text-on-surface-variant items-center">
             <span>Delivery ${deliveryBadge}</span><span>${deliveryDisplay}</span>
           </div>
-          ${deliveryFee > 0 && !isLocal ? `<p class="text-[10px] text-on-surface-variant/70 -mt-1">${esc(deliveryLabel)}</p>` : ''}
           <hr class="border-outline-variant/20" />
           <div class="flex justify-between font-headline-md text-headline-md text-deep-emerald">
             <span>Total</span><span>PKR ${Math.max(0, total).toLocaleString()}</span>
@@ -145,7 +111,6 @@ async function renderSummary() {
   `;
 }
 
-// Re-render summary whenever city changes
 document.getElementById('delivery-city')?.addEventListener('change', () => renderSummary());
 
 document.getElementById('location-btn')?.addEventListener('click', async () => {
@@ -208,7 +173,6 @@ form?.addEventListener('submit', async e => {
   const cart = getCart();
   if (!cart.length) return;
 
-  // Require city selection
   const cityEl  = document.getElementById('delivery-city');
   const city    = cityEl?.value || '';
   if (!city) {
@@ -224,9 +188,8 @@ form?.addEventListener('submit', async e => {
   const phone   = document.getElementById('phone').value.trim();
   const email   = document.getElementById('email').value.trim();
 
-  // Compute delivery charge from selected city
-  const { fee: deliveryFee, label: deliveryLabel } = await calculateDelivery(city);
-  const total = Math.max(0, calcSubtotal() - couponDiscount + deliveryFee);
+  const fee = await calculateDelivery(city);
+  const total = Math.max(0, calcSubtotal() - couponDiscount + fee);
 
   const cityLabel = cityEl?.options[cityEl.selectedIndex]?.text || city;
   const order = {
@@ -240,7 +203,6 @@ form?.addEventListener('submit', async e => {
   };
 
   try {
-    // Validate stock before placing order
     for (const item of cart) {
       if (item.variant_id) {
         const variants = await getProductVariants(item.id);
@@ -272,12 +234,11 @@ form?.addEventListener('submit', async e => {
         phone: order.customer_phone,
         address: order.customer_address,
         items: cart.map(i => `${i.title} × ${i.qty}`).join(', '),
-        delivery: `Rs ${deliveryFee.toLocaleString()} — ${deliveryLabel}`,
+        delivery: `Rs ${fee.toLocaleString()}`,
         total: `PKR ${total.toLocaleString()}`,
         coupon: appliedCoupon || 'None',
       }),
     }).catch(() => {});
-    // Send branded confirmation email via Resend
     fetch('/api/send-order-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -286,8 +247,6 @@ form?.addEventListener('submit', async e => {
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);
     showToast(`Order placed! Your Order ID: ${orderNumber}`);
-    
-    // Redirect to order tracking page
     setTimeout(() => window.location.href = `./order-status?id=${orderNumber}`, 1500);
   } catch (err) {
     errorEl.textContent = err.message;
@@ -361,7 +320,6 @@ async function loadRecommended() {
     });
   });
 
-  // Animate the recommended section and its children
   setTimeout(() => {
     recSection.querySelectorAll('.fade-in-up, .stagger').forEach(el => el.classList.add('visible'));
   }, 100);
