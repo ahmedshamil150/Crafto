@@ -114,16 +114,22 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartBadge();
   updateWishlistBadge();
 
-  // Floating pill nav
+  // Floating pill nav (desktop only)
   const header = document.getElementById('site-header');
   const pill = document.getElementById('header-pill');
   if (header && pill) {
+    const isDesktop = () => window.innerWidth >= 768;
     const updatePill = () => {
       const scrolled = window.scrollY > 80;
       header.style.opacity = scrolled ? '0' : '1';
       header.style.pointerEvents = scrolled ? 'none' : '';
-      pill.classList.toggle('hidden', !scrolled);
-      pill.classList.toggle('md:flex', scrolled);
+      if (isDesktop()) {
+        pill.classList.toggle('hidden', !scrolled);
+        pill.classList.toggle('md:flex', scrolled);
+      } else {
+        pill.classList.add('hidden');
+        pill.classList.remove('md:flex');
+      }
     };
     window.addEventListener('scroll', updatePill, { passive: true });
     updatePill();

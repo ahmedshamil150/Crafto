@@ -7,6 +7,7 @@ import {
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
   getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice, getInvoiceByOrderId,
+  clearCache,
 } from './api.js';
 import { downloadInvoicePDF } from './invoice-pdf.js';
 import { downloadDeliveryDoc } from './delivery-doc.js';
@@ -41,6 +42,7 @@ const DEFAULT_CATS = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands
 let CATEGORIES = [...DEFAULT_CATS];
 
 async function loadCategories() {
+  clearCache('categories');
   try {
     const cats = await getCategories();
     if (cats && cats.length) {
@@ -544,6 +546,7 @@ if (productsTable) {
   }
 
   async function loadProducts() {
+    clearCache('products');
     const filterState = getProductFilterState();
     productsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
 
@@ -731,6 +734,7 @@ if (ordersTable) {
   }
 
   async function loadOrders() {
+    clearCache('products'); // also bust product cache (stock may change)
     ordersTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     renderOrderFilters();
     const filterOpts = ordersStatusFilter ? { status: ordersStatusFilter } : {};
@@ -1123,6 +1127,7 @@ if (reviewsTable) {
   let allReviews = [];
 
   async function loadReviews() {
+    clearCache('reviews');
     reviewsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     if (!allReviews.length) {
       allReviews = await getAllReviews();
@@ -1229,6 +1234,7 @@ if (couponsTable) {
   let allCoupons = [];
 
   async function loadCoupons() {
+    clearCache('coupons');
     couponsTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     if (!allCoupons.length) {
       allCoupons = await getCoupons();
@@ -1336,6 +1342,7 @@ if (categoriesTable) {
   let allCatsArr = [];
 
   async function loadAdminCategories() {
+    clearCache('categories');
     categoriesTable.innerHTML = '<div class="admin-spinner">Loading…</div>';
     try {
       allCatsArr = await getCategories();

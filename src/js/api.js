@@ -21,6 +21,12 @@ function setCache(key, data) {
   cache.set(key, { data, ts: Date.now() });
 }
 
+export function clearCache(prefix) {
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) cache.delete(key);
+  }
+}
+
 function headers() {
   return {
     'Content-Type': 'application/json',
