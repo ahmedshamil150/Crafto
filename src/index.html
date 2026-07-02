@@ -134,21 +134,23 @@ html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto}
 </div>
 
 <header id="site-header" class="bg-cream-canvas dark:bg-surface shadow-sm fixed top-0 w-full z-50 transition-all duration-300">
-<nav class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4">
-<div class="flex items-center gap-4">
-<button class="md:hidden active:scale-95 transition-transform" id="burger">
+<nav class="items-center px-margin-mobile md:px-margin-desktop py-4 grid grid-cols-3 md:flex md:justify-between">
+<div class="flex md:hidden items-center">
+<button class="active:scale-95 transition-transform" id="burger">
 <span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span>
 </button>
-<a href="./" class="flex items-center"><img src="/headerlogo.png" alt="Crafto" class="h-6 md:h-9" /></a>
 </div>
-<div class="hidden md:flex gap-8 items-center">
+<div class="flex justify-center md:justify-start items-center col-start-2 md:col-start-auto">
+<a href="./" class="flex items-center"><img src="/headerlogo.png" alt="Crafto" class="h-6 md:h-9" /></a>
+<div class="hidden md:flex gap-8 items-center ml-8">
 <a class="nav-link font-label-caps text-label-caps text-metallic-gold hover:text-metallic-gold transition-colors" href="./">Home</a>
 <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./shop">Shop</a>
 <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./about">About</a>
 <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./contact">Contact</a>
 <a class="nav-link font-label-caps text-label-caps text-on-surface-variant hover:text-metallic-gold transition-colors" href="./order-status">Track Order</a>
 </div>
-<div class="flex items-center gap-4">
+</div>
+<div class="flex items-center justify-end gap-4">
 <a href="./shop" class="text-deep-emerald active:scale-95 transition-transform"><span class="material-symbols-outlined" data-icon="search">search</span></a>
 <a href="./wishlist" class="relative text-deep-emerald active:scale-95 transition-transform">
 <span class="material-symbols-outlined" data-icon="favorite">favorite</span>
