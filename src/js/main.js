@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Mobile floating buttons (phone only)
+  let mobileStyleEl = null;
   function setupMobileLayout() {
     const burger = document.getElementById('burger');
     const cartLink = document.querySelector('a[href="./cart"]');
@@ -147,23 +148,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const isPhone = window.innerWidth < 768;
 
     document.querySelectorAll('.mobile-float-btn').forEach(el => el.remove());
+    mobileStyleEl?.remove();
+    mobileStyleEl = null;
 
     if (isPhone) {
       header?.classList.remove('fixed', 'top-0');
       if (burger) burger.style.display = 'none';
-      if (iconsParent) iconsParent.style.display = 'none';
+
+      if (iconsParent) {
+        iconsParent.style.display = '';
+        if (cartLink) cartLink.style.display = 'none';
+      }
+
+      mobileStyleEl = document.createElement('style');
+      mobileStyleEl.id = 'mobile-header-style';
+      mobileStyleEl.textContent = `
+#site-header nav {
+  justify-content: center !important;
+  gap: 1rem !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+#site-header nav > a[href="./"] {
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+}
+#site-header nav > div.flex.items-center.gap-4 {
+  display: contents !important;
+}
+#site-header nav > a[href="./shop"],
+#site-header nav > div.flex.items-center.gap-4 > a[href="./shop"] { order: 1; }
+#site-header nav > a[href="./"] { order: 2; }
+#site-header nav > a[href="./wishlist"],
+#site-header nav > div.flex.items-center.gap-4 > a[href="./wishlist"] { order: 3; }
+`;
+      document.head.appendChild(mobileStyleEl);
 
       const floatBurger = document.createElement('button');
-      floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[60] rounded-full bg-cream-canvas shadow-xl w-12 h-12 flex items-center justify-center active:scale-95 transition-transform';
-      floatBurger.innerHTML = '<span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span>';
+      floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+      floatBurger.innerHTML = '<span class="material-symbols-outlined text-white text-xl" data-icon="menu">menu</span>';
       floatBurger.addEventListener('click', () => burger?.click());
       document.body.appendChild(floatBurger);
 
       if (cartLink) {
         const floatCart = document.createElement('a');
         floatCart.href = './cart';
-        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-cream-canvas shadow-xl w-12 h-12 flex items-center justify-center active:scale-95 transition-transform';
-        floatCart.innerHTML = cartLink.innerHTML;
+        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+        const wrap = document.createElement('div');
+        wrap.innerHTML = cartLink.innerHTML;
+        wrap.querySelectorAll('.material-symbols-outlined').forEach(el => el.classList.add('text-white'));
+        wrap.querySelectorAll('.cart-badge').forEach(el => el.style.setProperty('color', '#fff', 'important'));
+        floatCart.innerHTML = wrap.innerHTML;
         document.body.appendChild(floatCart);
       }
 
@@ -176,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
       header?.classList.add('fixed', 'top-0');
       if (burger) burger.style.display = '';
       if (iconsParent) iconsParent.style.display = '';
+      if (cartLink) cartLink.style.display = '';
       if (img && img.dataset.originalSrc) {
         img.src = img.dataset.originalSrc;
         delete img.dataset.originalSrc;
