@@ -121,12 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDesktop = () => window.innerWidth >= 768;
     const updatePill = () => {
       const scrolled = window.scrollY > 80;
-      header.style.opacity = scrolled ? '0' : '1';
-      header.style.pointerEvents = scrolled ? 'none' : '';
       if (isDesktop()) {
+        header.style.opacity = scrolled ? '0' : '1';
+        header.style.pointerEvents = scrolled ? 'none' : '';
         pill.classList.toggle('hidden', !scrolled);
         pill.classList.toggle('md:flex', scrolled);
       } else {
+        header.style.opacity = '1';
+        header.style.pointerEvents = '';
         pill.classList.add('hidden');
         pill.classList.remove('md:flex');
       }
