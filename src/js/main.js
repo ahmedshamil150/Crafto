@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   left: auto !important;
 }
 main { padding-top: 0 !important; }
+section.h-screen.flex.items-start { height: 50vh !important; min-height: 50vh !important; }
 .mobile-float-btn {
   position: fixed !important;
   z-index: 9999 !important;
