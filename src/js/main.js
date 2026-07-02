@@ -141,10 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let mobileStyleEl = null;
   function setupMobileLayout() {
     const burger = document.getElementById('burger');
-    const cartLink = document.querySelector('a[href="./cart"]');
     const logoLink = document.querySelector('a[href="./"]');
     const img = logoLink?.querySelector('img');
-    const iconsParent = cartLink?.parentElement;
     const isPhone = window.innerWidth < 768;
 
     document.querySelectorAll('.mobile-float-btn').forEach(el => el.remove());
@@ -154,15 +152,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isPhone) {
       header?.classList.remove('fixed', 'top-0');
       if (burger) burger.style.display = 'none';
-      if (iconsParent) iconsParent.style.display = 'none';
+
+      // Hide original icons div
+      const iconsDiv = document.querySelector('.flex.items-center.gap-4');
+      if (iconsDiv) iconsDiv.style.display = 'none';
 
       mobileStyleEl = document.createElement('style');
       mobileStyleEl.id = 'mobile-header-style';
       mobileStyleEl.textContent = `
 #site-header nav {
   justify-content: center !important;
-  padding-top: 1.25rem !important;
-  padding-bottom: 1.25rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
 }
 #site-header nav > a[href="./"] {
   position: static !important;
@@ -172,35 +173,31 @@ document.addEventListener('DOMContentLoaded', () => {
 `;
       document.head.appendChild(mobileStyleEl);
 
+      // Floating menu (top-left)
       const floatBurger = document.createElement('button');
-      floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
-      floatBurger.innerHTML = '<span class="material-symbols-outlined text-white" data-icon="menu">menu</span>';
+      floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[9999] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+      floatBurger.innerHTML = '<span class="material-symbols-outlined text-white">menu</span>';
       floatBurger.addEventListener('click', () => burger?.click());
       document.body.appendChild(floatBurger);
 
-      if (cartLink) {
-        const floatCart = document.createElement('a');
-        floatCart.href = './cart';
-        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
-        const wrap = document.createElement('div');
-        wrap.innerHTML = cartLink.innerHTML;
-        wrap.querySelectorAll('.material-symbols-outlined').forEach(el => el.classList.add('text-white'));
-        wrap.querySelectorAll('.cart-badge').forEach(el => el.style.setProperty('color', '#fff', 'important'));
-        floatCart.innerHTML = wrap.innerHTML;
-        document.body.appendChild(floatCart);
-      }
+      // Floating cart (top-right)
+      const floatCart = document.createElement('a');
+      floatCart.href = './cart';
+      floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[9999] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
+      floatCart.innerHTML = '<span class="material-symbols-outlined text-white">shopping_bag</span><span class="cart-badge absolute -top-1 -right-1 bg-metallic-gold text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center" style="display:none;">0</span>';
+      document.body.appendChild(floatCart);
 
       // Floating wishlist (bottom-left)
       const floatWishlist = document.createElement('a');
       floatWishlist.href = './wishlist';
-      floatWishlist.className = 'mobile-float-btn fixed bottom-4 left-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
+      floatWishlist.className = 'mobile-float-btn fixed bottom-4 left-4 z-[9999] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
       floatWishlist.innerHTML = '<span class="material-symbols-outlined text-white">favorite</span><span class="wishlist-badge absolute -top-1 -right-1 bg-metallic-gold text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center" style="display:none;">0</span>';
       document.body.appendChild(floatWishlist);
 
       // Floating search (bottom-right)
       const floatSearch = document.createElement('a');
       floatSearch.href = './shop';
-      floatSearch.className = 'mobile-float-btn fixed bottom-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+      floatSearch.className = 'mobile-float-btn fixed bottom-4 right-4 z-[9999] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
       floatSearch.innerHTML = '<span class="material-symbols-outlined text-white">search</span>';
       document.body.appendChild(floatSearch);
 
@@ -208,16 +205,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (img) {
         if (!img.dataset.originalSrc) img.dataset.originalSrc = img.src;
         img.src = '/favicon.png';
-        img.className = 'h-9 w-9';
+        img.className = 'h-8 w-8';
 
         const logoAnchor = img.closest('a');
         if (logoAnchor) {
           logoAnchor.classList.remove('flex', 'items-center');
-          logoAnchor.classList.add('flex', 'flex-col', 'items-center', 'gap-0.5');
+          logoAnchor.classList.add('flex', 'flex-col', 'items-center');
           let label = logoAnchor.querySelector('.crafto-label');
           if (!label) {
             label = document.createElement('span');
-            label.className = 'crafto-label text-[10px] font-bold tracking-[0.2em] text-deep-emerald';
+            label.className = 'crafto-label text-[9px] font-bold tracking-[0.15em] text-deep-emerald';
             label.textContent = 'CRAFTO';
             logoAnchor.appendChild(label);
           }
@@ -226,7 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       header?.classList.add('fixed', 'top-0');
       if (burger) burger.style.display = '';
-      if (iconsParent) iconsParent.style.display = '';
+      const iconsDiv = document.querySelector('.flex.items-center.gap-4');
+      if (iconsDiv) iconsDiv.style.display = '';
       if (img && img.dataset.originalSrc) {
         img.src = img.dataset.originalSrc;
         delete img.dataset.originalSrc;
@@ -234,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const logoAnchor = img.closest('a');
         if (logoAnchor) {
-          logoAnchor.classList.remove('flex', 'flex-col', 'items-center', 'gap-0.5');
+          logoAnchor.classList.remove('flex', 'flex-col', 'items-center');
           logoAnchor.classList.add('flex', 'items-center');
           const label = logoAnchor.querySelector('.crafto-label');
           if (label) label.remove();
