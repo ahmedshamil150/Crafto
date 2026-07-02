@@ -169,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
   transform: none !important;
   left: auto !important;
 }
+main { padding-top: 0 !important; }
 .mobile-float-btn {
   position: fixed !important;
   z-index: 9999 !important;
