@@ -445,6 +445,7 @@ if (productsTable) {
         }
       }
       modal.style.display = 'none';
+      allProducts = [];
       productsPage = 1;
       loadProducts();
     } catch (err) {

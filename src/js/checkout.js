@@ -1,6 +1,5 @@
-import { placeOrder, validateCoupon, getProducts, getProductById, getProductVariants, getInvoiceByOrderId } from './api.js';
+import { placeOrder, validateCoupon, getProducts, getProductById, getProductVariants } from './api.js';
 import { addToCart, showToast, isInWishlist, toggleWishlist } from './main.js';
-import { downloadInvoicePDF } from './invoice-pdf.js';
 
 const form      = document.getElementById('checkout-form');
 const summaryEl = document.getElementById('order-summary');
@@ -246,7 +245,7 @@ form?.addEventListener('submit', async e => {
 
     const result = await placeOrder(order, appliedCoupon);
     const orderNumber = result?.order_number || order.id;
-    fetch('https://formsubmit.co/ajax/craftostore.pk@gmail.com', {
+    fetch('https://formsubmit.co/ajax/crafto.pk@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
@@ -259,12 +258,8 @@ form?.addEventListener('submit', async e => {
         delivery: `Rs ${fee.toLocaleString()}`,
         total: `PKR ${total.toLocaleString()}`,
         coupon: appliedCoupon || 'None',
+        tax: `PKR ${tax.toLocaleString()}`,
       }),
-    }).catch(() => {});
-    fetch('/api/send-order-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: order.customer_name, email, orderId: orderNumber, items: cart, total }),
     }).catch(() => {});
     localStorage.removeItem('crafto_cart');
     sessionStorage.setItem('crafto_track_phone', phone);

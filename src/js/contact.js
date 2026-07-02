@@ -21,7 +21,7 @@ form?.addEventListener('submit', async e => {
   };
 
   try {
-    const res = await fetch('https://formsubmit.co/ajax/craftostore.pk@gmail.com', {
+    const res = await fetch('https://formsubmit.co/ajax/crafto.pk@gmail.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data),
