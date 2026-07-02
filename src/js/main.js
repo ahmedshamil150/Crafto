@@ -143,18 +143,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartLink = document.querySelector('a[href="./cart"]');
     const logoLink = document.querySelector('a[href="./"]');
     const img = logoLink?.querySelector('img');
+    const iconsParent = cartLink?.parentElement;
     const isPhone = window.innerWidth < 768;
+
+    document.querySelectorAll('.mobile-float-btn').forEach(el => el.remove());
 
     if (isPhone) {
       header?.classList.remove('fixed', 'top-0');
-      burger?.classList.add('fixed', 'top-4', 'left-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
-      cartLink?.classList.add('fixed', 'top-4', 'right-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
-      if (img) { img.src = '/favicon.png'; img.className = 'h-7 w-7'; }
+      if (burger) burger.style.display = 'none';
+      if (iconsParent) iconsParent.style.display = 'none';
+
+      const floatBurger = document.createElement('button');
+      floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[60] rounded-full bg-cream-canvas shadow-xl w-12 h-12 flex items-center justify-center active:scale-95 transition-transform';
+      floatBurger.innerHTML = '<span class="material-symbols-outlined text-deep-emerald" data-icon="menu">menu</span>';
+      floatBurger.addEventListener('click', () => burger?.click());
+      document.body.appendChild(floatBurger);
+
+      if (cartLink) {
+        const floatCart = document.createElement('a');
+        floatCart.href = './cart';
+        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-cream-canvas shadow-xl w-12 h-12 flex items-center justify-center active:scale-95 transition-transform';
+        floatCart.innerHTML = cartLink.innerHTML;
+        document.body.appendChild(floatCart);
+      }
+
+      if (img) {
+        if (!img.dataset.originalSrc) img.dataset.originalSrc = img.src;
+        img.src = '/favicon.png';
+        img.className = 'h-7 w-7';
+      }
     } else {
       header?.classList.add('fixed', 'top-0');
-      burger?.classList.remove('fixed', 'top-4', 'left-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
-      cartLink?.classList.remove('fixed', 'top-4', 'right-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
-      if (img) { img.src = '/headerlogo.png'; img.className = 'h-6 md:h-9'; }
+      if (burger) burger.style.display = '';
+      if (iconsParent) iconsParent.style.display = '';
+      if (img && img.dataset.originalSrc) {
+        img.src = img.dataset.originalSrc;
+        delete img.dataset.originalSrc;
+        img.className = 'h-6 md:h-9';
+      }
     }
   }
   setupMobileLayout();
