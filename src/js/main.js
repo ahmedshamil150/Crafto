@@ -172,6 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
 main { padding-top: 0 !important; }
 section.h-screen.flex.items-start { height: 50vh !important; min-height: 50vh !important; }
 section.h-screen.flex.items-start .container.relative.z-10 { padding-top: 1rem !important; }
+section.px-margin-mobile > .flex.flex-col.justify-between { align-items: center !important; }
+section.px-margin-mobile > .flex.flex-col.justify-between h2 { text-align: center !important; }
+section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: auto !important; margin-right: auto !important; }
 .mobile-float-btn {
   position: fixed !important;
   z-index: 9999 !important;
