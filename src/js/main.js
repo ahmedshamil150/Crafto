@@ -137,6 +137,29 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePill();
   }
 
+  // Mobile floating buttons (phone only)
+  function setupMobileLayout() {
+    const burger = document.getElementById('burger');
+    const cartLink = document.querySelector('a[href="./cart"]');
+    const logoLink = document.querySelector('a[href="./"]');
+    const img = logoLink?.querySelector('img');
+    const isPhone = window.innerWidth < 768;
+
+    if (isPhone) {
+      header?.classList.remove('fixed', 'top-0');
+      burger?.classList.add('fixed', 'top-4', 'left-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
+      cartLink?.classList.add('fixed', 'top-4', 'right-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
+      if (img) { img.src = '/favicon.png'; img.className = 'h-7 w-7'; }
+    } else {
+      header?.classList.add('fixed', 'top-0');
+      burger?.classList.remove('fixed', 'top-4', 'left-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
+      cartLink?.classList.remove('fixed', 'top-4', 'right-4', 'z-50', 'rounded-full', 'bg-cream-canvas', 'shadow-lg', 'w-12', 'h-12', 'flex', 'items-center', 'justify-center');
+      if (img) { img.src = '/headerlogo.png'; img.className = 'h-6 md:h-9'; }
+    }
+  }
+  setupMobileLayout();
+  window.addEventListener('resize', setupMobileLayout);
+
   // Mobile nav toggle
   const burger = document.getElementById('burger');
   const navMenu = document.getElementById('nav-menu');
