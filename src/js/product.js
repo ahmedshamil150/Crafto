@@ -146,7 +146,9 @@ function renderGrid() {
     filtered = filtered.filter(p => hasDisc(p.discount_percent));
   }
 
-  if (sortState === 'asc') {
+  if (sortState === '') {
+    filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  } else if (sortState === 'asc') {
     filtered.sort((a, b) => discPrice(a.price, a.discount_percent) - discPrice(b.price, b.discount_percent));
   } else if (sortState === 'desc') {
     filtered.sort((a, b) => discPrice(b.price, b.discount_percent) - discPrice(a.price, a.discount_percent));

@@ -59,6 +59,7 @@ async function loadHome() {
   if (!products.length) {
     grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-12">No featured products yet.</p>';
   } else {
+    products.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     grid.innerHTML = products.map(p => productCard(p)).join('');
 
     grid.querySelectorAll('.home-add-cart').forEach(btn => {
