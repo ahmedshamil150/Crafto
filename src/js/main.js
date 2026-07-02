@@ -161,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
       mobileStyleEl.textContent = `
 #site-header nav {
   justify-content: center !important;
-  padding-top: 0.75rem !important;
-  padding-bottom: 0.75rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
 }
 #site-header nav > a[href="./"] {
   position: static !important;
@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 main { padding-top: 0 !important; }
 section.h-screen.flex.items-start { height: 50vh !important; min-height: 50vh !important; }
+section.h-screen.flex.items-start .container.relative.z-10 { padding-top: 1rem !important; }
 .mobile-float-btn {
   position: fixed !important;
   z-index: 9999 !important;
