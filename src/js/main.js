@@ -154,18 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isPhone) {
       header?.classList.remove('fixed', 'top-0');
       if (burger) burger.style.display = 'none';
-
-      if (iconsParent) {
-        iconsParent.style.display = '';
-        if (cartLink) cartLink.style.display = 'none';
-      }
+      if (iconsParent) iconsParent.style.display = 'none';
 
       mobileStyleEl = document.createElement('style');
       mobileStyleEl.id = 'mobile-header-style';
       mobileStyleEl.textContent = `
 #site-header nav {
   justify-content: center !important;
-  gap: 1rem !important;
   padding-top: 1.25rem !important;
   padding-bottom: 1.25rem !important;
 }
@@ -174,27 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
   transform: none !important;
   left: auto !important;
 }
-#site-header nav > div.flex.items-center.gap-4 {
-  display: contents !important;
-}
-#site-header nav > a[href="./shop"],
-#site-header nav > div.flex.items-center.gap-4 > a[href="./shop"] { order: 1; }
-#site-header nav > a[href="./"] { order: 2; }
-#site-header nav > a[href="./wishlist"],
-#site-header nav > div.flex.items-center.gap-4 > a[href="./wishlist"] { order: 3; }
 `;
       document.head.appendChild(mobileStyleEl);
 
       const floatBurger = document.createElement('button');
       floatBurger.className = 'mobile-float-btn fixed top-4 left-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
-      floatBurger.innerHTML = '<span class="material-symbols-outlined text-white text-xl" data-icon="menu">menu</span>';
+      floatBurger.innerHTML = '<span class="material-symbols-outlined text-white" data-icon="menu">menu</span>';
       floatBurger.addEventListener('click', () => burger?.click());
       document.body.appendChild(floatBurger);
 
       if (cartLink) {
         const floatCart = document.createElement('a');
         floatCart.href = './cart';
-        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+        floatCart.className = 'mobile-float-btn fixed top-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
         const wrap = document.createElement('div');
         wrap.innerHTML = cartLink.innerHTML;
         wrap.querySelectorAll('.material-symbols-outlined').forEach(el => el.classList.add('text-white'));
@@ -203,20 +190,55 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(floatCart);
       }
 
+      // Floating wishlist (bottom-left)
+      const floatWishlist = document.createElement('a');
+      floatWishlist.href = './wishlist';
+      floatWishlist.className = 'mobile-float-btn fixed bottom-4 left-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform relative';
+      floatWishlist.innerHTML = '<span class="material-symbols-outlined text-white">favorite</span><span class="wishlist-badge absolute -top-1 -right-1 bg-metallic-gold text-[10px] text-white rounded-full w-4 h-4 flex items-center justify-center" style="display:none;">0</span>';
+      document.body.appendChild(floatWishlist);
+
+      // Floating search (bottom-right)
+      const floatSearch = document.createElement('a');
+      floatSearch.href = './shop';
+      floatSearch.className = 'mobile-float-btn fixed bottom-4 right-4 z-[60] rounded-full bg-deep-emerald shadow-xl w-10 h-10 flex items-center justify-center active:scale-95 transition-transform';
+      floatSearch.innerHTML = '<span class="material-symbols-outlined text-white">search</span>';
+      document.body.appendChild(floatSearch);
+
+      // Bigger favicon + CRAFTO label below it
       if (img) {
         if (!img.dataset.originalSrc) img.dataset.originalSrc = img.src;
         img.src = '/favicon.png';
-        img.className = 'h-7 w-7';
+        img.className = 'h-9 w-9';
+
+        const logoAnchor = img.closest('a');
+        if (logoAnchor) {
+          logoAnchor.classList.remove('flex', 'items-center');
+          logoAnchor.classList.add('flex', 'flex-col', 'items-center', 'gap-0.5');
+          let label = logoAnchor.querySelector('.crafto-label');
+          if (!label) {
+            label = document.createElement('span');
+            label.className = 'crafto-label text-[10px] font-bold tracking-[0.2em] text-deep-emerald';
+            label.textContent = 'CRAFTO';
+            logoAnchor.appendChild(label);
+          }
+        }
       }
     } else {
       header?.classList.add('fixed', 'top-0');
       if (burger) burger.style.display = '';
       if (iconsParent) iconsParent.style.display = '';
-      if (cartLink) cartLink.style.display = '';
       if (img && img.dataset.originalSrc) {
         img.src = img.dataset.originalSrc;
         delete img.dataset.originalSrc;
         img.className = 'h-6 md:h-9';
+
+        const logoAnchor = img.closest('a');
+        if (logoAnchor) {
+          logoAnchor.classList.remove('flex', 'flex-col', 'items-center', 'gap-0.5');
+          logoAnchor.classList.add('flex', 'items-center');
+          const label = logoAnchor.querySelector('.crafto-label');
+          if (label) label.remove();
+        }
       }
     }
   }
