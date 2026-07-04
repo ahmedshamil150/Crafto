@@ -13,7 +13,7 @@ export function generateInvoicePDF(invoice, order) {
   };
 
   // Header - Crafto branding
-  doc.setFillColor(0, 106, 78); // Deep emerald green
+  doc.setFillColor(1, 88, 69); // Deep emerald green
   doc.rect(0, 0, pageWidth, 40, 'F');
   
   doc.setTextColor(255, 255, 255);
@@ -75,7 +75,7 @@ export function generateInvoicePDF(invoice, order) {
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 106, 78);
+  doc.setTextColor(1, 88, 69);
   safeText('Item', 25, y + 7);
   safeText('Qty', 120, y + 7);
   safeText('Price', 140, y + 7);
@@ -112,7 +112,7 @@ export function generateInvoicePDF(invoice, order) {
   y += 10;
 
   // Summary section
-  doc.setDrawColor(0, 106, 78);
+  doc.setDrawColor(1, 88, 69);
   doc.line(20, y, pageWidth - 20, y);
   y += 10;
 
@@ -153,7 +153,7 @@ export function generateInvoicePDF(invoice, order) {
   // Total
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 106, 78);
+  doc.setTextColor(1, 88, 69);
   safeText('Total:', summaryX, y + 3);
   safeText(`PKR ${Number(invoice.total).toLocaleString()}`, summaryX + 50, y + 3);
   

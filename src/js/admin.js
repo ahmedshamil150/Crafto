@@ -785,7 +785,7 @@ if (ordersTable) {
               </td>
               <td class="action-cell">
                 <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                  <button class="button order-invoice-btn" data-id="${o.id}" style="background:#006A4E;padding:4px 8px;font-size:0.75rem;">Invoice</button>
+                  <button class="button order-invoice-btn" data-id="${o.id}" style="background:#015845;padding:4px 8px;font-size:0.75rem;">Invoice</button>
                   <button class="button order-delivery-btn" data-id="${o.id}" style="background:#D4AF37;padding:4px 8px;font-size:0.75rem;">Delivery</button>
                   <button class="button delete-order-btn" data-id="${o.id}" style="background:#c62828;padding:4px 8px;font-size:0.75rem;">Delete</button>
                 </div>
@@ -1642,7 +1642,7 @@ if (invoicesTable) {
                 }">${inv.status.replace('_', ' ')}</span>
               </td>
               <td class="action-cell">
-                <button class="button download-invoice-btn" data-id="${inv.id}" style="background:#006A4E;">Download PDF</button>
+                <button class="button download-invoice-btn" data-id="${inv.id}" style="background:#015845;">Download PDF</button>
                 ${inv.status === 'active' ? `
                   <button class="button cancel-invoice-btn" data-id="${inv.id}" style="background:#c62828;">Cancel</button>
                 ` : ''}
@@ -1746,7 +1746,7 @@ if (chargesTable) {
               <td>${c.type === 'percentage' ? 'Percentage' : 'Fixed'}</td>
               <td style="font-size:0.8rem;color:#666;">${c.updated_at ? new Date(c.updated_at).toLocaleString('en-PK') : '–'}</td>
               <td class="action-cell">
-                <button class="button edit-charge-btn" data-key="${esc(c.key)}" data-label="${esc(c.label)}" data-value="${c.value}" data-type="${c.type}" style="background:#006A4E;">Edit</button>
+                <button class="button edit-charge-btn" data-key="${esc(c.key)}" data-label="${esc(c.label)}" data-value="${c.value}" data-type="${c.type}" style="background:#015845;">Edit</button>
                 <button class="button delete-charge-btn" data-key="${esc(c.key)}" style="background:#c62828;">Delete</button>
               </td>
             </tr>

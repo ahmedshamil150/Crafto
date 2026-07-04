@@ -16,7 +16,7 @@ export function generateDeliveryDoc(order) {
   };
 
   // Title
-  doc.setFillColor(0, 106, 78);
+  doc.setFillColor(1, 88, 69);
   doc.rect(0, 0, pageWidth, 35, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
@@ -43,7 +43,7 @@ export function generateDeliveryDoc(order) {
   const colW = (pageWidth - 50) / 2;
 
   // FROM (Sender)
-  doc.setFillColor(0, 106, 78);
+  doc.setFillColor(1, 88, 69);
   doc.rect(colX, y, colW, 8, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
@@ -93,10 +93,10 @@ export function generateDeliveryDoc(order) {
   y = Math.max(y, ty + 10);
 
   // Items header
-  doc.setDrawColor(0, 106, 78);
+  doc.setDrawColor(1, 88, 69);
   doc.line(15, y, pageWidth - 15, y);
   y += 8;
-  doc.setFillColor(0, 106, 78);
+  doc.setFillColor(1, 88, 69);
   doc.rect(15, y, pageWidth - 30, 9, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
@@ -130,7 +130,7 @@ export function generateDeliveryDoc(order) {
   y += 8;
 
   // Summary
-  doc.setDrawColor(0, 106, 78);
+  doc.setDrawColor(1, 88, 69);
   doc.line(15, y, pageWidth - 15, y);
   y += 8;
   doc.setFontSize(10);
@@ -167,7 +167,7 @@ export function generateDeliveryDoc(order) {
   y += 40;
 
   // Footer
-  doc.setFillColor(0, 106, 78);
+  doc.setFillColor(1, 88, 69);
   doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(7);

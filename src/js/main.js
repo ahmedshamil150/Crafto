@@ -60,7 +60,7 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   transition: color 0.3s ease;
   z-index: 1;
 }
-.pill-item:hover { color: #006A4E; }
+.pill-item:hover { color: #015845; }
 .hover-circle {
   position: absolute;
   bottom: 0;
@@ -105,7 +105,7 @@ setTimeout(() => { minTime = true; checkReady(); }, 2500);
   color: #fff;
   transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
-.pill-cart:hover { background: #fff; color: #006A4E; transform: scale(1.1); }
+.pill-cart:hover { background: #fff; color: #015845; transform: scale(1.1); }
 `;
   document.head.appendChild(style);
 })();
@@ -178,7 +178,7 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
   position: fixed !important;
   z-index: 9995 !important;
   border-radius: 9999px !important;
-  background: #006A4E !important;
+  background: #015845 !important;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
   width: 40px !important;
   height: 40px !important;
@@ -253,7 +253,7 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
           if (!label) {
             label = document.createElement('span');
             label.className = 'crafto-label';
-            label.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:0.15em;color:#006A4E;margin-top:2px';
+            label.style.cssText = 'font-size:9px;font-weight:700;letter-spacing:0.15em;color:#015845;margin-top:2px';
             label.textContent = 'CRAFTO';
             logoAnchor.appendChild(label);
           }
@@ -316,7 +316,7 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
 
     const header = document.createElement('div');
     header.className = 'menu-header';
-    header.style.cssText = 'background:#006A4E;padding:1.15rem 2rem;display:flex;align-items:center;gap:0.65rem;margin:calc(-5rem) calc(-2rem) 0;';
+    header.style.cssText = 'background:#015845;padding:1.15rem 2rem;display:flex;align-items:center;gap:0.65rem;margin:calc(-5rem) calc(-2rem) 0;';
     header.innerHTML = '<img src="/favicon.png" alt="" style="width:34px;height:34px;border-radius:50%;flex-shrink:0" /><span style="color:#fff;font-size:18px;font-weight:700;letter-spacing:0.15em">CRAFTO</span>';
     menu.prepend(header);
 
@@ -328,7 +328,7 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
     const footer = document.createElement('div');
     footer.className = 'menu-footer';
     footer.style.cssText = 'margin-top:auto;padding-top:1rem;border-top:1px solid #bec9c2;';
-    footer.innerHTML = '<a href="tel:+923359115702" class="menu-call-btn" style="display:flex;align-items:center;gap:0.5rem;background:#006A4E;color:#fff;padding:0.75rem 1rem;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none;justify-content:center;margin-bottom:1rem;"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call Us Now</a><p style="font-size:13px;color:#3f4944;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;"><span class="material-symbols-outlined" style="font-size:16px">location_on</span> Shop No 1, First Floor, Shanghai Plaza, China Market, Rawalpindi</p><a href="./privacy" style="font-size:12px;color:#006A4E;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:0.35rem;"><span class="material-symbols-outlined" style="font-size:14px">lock</span> Privacy Policy</a>';
+    footer.innerHTML = '<a href="tel:+923359115702" class="menu-call-btn" style="display:flex;align-items:center;gap:0.5rem;background:#015845;color:#fff;padding:0.75rem 1rem;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none;justify-content:center;margin-bottom:1rem;"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call Us Now</a><p style="font-size:13px;color:#3f4944;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;"><span class="material-symbols-outlined" style="font-size:16px">location_on</span> Shop No 1, First Floor, Shanghai Plaza, China Market, Rawalpindi</p><a href="./privacy" style="font-size:12px;color:#015845;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:0.35rem;"><span class="material-symbols-outlined" style="font-size:14px">lock</span> Privacy Policy</a>';
     menu.appendChild(footer);
 
     footer.querySelector('.menu-call-btn')?.addEventListener('click', () => toggleNav(false));
@@ -391,7 +391,7 @@ export function showToast(msg, type = 'success') {
     transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease',
     pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '8px',
     color: type === 'error' ? '#fff' : '#fff',
-    background: type === 'error' ? '#dc2626' : '#006A4E',
+    background: type === 'error' ? '#dc2626' : '#015845',
   });
   const icon = document.createElement('span');
   icon.className = 'material-symbols-outlined';

@@ -203,7 +203,7 @@
               <span style="font-weight:600;">${s.sessions}</span>
             </div>
             <div style="background:#e0e0e0;border-radius:4px;height:6px;overflow:hidden;">
-              <div style="background:#006A4E;width:${pct}%;height:100%;border-radius:4px;"></div>
+              <div style="background:#015845;width:${pct}%;height:100%;border-radius:4px;"></div>
             </div>
           </div>
         `;
@@ -235,7 +235,7 @@
       const barW = Math.max(2, cw / values.length - 1);
 
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = '#006A4E';
+      ctx.fillStyle = '#015845';
       values.forEach((v, i) => {
         const x = pad.l + i * (barW + 1);
         const bh = (v / max) * ch;
