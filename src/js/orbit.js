@@ -1,6 +1,18 @@
 // Vanilla JS orbiting image animation
+const DEFAULT_IMAGES = [
+  'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=200&q=80',
+  'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=200&q=80',
+  'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=200&q=80',
+  'https://images.unsplash.com/photo-1603006905003-be475563bc59?w=200&q=80',
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&q=80',
+  'https://images.unsplash.com/photo-1602872030216-3ae373e4c0a7?w=200&q=80',
+  'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=200&q=80',
+  'https://images.unsplash.com/photo-1584302179602-e4c3d3fd629d?w=200&q=80',
+];
+
 export function initOrbit(container, images, options = {}) {
-  if (!container || !images.length) return;
+  if (!container) return;
+  images = images && images.length ? images : DEFAULT_IMAGES;
 
   const {
     itemSize = 80,

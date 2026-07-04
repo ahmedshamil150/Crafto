@@ -220,13 +220,7 @@ async function renderShop() {
   if (isShop) {
     const orbitContainer = document.getElementById('shop-orbit');
     if (orbitContainer) {
-      const seen = new Set();
-      const orbitImages = allProducts
-        .filter(p => { const c = (p.category || '').toLowerCase().trim(); if (seen.has(c)) return false; seen.add(c); return true; })
-        .map(p => p.image_url)
-        .filter(Boolean)
-        .slice(0, 8);
-      if (orbitImages.length >= 2) initOrbit(orbitContainer, orbitImages);
+      initOrbit(orbitContainer);
     }
   }
 
