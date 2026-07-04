@@ -196,10 +196,10 @@ function renderCategoryCards() {
       img: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=1000&q=90'
     },
     {
-      id: 'jewelry boxes',
-      label: 'Jewelry Boxes',
-      desc: 'Carved from sustainable sheesham wood and adorned with hand-painted motifs, our keepsake chests are crafted by skilled artisans in Chiniot. Each box features traditional brass inlay work passed down through centuries.',
-      img: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1000&q=90'
+      id: 'office decor',
+      label: 'Office Decor',
+      desc: 'Elevate your workspace with handcrafted Pakistani office decor — from engraved brass pen stands and carved sheesham wood desk organizers to hand-painted calligraphy pieces that inspire productivity and heritage.',
+      img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&q=90'
     },
     {
       id: 'lamps',
