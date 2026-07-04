@@ -3,7 +3,7 @@ import {
   getProducts, getOrders, createProduct, updateProduct, deleteProduct, deleteOrder, updateOrderStatus,
   getAllReviews, deleteReview, setReviewPinned, getProductsCount, getOrdersCount, uploadImage,
   getCoupons, createCoupon, deleteCoupon,
-  getCategories, createCategory, deleteCategory,
+  getCategories, createCategory, updateCategory, deleteCategory,
   getActiveHeroImage, getHeroImages, setHeroImage,
   getProductVariants, createVariant, updateVariant, deleteVariant,
   getInvoices, getInvoicesCount, deleteInvoice, cancelInvoice, getInvoiceByOrderId,
@@ -1339,9 +1339,8 @@ if (couponsTable) {
 // --- Categories ---
 const categoriesTable = document.getElementById('categories-table');
 if (categoriesTable) {
-  const CATS_PER_PAGE = 20;
-  let catsPage = 1;
   let allCatsArr = [];
+  let dragRow = null;
 
   async function loadAdminCategories() {
     clearCache('categories');
@@ -1356,22 +1355,20 @@ if (categoriesTable) {
       categoriesTable.innerHTML = '<p>No categories yet. Add one above.</p>';
       return;
     }
-    const totalItems = allCatsArr.length;
-    const totalPages = Math.ceil(totalItems / CATS_PER_PAGE) || 1;
-    if (catsPage > totalPages) catsPage = totalPages;
-    const pageCats = allCatsArr.slice((catsPage - 1) * CATS_PER_PAGE, catsPage * CATS_PER_PAGE);
 
     categoriesTable.innerHTML = `
+      <p style="font-size:0.85rem;color:#666;margin-bottom:0.75rem;">Drag rows to reorder categories.</p>
       <div class="admin-table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Name</th><th>Sort Order</th><th>Created</th><th>Actions</th>
+            <th style="width:2rem"></th><th>Name</th><th>Sort Order</th><th>Created</th><th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          ${pageCats.map((c, i) => `
-            <tr style="--i:${i}">
+        <tbody id="cats-tbody">
+          ${allCatsArr.map((c, i) => `
+            <tr data-cat-id="${c.id}" draggable="true" style="cursor:grab;--i:${i}">
+              <td style="text-align:center;color:#999;font-size:18px;cursor:grab;">⠿</td>
               <td><strong>${esc(c.name)}</strong></td>
               <td>${c.sort_order ?? 0}</td>
               <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('en-PK') : '–'}</td>
@@ -1383,11 +1380,6 @@ if (categoriesTable) {
         </tbody>
       </table>
       </div>
-      <div class="pagination">
-        <button class="button page-btn" id="cats-prev" ${catsPage <= 1 ? 'disabled' : ''}>← Prev</button>
-        <span class="page-info">Page ${catsPage} of ${totalPages} (${totalItems} total)</span>
-        <button class="button page-btn" id="cats-next" ${catsPage >= totalPages ? 'disabled' : ''}>Next →</button>
-      </div>
     `;
 
     categoriesTable.querySelectorAll('.delete-cat-btn').forEach(btn => {
@@ -1397,25 +1389,55 @@ if (categoriesTable) {
         try {
           await deleteCategory(btn.dataset.id);
           allCatsArr = [];
-          catsPage = 1;
           loadAdminCategories();
-          loadCategories(); // refresh global categories
+          loadCategories();
         } catch { btn.disabled = false; }
       });
+    });
+
+    // Drag-drop reorder
+    const tbody = document.getElementById('cats-tbody');
+    if (!tbody) return;
+
+    tbody.addEventListener('dragstart', (e) => {
+      dragRow = e.target.closest('tr');
+      if (!dragRow) return;
+      dragRow.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    tbody.addEventListener('dragend', (e) => {
+      const row = e.target.closest('tr');
+      if (row) row.style.opacity = '1';
+      dragRow = null;
+    });
+
+    tbody.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const row = e.target.closest('tr');
+      if (!row || row === dragRow) return;
+      const rect = row.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      tbody.insertBefore(dragRow, e.clientY < midY ? row : row.nextSibling);
+    });
+
+    tbody.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      const rows = tbody.querySelectorAll('tr');
+      const newOrder = Array.from(rows).map(r => r.dataset.catId).filter(Boolean);
+      // Update sort_order for each category based on new position
+      try {
+        await Promise.all(newOrder.map((id, idx) => updateCategory(id, { sort_order: idx + 1 })));
+        clearCache('categories');
+        loadCategories();
+      } catch (err) {
+        console.error('Failed to save category order:', err);
+      }
+      loadAdminCategories();
     });
   }
 
   loadAdminCategories();
-
-  document.addEventListener('click', (e) => {
-    if (e.target.id === 'cats-prev') {
-      if (catsPage > 1) { catsPage--; loadAdminCategories(); }
-    }
-    if (e.target.id === 'cats-next') {
-      const totalPages = Math.ceil(allCatsArr.length / CATS_PER_PAGE) || 1;
-      if (catsPage < totalPages) { catsPage++; loadAdminCategories(); }
-    }
-  });
 
   document.getElementById('category-form')?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1425,15 +1447,13 @@ if (categoriesTable) {
     try {
       const data = {
         name: document.getElementById('c-name').value.trim(),
-        sort_order: parseInt(document.getElementById('c-sort').value) || 0,
+        sort_order: (allCatsArr.length ? Math.max(...allCatsArr.map(c => c.sort_order ?? 0)) : 0) + 1,
       };
       await createCategory(data);
       e.target.reset();
-      document.getElementById('c-sort').value = '0';
       allCatsArr = [];
-      catsPage = 1;
       loadAdminCategories();
-      loadCategories(); // refresh global categories
+      loadCategories();
     } catch (err) {
       msg.textContent = err.message || 'Failed to create category.';
       msg.style.display = 'block';

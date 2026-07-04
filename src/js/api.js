@@ -445,6 +445,14 @@ export async function createCategory(data) {
   return result.data;
 }
 
+export async function updateCategory(id, data) {
+  await adminFetch({
+    path: `/rest/v1/categories?id=eq.${id}`,
+    method: 'PATCH',
+    body: data,
+  });
+}
+
 export async function deleteCategory(id) {
   await adminFetch({
     path: `/rest/v1/categories?id=eq.${id}`,
