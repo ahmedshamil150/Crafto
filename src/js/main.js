@@ -282,7 +282,10 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
     }
   }
   setupMobileLayout();
-  window.addEventListener('resize', setupMobileLayout);
+  window.addEventListener('resize', () => {
+    setupMobileLayout();
+    enhanceMobileMenu();
+  });
 
   // Mobile nav toggle
   const burger = document.getElementById('burger');
@@ -299,13 +302,15 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
     link.addEventListener('click', () => toggleNav(false));
   });
 
-  // Increase desktop nav link font size
+  // Desktop nav styles + hide mobile menu on desktop
   const navStyle = document.createElement('style');
-  navStyle.textContent = '@media(min-width:768px){.nav-link{font-size:14px!important}}';
+  navStyle.textContent = '@media(min-width:768px){.nav-link{font-size:14px!important}#nav-menu{display:none!important}}';
   document.head.appendChild(navStyle);
 
   // Enhance mobile side menu
+  const isMobile = () => window.innerWidth < 768;
   function enhanceMobileMenu() {
+    if (!isMobile()) return;
     const menu = document.getElementById('nav-menu');
     if (!menu || menu.querySelector('.menu-header')) return;
 
@@ -316,17 +321,18 @@ section.px-margin-mobile > .flex.flex-col.justify-between .w-24 { margin-left: a
     menu.prepend(header);
 
     menu.querySelectorAll(':scope > a').forEach(a => {
-      a.style.fontSize = '16px';
+      a.style.fontSize = '14px';
       a.style.paddingBlock = '0.5rem';
     });
 
     const footer = document.createElement('div');
     footer.className = 'menu-footer';
     footer.style.cssText = 'margin-top:auto;padding-top:1rem;border-top:1px solid #bec9c2;';
-    footer.innerHTML = '<a href="tel:+923359115702" class="menu-call-btn" style="display:flex;align-items:center;gap:0.5rem;background:#006A4E;color:#fff;padding:0.75rem 1rem;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none;justify-content:center;margin-bottom:1rem;"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call Us Now</a><p style="font-size:13px;color:#3f4944;display:flex;align-items:center;gap:0.5rem;"><span class="material-symbols-outlined" style="font-size:16px">location_on</span> Shop No 1, First Floor, Shanghai Plaza, China Market, Rawalpindi</p>';
+    footer.innerHTML = '<a href="tel:+923359115702" class="menu-call-btn" style="display:flex;align-items:center;gap:0.5rem;background:#006A4E;color:#fff;padding:0.75rem 1rem;border-radius:999px;font-size:14px;font-weight:600;text-decoration:none;justify-content:center;margin-bottom:1rem;"><span class="material-symbols-outlined" style="font-size:18px">call</span> Call Us Now</a><p style="font-size:13px;color:#3f4944;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;"><span class="material-symbols-outlined" style="font-size:16px">location_on</span> Shop No 1, First Floor, Shanghai Plaza, China Market, Rawalpindi</p><a href="./privacy" style="font-size:12px;color:#006A4E;text-decoration:none;font-weight:600;display:flex;align-items:center;gap:0.35rem;"><span class="material-symbols-outlined" style="font-size:14px">lock</span> Privacy Policy</a>';
     menu.appendChild(footer);
 
     footer.querySelector('.menu-call-btn')?.addEventListener('click', () => toggleNav(false));
+    footer.querySelector('a[href="./privacy"]')?.addEventListener('click', () => toggleNav(false));
   }
   enhanceMobileMenu();
 
