@@ -220,7 +220,7 @@ async function renderShop() {
   if (isShop) {
     const orbitContainer = document.getElementById('shop-orbit');
     if (orbitContainer) {
-      initOrbit(orbitContainer);
+      initOrbit(orbitContainer, null, { radiusX: 450, radiusY: 100, baseWidth: 1000, itemSize: 56 });
     }
   }
 
