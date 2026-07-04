@@ -284,6 +284,7 @@ async function renderDetail() {
     getProductVariants(id).catch(() => []),
   ]);
   if (!p) { detail.innerHTML = '<p class="text-center text-on-surface-variant py-20">Product not found.</p>'; return; }
+  if (typeof window.injectProductSchema === 'function') window.injectProductSchema(p);
 
   const images = [p.image_url, p.image_url_2, p.image_url_3]
     .filter(Boolean)
