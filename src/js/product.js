@@ -46,7 +46,7 @@ let activeTab = 'all';
 let sortState = ''; // '', 'asc', 'desc'
 let filterDisc = false;
 let searchQuery = '';
-const PRODUCTS_PER_PAGE = 16;
+const PRODUCTS_PER_PAGE = 20;
 let currentPage = 1;
 
 function esc(str) {

@@ -55,7 +55,7 @@ function productCard(p) {
 }
 
 async function loadHome() {
-  const products = await getProducts({ featured: true, limit: 6 });
+  const products = await getProducts({ featured: true, limit: 10 });
   if (!products.length) {
     grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-12">No featured products yet.</p>';
   } else {
