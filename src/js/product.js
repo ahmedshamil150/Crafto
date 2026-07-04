@@ -1,6 +1,7 @@
 // src/js/product.js
 import { getProducts, getProductById, getReviews, createReview, getProductVariants, getCategories } from './api.js';
 import { updateCartBadge, showToast, addToCart, isInWishlist, toggleWishlist } from './main.js';
+import { initOrbit } from './orbit.js';
 
 let CATEGORIES = ['Vase', 'Jewelry boxes', 'Lamps', 'Tables', 'Candle stands', 'Planters'];
 
@@ -213,6 +214,20 @@ async function renderShop() {
   if (!allProducts.length) {
     grid.innerHTML = isShop ? '<p>No products found.</p>' : '<p class="loading">No featured products yet — check back soon!</p>';
     return;
+  }
+
+  // Init orbit animation in shop hero
+  if (isShop) {
+    const orbitContainer = document.getElementById('shop-orbit');
+    if (orbitContainer) {
+      const seen = new Set();
+      const orbitImages = allProducts
+        .filter(p => { const c = (p.category || '').toLowerCase().trim(); if (seen.has(c)) return false; seen.add(c); return true; })
+        .map(p => p.image_url)
+        .filter(Boolean)
+        .slice(0, 8);
+      if (orbitImages.length >= 2) initOrbit(orbitContainer, orbitImages);
+    }
   }
 
   // Read URL category parameter to auto-select tab
