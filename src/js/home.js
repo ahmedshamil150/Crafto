@@ -47,7 +47,7 @@ function productCard(p) {
         <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
           <a href="./product?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-6 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
           <button class="home-add-cart btn-shine flex-none md:flex-none w-8 h-8 md:w-auto md:px-5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors flex items-center justify-center"
-            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
         </div>
       </div>
     </div>
@@ -64,7 +64,7 @@ async function loadHome() {
 
     grid.querySelectorAll('.home-add-cart').forEach(btn => {
       btn.addEventListener('click', () => {
-        addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price));
+        addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price), 1, '', '', btn.dataset.image || '');
       });
     });
 

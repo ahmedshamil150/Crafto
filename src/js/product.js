@@ -137,7 +137,7 @@ function productCardHtml(p) {
         <div class="mt-2 md:mt-4 flex flex-row gap-1.5 md:gap-2 justify-center">
           <a href="./product?id=${p.id}" class="flex-1 md:flex-none px-3 md:px-5 py-1.5 md:py-2 border border-deep-emerald text-deep-emerald font-label-caps text-[10px] rounded hover:bg-deep-emerald hover:text-white transition-colors text-center">View</a>
           <button class="shop-add-cart btn-shine flex-none md:flex-none w-8 h-8 md:w-auto md:px-5 md:py-2 bg-deep-emerald text-white rounded-full font-label-caps text-[10px] hover:bg-primary transition-colors active:scale-95 flex items-center justify-center"
-            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${img}"><span class="material-symbols-outlined text-sm md:hidden">shopping_bag</span><span class="hidden md:inline">Add to Cart</span></button>
         </div>
       </div>
     </div>
@@ -205,7 +205,7 @@ function renderGrid() {
   grid.innerHTML = page.map(productCardHtml).join('');
   grid.querySelectorAll('.shop-add-cart').forEach(btn => {
     btn.addEventListener('click', function() {
-      addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price));
+      addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price), 1, '', '', this.dataset.image || '');
     });
   });
   grid.querySelectorAll('.shop-wishlist').forEach(btn => {
@@ -399,7 +399,7 @@ async function renderDetail() {
 
         <div class="flex gap-3 items-center">
           <button class="btn-shine flex-1 px-8 py-3 bg-deep-emerald text-white rounded-full font-label-caps text-xs uppercase tracking-widest hover:bg-primary transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed" id="add-to-cart"
-            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}"
+            data-id="${p.id}" data-title="${esc(p.title)}" data-price="${finalPrice}" data-image="${images[0]}"
             ${totalStock === 0 ? 'disabled' : ''}>
             <span class="material-symbols-outlined text-base align-middle mr-1.5">shopping_bag</span> Add to Cart
           </button>
@@ -475,7 +475,7 @@ async function renderDetail() {
   document.getElementById('add-to-cart')?.addEventListener('click', function() {
     const varId = this.dataset.variantId || '';
     const varLabel = this.dataset.variantLabel || '';
-    addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price), 1, varId, varLabel);
+    addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price), 1, varId, varLabel, this.dataset.image || '');
   });
 
   // Variant selection logic

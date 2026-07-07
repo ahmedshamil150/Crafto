@@ -310,7 +310,7 @@ async function loadRecommended() {
                 <h3 class="font-headline-md text-sm text-charcoal-text mt-1">${esc(p.title)}</h3>
                 <p class="font-body-md text-deep-emerald font-semibold mt-1">PKR ${fp.toLocaleString()}</p>
                 <button class="checkout-add-cart btn-shine mt-3 w-full px-3 py-2 bg-deep-emerald text-white rounded-lg font-label-caps text-[10px] hover:bg-primary transition-all active:scale-[0.97]"
-                  data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}"><span class="material-symbols-outlined text-xs align-middle">shopping_bag</span> Add to Cart</button>
+                  data-id="${p.id}" data-title="${esc(p.title)}" data-price="${fp}" data-image="${img}"><span class="material-symbols-outlined text-xs align-middle">shopping_bag</span> Add to Cart</button>
               </div>
             </div>
           `;
@@ -321,7 +321,7 @@ async function loadRecommended() {
 
   recSection.querySelectorAll('.checkout-add-cart').forEach(btn => {
     btn.addEventListener('click', () => {
-      addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price));
+      addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price), 1, '', '', btn.dataset.image || '');
     });
   });
 

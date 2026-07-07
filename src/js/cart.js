@@ -27,22 +27,33 @@ function render() {
   cartCount.textContent = `${cart.reduce((s, i) => s + i.qty, 0)} item${cart.length > 1 ? 's' : ''} in your cart`;
 
   cartItemsEl.innerHTML = cart.map((item, i) => `
-    <div class="cart-item bg-white rounded-xl p-4 md:p-5 shadow-sm border border-outline-variant/10 flex items-center gap-4 transition-all hover:shadow-md" data-index="${i}">
+    <div class="cart-item bg-white rounded-xl p-4 md:p-5 shadow-sm border border-outline-variant/10 flex items-start md:items-center gap-3 transition-all hover:shadow-md" data-index="${i}">
       <div class="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-surface-container flex items-center justify-center flex-shrink-0 overflow-hidden">
         ${item.image ? `<img src="${item.image}" alt="" class="w-full h-full object-cover" />` : `<span class="material-symbols-outlined text-2xl text-deep-emerald/40">inventory_2</span>`}
       </div>
       <div class="flex-1 min-w-0">
-        <h3 class="font-headline-md text-sm md:text-base text-charcoal-text truncate">${item.title}</h3>
+        <h3 class="font-headline-md text-sm md:text-base text-charcoal-text truncate pr-1">${item.title}</h3>
         ${item.variant_label ? '<p class="font-label-caps text-[10px] text-on-surface-variant mt-0.5">' + esc(item.variant_label) + '</p>' : ''}
         <p class="font-body-md text-deep-emerald font-semibold text-sm mt-0.5">PKR ${Number(item.price).toLocaleString()}</p>
+        <div class="flex items-center gap-2 mt-2 md:hidden">
+          <div class="flex items-center border border-outline-variant/30 rounded-lg overflow-hidden">
+            <button class="cart-qty-btn px-2 py-1.5 text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95 text-sm leading-none" data-action="dec">−</button>
+            <span class="px-2.5 py-1.5 font-body-md text-sm text-charcoal-text min-w-[1.75rem] text-center border-x border-outline-variant/30">${item.qty}</span>
+            <button class="cart-qty-btn px-2 py-1.5 text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95 text-sm leading-none" data-action="inc">+</button>
+          </div>
+          <span class="font-body-md text-sm text-charcoal-text font-semibold">PKR ${(item.price * item.qty).toLocaleString()}</span>
+          <button class="cart-remove w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-red-50 hover:text-red-500 transition-all active:scale-90 ml-auto" data-action="remove" title="Remove item">
+            <span class="material-symbols-outlined text-sm">delete</span>
+          </button>
+        </div>
       </div>
-      <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+      <div class="items-center gap-3 flex-shrink-0 hidden md:flex">
         <div class="flex items-center border border-outline-variant/30 rounded-lg overflow-hidden">
           <button class="cart-qty-btn px-2.5 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95 text-sm leading-none" data-action="dec">−</button>
           <span class="px-3 py-2 font-body-md text-sm text-charcoal-text min-w-[2rem] text-center border-x border-outline-variant/30">${item.qty}</span>
           <button class="cart-qty-btn px-2.5 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors active:scale-95 text-sm leading-none" data-action="inc">+</button>
         </div>
-        <p class="font-body-md text-sm text-charcoal-text font-semibold min-w-[5rem] text-right hidden md:block">PKR ${(item.price * item.qty).toLocaleString()}</p>
+        <p class="font-body-md text-sm text-charcoal-text font-semibold min-w-[5rem] text-right">PKR ${(item.price * item.qty).toLocaleString()}</p>
         <button class="cart-remove w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-red-50 hover:text-red-500 transition-all active:scale-90" data-action="remove" title="Remove item">
           <span class="material-symbols-outlined text-base">delete</span>
         </button>
