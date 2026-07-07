@@ -371,9 +371,9 @@ export function showToast(msg, type = 'success') {
     container = document.createElement('div');
     container.id = 'toast-container';
     Object.assign(container.style, {
-      position: 'fixed', top: '80px', right: '16px', zIndex: '99999',
-      display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end',
-      maxWidth: '360px', pointerEvents: 'none',
+      position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: '99999',
+      display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center',
+      width: 'calc(100% - 32px)', maxWidth: '400px', pointerEvents: 'none',
     });
     document.body.appendChild(container);
   }
@@ -383,9 +383,10 @@ export function showToast(msg, type = 'success') {
     padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '500',
     fontFamily: 'Hanken Grotesk, sans-serif',
     boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)',
-    transform: 'translateX(120%)', opacity: '0',
+    transform: 'translateY(20px)', opacity: '0',
     transition: 'transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease',
     pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '8px',
+    width: '100%',
     color: type === 'error' ? '#fff' : '#fff',
     background: type === 'error' ? '#dc2626' : '#015845',
   });
@@ -396,11 +397,11 @@ export function showToast(msg, type = 'success') {
   toast.prepend(icon);
   container.appendChild(toast);
   requestAnimationFrame(() => {
-    toast.style.transform = 'translateX(0)';
+    toast.style.transform = 'translateY(0)';
     toast.style.opacity = '1';
   });
   setTimeout(() => {
-    toast.style.transform = 'translateX(120%)';
+    toast.style.transform = 'translateY(20px)';
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 400);
   }, 2000);
