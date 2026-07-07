@@ -55,6 +55,42 @@ function esc(str) {
   return el.innerHTML;
 }
 
+function formatDescription(text) {
+  if (!text) return '<p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">No description available.</p>';
+  const lines = text.split('\n');
+  const ulRe = /^[\*\-+]\s+/;
+  const olRe = /^\d+[\.\)]\s+/;
+  const hasList = lines.some(l => ulRe.test(l) || olRe.test(l));
+  if (!hasList) return `<p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">${esc(text)}</p>`;
+  let html = '<div class="font-body-md text-on-surface-variant mb-6 leading-relaxed space-y-2">';
+  let inUl = false, inOl = false;
+  for (const raw of lines) {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      continue;
+    }
+    if (ulRe.test(trimmed)) {
+      if (inOl) { html += '</ol>'; inOl = false; }
+      if (!inUl) { html += '<ul class="list-disc pl-5 space-y-1">'; inUl = true; }
+      html += `<li>${esc(trimmed.replace(ulRe, ''))}</li>`;
+    } else if (olRe.test(trimmed)) {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (!inOl) { html += '<ol class="list-decimal pl-5 space-y-1">'; inOl = true; }
+      html += `<li>${esc(trimmed.replace(olRe, ''))}</li>`;
+    } else {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+      html += `<p>${esc(trimmed)}</p>`;
+    }
+  }
+  if (inUl) html += '</ul>';
+  if (inOl) html += '</ol>';
+  html += '</div>';
+  return html;
+}
+
 function renderStars(rating) {
   return Array.from({ length: 5 }, (_, i) =>
     '<span class="' + (i < rating ? 'text-metallic-gold' : 'text-outline-variant') + '">★</span>'
@@ -327,7 +363,7 @@ async function renderDetail() {
           ${onSale ? '<span class="bg-red-100 text-red-700 text-[10px] font-label-caps px-2.5 py-0.5 rounded-full">-' + p.discount_percent + '%</span>' : ''}
         </div>
         <h1 class="font-headline-lg text-headline-lg text-deep-emerald mb-4">${esc(p.title)}</h1>
-        <p class="font-body-md text-on-surface-variant mb-6 leading-relaxed">${esc(p.description || 'No description available.')}</p>
+        ${formatDescription(p.description)}
 
         <div class="mb-4">
           <span id="detail-price" class="font-headline-md text-headline-md text-deep-emerald">PKR ${finalPrice.toLocaleString()}</span>
@@ -374,6 +410,12 @@ async function renderDetail() {
             <span class="material-symbols-outlined" style="font-size:1.3rem;">${isInWishlist(p.id) ? 'favorite' : 'favorite_border'}</span>
           </button>
         </div>
+
+        <a href="https://wa.me/923359115702?text=${encodeURIComponent('Hi, I am interested in ' + p.title + ' - PKR ' + finalPrice.toLocaleString())}" target="_blank" rel="noopener noreferrer"
+          class="btn-shine flex items-center justify-center gap-2 w-full px-6 py-3 rounded-full font-label-caps text-xs uppercase tracking-widest transition-all active:scale-[0.97]"
+          style="background:#25D366;color:#fff;">
+          <span class="material-symbols-outlined text-base">chat</span> Order on WhatsApp
+        </a>
       </div>
     </div>
 
