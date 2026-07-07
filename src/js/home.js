@@ -65,7 +65,6 @@ async function loadHome() {
     grid.querySelectorAll('.home-add-cart').forEach(btn => {
       btn.addEventListener('click', () => {
         addToCart(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price));
-        showToast(`${btn.dataset.title} added to cart!`);
       });
     });
 

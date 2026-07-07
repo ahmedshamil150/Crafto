@@ -206,7 +206,6 @@ function renderGrid() {
   grid.querySelectorAll('.shop-add-cart').forEach(btn => {
     btn.addEventListener('click', function() {
       addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price));
-      showToast(`${this.dataset.title} added to cart!`);
     });
   });
   grid.querySelectorAll('.shop-wishlist').forEach(btn => {
@@ -412,7 +411,7 @@ async function renderDetail() {
         </div>
 
         <a href="https://wa.me/923359115702?text=${encodeURIComponent('Hi, I am interested in ' + p.title + ' - PKR ' + finalPrice.toLocaleString())}" target="_blank" rel="noopener noreferrer"
-          class="btn-shine flex items-center justify-center gap-2 w-full px-6 py-3 rounded-full font-label-caps text-xs uppercase tracking-widest transition-all active:scale-[0.97]"
+          class="btn-shine flex items-center justify-center gap-2 w-full px-6 py-3 rounded-full font-label-caps text-xs uppercase tracking-widest transition-all active:scale-[0.97] mt-3"
           style="background:#25D366;color:#fff;">
           <span class="material-symbols-outlined text-base">chat</span> Order on WhatsApp
         </a>
@@ -477,7 +476,6 @@ async function renderDetail() {
     const varId = this.dataset.variantId || '';
     const varLabel = this.dataset.variantLabel || '';
     addToCart(this.dataset.id, this.dataset.title, parseFloat(this.dataset.price), 1, varId, varLabel);
-    showToast(`${this.dataset.title} added to cart!`);
   });
 
   // Variant selection logic

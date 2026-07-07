@@ -371,14 +371,10 @@ export function showToast(msg, type = 'success') {
     container = document.createElement('div');
     container.id = 'toast-container';
     Object.assign(container.style, {
-      position: 'fixed', bottom: '16px', left: '16px', right: '16px', zIndex: '99999',
-      display: 'flex', flexDirection: 'column', gap: '10px',
+      position: 'fixed', top: '80px', right: '16px', zIndex: '99999',
+      display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end',
       maxWidth: '360px', pointerEvents: 'none',
     });
-    // On desktop, let it stretch from the right only
-    if (window.innerWidth >= 768) {
-      container.style.left = 'auto';
-    }
     document.body.appendChild(container);
   }
   const toast = document.createElement('div');
@@ -407,7 +403,7 @@ export function showToast(msg, type = 'success') {
     toast.style.transform = 'translateX(120%)';
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 400);
-  }, 3000);
+  }, 2000);
 }
 
 function getCart() { return JSON.parse(localStorage.getItem('crafto_cart') || '[]'); }
